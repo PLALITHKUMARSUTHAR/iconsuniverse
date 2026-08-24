@@ -9,7 +9,6 @@ const Category = require('../models/Category');
 const User = require('../models/User');
 const Pack = require('../models/Pack');
 
-
 const ICONS_DIR = path.resolve(__dirname, '../../all icons');
 const BUCKET_NAME = process.env.R2_BUCKET_NAME || 'iconsuniverse-assets';
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || 'https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev';
@@ -18,7 +17,6 @@ const PROGRESS_FILE = path.resolve(__dirname, '.upload_progress.json');
 const STRICT_MAX_LIMIT = 1000000;
 const CONCURRENCY = parseInt(process.env.CONCURRENCY || '200', 10);
 const DB_BATCH_SIZE = 2500;
-
 
 // Helper: Recursively collect all icon files
 function collectFiles(dir) {
@@ -73,8 +71,7 @@ async function runSafePipeline({ dryRun = false } = {}) {
   // STRICT 1M SAFETY CHECK
   if (totalCount > STRICT_MAX_LIMIT) {
     console.error(`\n[CRITICAL SAFETY HALT] Total file count (${totalCount}) exceeds 1,000,000!`);
-    console.error(`To prevent unintended cloud costs, the process has halted immediately without uploading any files.`);
-    console.error(`Please review the folder or remove excess files before running.`);
+    console.error(`To prevent unintended cloud costs, the process has halted immediately.`);
     process.exit(1);
   }
 
@@ -91,15 +88,16 @@ async function runSafePipeline({ dryRun = false } = {}) {
   console.log(`[Database] Connected successfully.`);
 
   // Load progress state
-  let progress = { uploadedKeys: {}, dbInsertedCount: 0 };
+  let progress = { uploadedKeys: {} };
   if (fs.existsSync(PROGRESS_FILE)) {
     try {
       progress = JSON.parse(fs.readFileSync(PROGRESS_FILE, 'utf8'));
-      console.log(`[Resume State] Loaded previous progress: ${Object.keys(progress.uploadedKeys).length} already uploaded.`);
+      if (!progress.uploadedKeys) progress.uploadedKeys = {};
+      console.log(`[Resume State] Loaded ${Object.keys(progress.uploadedKeys).length.toLocaleString()} files already uploaded to Cloudflare R2.`);
     } catch (e) {}
   }
 
-  // Ensure default contributor user or categories exist
+  // Ensure default contributor user exists
   let defaultUser = await User.findOne({ role: 'admin' });
   if (!defaultUser) {
     defaultUser = await User.findOne();
@@ -113,8 +111,64 @@ async function runSafePipeline({ dryRun = false } = {}) {
     categoriesCache[cat.slug] = cat._id;
   }
 
-  // Queue files to upload
+  // Separate uploaded vs pending
+  const alreadyUploadedFiles = allFiles.filter(f => progress.uploadedKeys[f.relPath]);
   const pendingFiles = allFiles.filter(f => !progress.uploadedKeys[f.relPath]);
+
+  // Sync any already uploaded files that aren't yet in DB
+  const currentDbCount = await Icon.countDocuments();
+  if (currentDbCount < alreadyUploadedFiles.length) {
+    console.log(`\n[Syncing Database] Registering lightweight metadata for ${alreadyUploadedFiles.length.toLocaleString()} existing R2 files in MongoDB...`);
+    let syncBatch = [];
+    for (let i = 0; i < alreadyUploadedFiles.length; i++) {
+      const fileItem = alreadyUploadedFiles[i];
+      const { relPath, filename } = fileItem;
+      const folderCategory = relPath.split('/')[0] || 'general';
+      const categorySlug = folderCategory.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      
+      let categoryId = categoriesCache[categorySlug];
+      if (!categoryId) {
+        const newCat = await Category.findOneAndUpdate(
+          { slug: categorySlug },
+          { name: folderCategory, slug: categorySlug },
+          { upsert: true, new: true }
+        );
+        categoriesCache[categorySlug] = newCat._id;
+        categoryId = newCat._id;
+      }
+
+      const title = formatTitle(filename);
+      const slug = formatSlug(relPath);
+      const cdnUrl = `${R2_PUBLIC_URL}/icons/${relPath}`;
+
+      syncBatch.push({
+        updateOne: {
+          filter: { slug },
+          update: {
+            $set: {
+              title,
+              slug,
+              svgContent: '',
+              svgUrl: cdnUrl,
+              pngPreviewUrl: cdnUrl,
+              categoryId,
+              style: 'outline',
+              status: 'approved',
+              contributorId: defaultUserId,
+            }
+          },
+          upsert: true
+        }
+      });
+
+      if (syncBatch.length >= DB_BATCH_SIZE || i === alreadyUploadedFiles.length - 1) {
+        await Icon.bulkWrite(syncBatch, { ordered: false });
+        syncBatch = [];
+      }
+    }
+    console.log(`[Sync Complete] Existing R2 files synced to MongoDB.`);
+  }
+
   console.log(`\n[3/5] Files remaining to upload to R2 & DB: ${pendingFiles.length.toLocaleString()}`);
 
   let uploadedCount = Object.keys(progress.uploadedKeys).length;
@@ -148,7 +202,7 @@ async function runSafePipeline({ dryRun = false } = {}) {
           CacheControl: 'public, max-age=31536000, immutable',
         }));
 
-        // 2. Prepare DB record
+        // 2. Prepare lightweight DB record (without bloated raw string to save MongoDB 512MB quota)
         const folderCategory = relPath.split('/')[0] || 'general';
         const categorySlug = folderCategory.toLowerCase().replace(/[^a-z0-9]+/g, '-');
         
@@ -165,7 +219,6 @@ async function runSafePipeline({ dryRun = false } = {}) {
 
         const title = formatTitle(filename);
         const slug = formatSlug(relPath);
-        const svgContent = isSvg ? fileBuffer.toString('utf8') : '';
         const cdnUrl = `${R2_PUBLIC_URL}/${r2Key}`;
 
         dbBatch.push({
@@ -175,7 +228,7 @@ async function runSafePipeline({ dryRun = false } = {}) {
               $set: {
                 title,
                 slug,
-                svgContent: isSvg ? svgContent : '',
+                svgContent: '',
                 svgUrl: cdnUrl,
                 pngPreviewUrl: cdnUrl,
                 categoryId,
