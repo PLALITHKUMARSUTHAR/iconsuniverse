@@ -16,8 +16,9 @@ const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || 'https://pub-2b1851a9e65c42c0
 const PROGRESS_FILE = path.resolve(__dirname, '.upload_progress.json');
 
 const STRICT_MAX_LIMIT = 1000000;
-const CONCURRENCY = 40;
-const DB_BATCH_SIZE = 1000;
+const CONCURRENCY = parseInt(process.env.CONCURRENCY || '200', 10);
+const DB_BATCH_SIZE = 2500;
+
 
 // Helper: Recursively collect all icon files
 function collectFiles(dir) {
