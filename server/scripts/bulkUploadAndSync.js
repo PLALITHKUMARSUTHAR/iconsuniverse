@@ -6,6 +6,9 @@ const { PutObjectCommand } = require('@aws-sdk/client-s3');
 const r2Client = require('../config/r2');
 const Icon = require('../models/Icon');
 const Category = require('../models/Category');
+const User = require('../models/User');
+const Pack = require('../models/Pack');
+
 
 const ICONS_DIR = path.resolve(__dirname, '../../all icons');
 const BUCKET_NAME = process.env.R2_BUCKET_NAME || 'iconsuniverse-assets';
@@ -96,9 +99,9 @@ async function runSafePipeline({ dryRun = false } = {}) {
   }
 
   // Ensure default contributor user or categories exist
-  let defaultUser = await mongoose.model('User').findOne({ role: 'admin' });
+  let defaultUser = await User.findOne({ role: 'admin' });
   if (!defaultUser) {
-    defaultUser = await mongoose.model('User').findOne();
+    defaultUser = await User.findOne();
   }
   const defaultUserId = defaultUser ? defaultUser._id : new mongoose.Types.ObjectId();
 
