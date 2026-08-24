@@ -1,0 +1,26 @@
+{
+  "name": "iconsuniverse-backend",
+  "deployment": {
+    "instances": 1,
+    "docker": {
+      "buildType": "dockerfile",
+      "dockerfilePath": "server/Dockerfile",
+      "dockerWorkDir": "server"
+    }
+  },
+  "ports": [
+    {
+      "name": "http",
+      "port": 5000,
+      "protocol": "HTTP",
+      "public": true
+    }
+  ],
+  "healthCheck": {
+    "protocol": "HTTP",
+    "path": "/health",
+    "port": 5000,
+    "initialDelaySeconds": 10,
+    "periodSeconds": 15
+  }
+}

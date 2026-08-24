@@ -1,0 +1,42 @@
+{
+  "categories": [
+    { "name": "Shopping & E-Commerce", "slug": "shopping-ecommerce" },
+    { "name": "Weather", "slug": "weather" },
+    { "name": "Finance & Banking", "slug": "finance-banking" },
+    { "name": "Social Media", "slug": "social-media" },
+    { "name": "Food & Beverage", "slug": "food-beverage" },
+    { "name": "Health & Medical", "slug": "health-medical" },
+    { "name": "Technology & Devices", "slug": "technology-devices" },
+    { "name": "Education", "slug": "education" }
+  ],
+  "users": [
+    { "name": "Admin User", "email": "admin@iconsuniverse.com", "role": "admin", "plan": "pro_annual", "isVerified": true },
+    { "name": "Priya Contributor", "email": "priya.contrib@example.com", "role": "contributor", "plan": "free", "isVerified": true },
+    { "name": "Demo User", "email": "demo.user@example.com", "role": "user", "plan": "free", "isVerified": true }
+  ],
+  "packs": [
+    {
+      "title": "E-Commerce Line Icons",
+      "slug": "ecommerce-line-icons",
+      "description": "50 minimal outline icons for online store UI — cart, checkout, delivery, and payment states.",
+      "categorySlug": "shopping-ecommerce",
+      "isPremium": false,
+      "status": "approved"
+    },
+    {
+      "title": "Weather Flat Color Set",
+      "slug": "weather-flat-color-set",
+      "description": "30 flat-color weather condition icons — sun, rain, snow, storm, and forecast indicators.",
+      "categorySlug": "weather",
+      "isPremium": true,
+      "status": "approved"
+    }
+  ],
+  "icons": [
+    { "title": "Shopping Cart", "slug": "shopping-cart", "tags": ["cart", "buy", "checkout", "store"], "categorySlug": "shopping-ecommerce", "style": "outline", "isPremium": false, "status": "approved" },
+    { "title": "Credit Card", "slug": "credit-card", "tags": ["payment", "card", "finance", "checkout"], "categorySlug": "finance-banking", "style": "filled", "isPremium": false, "status": "approved" },
+    { "title": "Sunny Day", "slug": "sunny-day", "tags": ["weather", "sun", "forecast", "clear"], "categorySlug": "weather", "style": "color", "isPremium": true, "status": "approved" },
+    { "title": "Heart Rate Pulse", "slug": "heart-rate-pulse", "tags": ["health", "medical", "heartbeat", "ecg"], "categorySlug": "health-medical", "style": "outline", "isPremium": false, "status": "approved" },
+    { "title": "Graduation Cap", "slug": "graduation-cap", "tags": ["education", "graduate", "school", "degree"], "categorySlug": "education", "style": "flat", "isPremium": false, "status": "approved" }
+  ]
+}

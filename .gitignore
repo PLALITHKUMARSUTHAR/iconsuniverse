@@ -1,0 +1,44 @@
+# Raw icon assets & temporary stitch files (DO NOT COMMIT 1M FILES TO GIT)
+all icons/
+"all icons"/
+all icons
+stitch files/
+"stitch files"/
+stitch files
+
+# Node modules
+node_modules/
+*/node_modules/
+**/node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Environment variables & secrets
+.env
+.env*
+!.env.example
+*.env
+server/.env
+client/.env
+
+# Build output
+dist/
+dist-ssr/
+build/
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
