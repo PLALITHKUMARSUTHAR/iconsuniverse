@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import IconFilters from '../components/icons/IconFilters';
 import IconGrid from '../components/icons/IconGrid';
 import BulkDownloadModal from '../components/collections/BulkDownloadModal';
 import CategoryStyleModal from '../components/landing/CategoryStyleModal';
+import AllCategoriesModal from '../components/common/AllCategoriesModal';
 import { iconService } from '../services/iconService';
-import { Search, Sparkles, Download, X, Layers, Check, ArrowRight } from 'lucide-react';
+import { Search, Sparkles, Download, X, Layers, Check, ArrowRight, Grid3X3, ChevronUp } from 'lucide-react';
 import Button from '../components/common/Button';
 import { main17FeaturedCategories } from '../data/categories';
 import { CategoryIconMap } from '../data/categoryIcons';
-import { seedIcons, seedPacks } from '../data/seedData';
 
 const SearchResultsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -39,8 +39,9 @@ const SearchResultsPage = () => {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
 
-  // Interactive Category Style Modal for Explore Other Categories
+  // Modals for Category Selection
   const [exploreModalCategory, setExploreModalCategory] = useState(null);
+  const [isAllOtherCategoriesModalOpen, setIsAllOtherCategoriesModalOpen] = useState(false);
 
   // Infinite Scroll Observer
   const observerRef = useRef(null);
@@ -103,7 +104,6 @@ const SearchResultsPage = () => {
     setLoadingMore1000(true);
     setStage('stage2');
 
-    // Calculate how many more icons needed to reach 1,500
     const targetCount = 1500;
     let currentPage = page;
 
@@ -112,12 +112,11 @@ const SearchResultsPage = () => {
         currentPage += 1;
         setPage(currentPage);
         await fetchIconsBatch(currentPage, false, 100);
-        // Safety break if exhausted
         if (!hasMore) break;
       }
     } finally {
       setLoadingMore1000(false);
-      setStage('infinite'); // After loading next 1000, automatically enable infinite scroll!
+      setStage('infinite');
     }
   };
 
@@ -132,7 +131,7 @@ const SearchResultsPage = () => {
 
       observerRef.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && hasMore && !loadingRef.current) {
-          // If we are in stage1 and reached 500 icons, pause infinite scroll and show button
+          // If we are in stage1 and reached 500 icons, pause infinite scroll until button is clicked
           if (categoryParam && stage === 'stage1' && icons.length >= 500) {
             return;
           }
@@ -189,8 +188,10 @@ const SearchResultsPage = () => {
   // Selected icon objects for BulkDownloadModal
   const selectedIconObjects = icons.filter((i) => selectedIds.has(i._id || i.slug));
 
-  // Other categories for "Explore Other Categories" footer
-  const otherCategories = main17FeaturedCategories.filter((cat) => cat.slug !== categoryParam).slice(0, 12);
+  // Explore other categories: 11 featured categories (excluding current)
+  const featured11Categories = main17FeaturedCategories
+    .filter((cat) => cat.slug !== categoryParam)
+    .slice(0, 11);
 
   // Grouped Icons Rendering
   const renderGroupedIcons = () => {
@@ -234,11 +235,14 @@ const SearchResultsPage = () => {
     );
   };
 
-  const isCategoryComplete = Boolean(categoryParam && icons.length > 0 && (!hasMore || (totalCount > 0 && icons.length >= totalCount)));
-  const showLoad1000Button = Boolean(categoryParam && stage === 'stage1' && icons.length >= 500 && hasMore);
+  const isCategoryMode = Boolean(categoryParam);
+  const isCategoryComplete = Boolean(isCategoryMode && icons.length > 0 && (!hasMore || (totalCount > 0 && icons.length >= totalCount)));
+  const showLoad1000Button = Boolean(isCategoryMode && stage === 'stage1' && icons.length >= 500 && hasMore);
+  const showExploreSection = Boolean(isCategoryMode && icons.length >= 500);
+  const isFixedBottomActive = Boolean(isCategoryMode && (stage === 'stage2' || stage === 'infinite') && !isCategoryComplete);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className={`flex flex-col gap-4 ${isFixedBottomActive ? 'pb-40' : ''}`}>
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-subpage-outline-variant/20">
         <div>
@@ -323,7 +327,7 @@ const SearchResultsPage = () => {
               Showing 500 {categoryParam.replace(/-/g, ' ')} Icons
             </h3>
             <p className="text-xs text-landing-on-surface-variant mt-0.5">
-              Click below to load the next 1,000 icons and unlock continuous scrolling for this category.
+              Click below to load the next 1,000 icons and keep browsing with sticky categories & footer.
             </p>
           </div>
           <Button
@@ -331,7 +335,7 @@ const SearchResultsPage = () => {
             size="md"
             onClick={handleLoadNext1000}
             isLoading={loadingMore1000}
-            className="px-6 py-3 font-bold text-xs shadow-coral shrink-0"
+            className="px-6 py-3 font-bold text-xs shadow-coral shrink-0 cursor-pointer"
           >
             Load 1,000 More Icons →
           </Button>
@@ -365,8 +369,8 @@ const SearchResultsPage = () => {
         </div>
       )}
 
-      {/* EXPLORE OTHER CATEGORIES BOXES */}
-      {Boolean(categoryParam) && (
+      {/* INLINE EXPLORE OTHER CATEGORIES (Shown only after 500 icons, when not in fixed bottom mode) */}
+      {showExploreSection && !isFixedBottomActive && (
         <div className="my-8 pt-8 border-t border-landing-surface-container/80 animate-fade-in">
           <div className="flex items-center justify-between mb-5">
             <div>
@@ -380,7 +384,7 @@ const SearchResultsPage = () => {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {otherCategories.map((cat) => {
+            {featured11Categories.map((cat) => {
               const IconComp = CategoryIconMap[cat.iconName] || Layers;
               return (
                 <button
@@ -402,6 +406,69 @@ const SearchResultsPage = () => {
                 </button>
               );
             })}
+
+            {/* 12th Box: "Others" -> Opens All 163 Remaining Categories Modal */}
+            <button
+              type="button"
+              onClick={() => setIsAllOtherCategoriesModalOpen(true)}
+              className="group p-3.5 sm:p-4 rounded-2xl bg-energy-gradient text-white border border-transparent shadow-xs hover:shadow-md transition-all duration-150 flex flex-col items-center text-center justify-center gap-2 transform hover:-translate-y-0.5 cursor-pointer"
+            >
+              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center transition-transform group-hover:scale-110">
+                <Grid3X3 className="w-5 h-5 text-white" />
+              </div>
+
+              <h3 className="text-xs font-extrabold font-heading text-white tracking-wide">
+                Others
+              </h3>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* FIXED BOTTOM DOCK: Sticks Explore Categories + Compact Footer to screen after Load More is clicked */}
+      {isFixedBottomActive && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#001e52] border-t border-white/20 shadow-2xl backdrop-blur-xl animate-fade-in">
+          {/* Explore Other Categories Horizontal Strip */}
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-2.5 flex items-center justify-between gap-3 overflow-x-auto no-scrollbar border-b border-white/10">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-landing-electric-teal shrink-0 hidden sm:inline-block">
+              Explore:
+            </span>
+
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+              {featured11Categories.map((cat) => {
+                const IconComp = CategoryIconMap[cat.iconName] || Layers;
+                return (
+                  <button
+                    key={cat.slug}
+                    type="button"
+                    onClick={() => setExploreModalCategory(cat)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold shrink-0 transition-all cursor-pointer"
+                  >
+                    <IconComp className="w-3.5 h-3.5" style={{ color: cat.color }} />
+                    <span className="truncate max-w-[110px]">{cat.name}</span>
+                  </button>
+                );
+              })}
+
+              {/* 12th Box: "Others" */}
+              <button
+                type="button"
+                onClick={() => setIsAllOtherCategoriesModalOpen(true)}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-energy-gradient text-white text-xs font-extrabold shrink-0 shadow-sm hover:scale-105 transition-transform cursor-pointer"
+              >
+                <Grid3X3 className="w-3.5 h-3.5 text-white" />
+                <span>Others</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Compact Sticky Footer Line with Sitemap on Right */}
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-2 flex items-center justify-between text-[11px] text-landing-primary-fixed-dim">
+            <p>© 2026 IconsUniverse. All rights reserved.</p>
+
+            <Link to="/sitemap" className="text-white hover:text-landing-electric-teal font-semibold transition-colors">
+              Sitemap
+            </Link>
           </div>
         </div>
       )}
@@ -416,12 +483,22 @@ const SearchResultsPage = () => {
         />
       )}
 
-      {/* Interactive Category Style Modal for Explore Other Categories */}
+      {/* Interactive Category Style Modal */}
       {exploreModalCategory && (
         <CategoryStyleModal
           isOpen={!!exploreModalCategory}
           onClose={() => setExploreModalCategory(null)}
           category={exploreModalCategory}
+        />
+      )}
+
+      {/* All Remaining Categories Modal (Triggered by "Others") */}
+      {isAllOtherCategoriesModalOpen && (
+        <AllCategoriesModal
+          isOpen={isAllOtherCategoriesModalOpen}
+          onClose={() => setIsAllOtherCategoriesModalOpen(false)}
+          excludeSlug={categoryParam}
+          onSelectCategory={(cat) => setExploreModalCategory(cat)}
         />
       )}
     </div>

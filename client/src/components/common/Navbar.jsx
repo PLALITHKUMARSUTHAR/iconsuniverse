@@ -23,57 +23,90 @@ const Navbar = ({ isLanding = false }) => {
             : 'glass-subpage border-b border-subpage-outline-variant/30 bg-white/90'
         } backdrop-blur-xl shadow-sm`}
       >
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-2.5 flex items-center justify-between gap-4">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 h-16 flex items-center justify-between gap-4">
           {/* Logo from Stitch Logo folder */}
-          <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
-            <img
-              src="/logo.png"
-              alt="IconsUniverse"
-              className="h-9 w-auto object-contain rounded-xl shadow-sm transform group-hover:scale-105 transition-transform"
-            />
-            <span className="font-heading font-extrabold text-lg sm:text-xl text-landing-primary tracking-tight">
-              Icons<span className="text-landing-vibrant-coral">Universe</span>
-            </span>
-          </Link>
-
-          {/* Search bar in Navbar (hidden on landing hero) */}
-          {!isLanding && (
-            <div className="hidden md:flex flex-1 max-w-md mx-4">
-              <SearchBar placeholder="Search vector icons..." />
-            </div>
-          )}
-
-          {/* Desktop Navigation Links */}
-          <div className="hidden lg:flex items-center gap-6">
-            <Link
-              to="/search"
-              className={`text-xs font-bold transition-colors ${
-                isCurrent('/search') ? 'text-landing-vibrant-coral' : 'text-landing-on-surface-variant hover:text-landing-primary'
-              }`}
-            >
-              Icons
-            </Link>
-
-            <Link
-              to="/search?type=packs"
-              className="text-xs font-bold text-landing-on-surface-variant hover:text-landing-primary transition-colors flex items-center gap-1"
-            >
-              <Layers className="w-3.5 h-3.5 text-landing-primary" />
-              <span>Icon Packs</span>
-            </Link>
-
-            <Link
-              to="/pricing"
-              className={`text-xs font-bold transition-colors ${
-                isCurrent('/pricing') ? 'text-landing-vibrant-coral' : 'text-landing-on-surface-variant hover:text-landing-primary'
-              }`}
-            >
-              Pricing
+          <div className="flex items-center">
+            <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
+              <img
+                src="/logo.png"
+                alt="IconsUniverse"
+                className="h-8 sm:h-9 w-auto object-contain rounded-xl shadow-sm transform group-hover:scale-105 transition-transform"
+              />
+              <span className="font-heading font-extrabold text-lg sm:text-xl text-landing-primary tracking-tight">
+                Icons<span className="text-landing-vibrant-coral">Universe</span>
+              </span>
             </Link>
           </div>
 
+          {/* Search bar in Navbar (hidden on landing hero) */}
+          {!isLanding ? (
+            <div className="hidden md:flex flex-1 max-w-md mx-4">
+              <SearchBar placeholder="Search vector icons..." />
+            </div>
+          ) : (
+            /* Center Nav Links on Landing Page */
+            <div className="hidden md:flex items-center justify-center gap-8">
+              <Link
+                to="/search"
+                className={`text-xs font-bold transition-colors ${
+                  isCurrent('/search') ? 'text-landing-vibrant-coral' : 'text-landing-on-surface-variant hover:text-landing-primary'
+                }`}
+              >
+                Browse Icons
+              </Link>
+
+              <Link
+                to="/search?type=packs"
+                className="text-xs font-bold text-landing-on-surface-variant hover:text-landing-primary transition-colors flex items-center gap-1.5"
+              >
+                <Layers className="w-3.5 h-3.5 text-landing-primary" />
+                <span>Icon Packs</span>
+              </Link>
+
+              <Link
+                to="/pricing"
+                className={`text-xs font-bold transition-colors ${
+                  isCurrent('/pricing') ? 'text-landing-vibrant-coral' : 'text-landing-on-surface-variant hover:text-landing-primary'
+                }`}
+              >
+                Pricing
+              </Link>
+            </div>
+          )}
+
+          {/* Desktop Navigation Links for Subpages */}
+          {!isLanding && (
+            <div className="hidden lg:flex items-center gap-6">
+              <Link
+                to="/search"
+                className={`text-xs font-bold transition-colors ${
+                  isCurrent('/search') ? 'text-landing-vibrant-coral' : 'text-landing-on-surface-variant hover:text-landing-primary'
+                }`}
+              >
+                Icons
+              </Link>
+
+              <Link
+                to="/search?type=packs"
+                className="text-xs font-bold text-landing-on-surface-variant hover:text-landing-primary transition-colors flex items-center gap-1"
+              >
+                <Layers className="w-3.5 h-3.5 text-landing-primary" />
+                <span>Icon Packs</span>
+              </Link>
+
+              <Link
+                to="/pricing"
+                className={`text-xs font-bold transition-colors ${
+                  isCurrent('/pricing') ? 'text-landing-vibrant-coral' : 'text-landing-on-surface-variant hover:text-landing-primary'
+                }`}
+              >
+                Pricing
+              </Link>
+            </div>
+          )}
+
           {/* Action Buttons: Collection Drawer & Auth */}
-          <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
             {/* My Collection Drawer Trigger */}
             <button
               type="button"
