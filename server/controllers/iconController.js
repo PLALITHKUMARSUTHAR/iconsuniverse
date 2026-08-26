@@ -10,7 +10,7 @@ const { sanitizeSVG, extractColorsFromSVG, svgToDataUrl } = require('../utils/sv
 // @access  Public
 exports.getIcons = async (req, res, next) => {
   try {
-    const { q, category, style, isPremium, color, sort = 'popular', page = 1, limit = 40 } = req.query;
+    const { q, category, style, colorType, color, isPremium, sort = 'trending', page = 1, limit = 40 } = req.query;
     const filter = { status: { $ne: 'rejected' } };
 
     // Text search (title, slug, tags)
@@ -51,14 +51,37 @@ exports.getIcons = async (req, res, next) => {
       }
     }
 
-    // Style filter
+    // Shape / Style filter (all | outline | filled | color | flat | gradient | hand-drawn | 3d)
     if (style && style !== 'all') {
-      filter.style = style;
+      if (style === 'filled') {
+        filter.$or = [{ style: 'filled' }, { isFilled: true }];
+      } else if (style === 'outline') {
+        filter.style = 'outline';
+      } else if (style === 'color' || style === 'flat') {
+        filter.style = { $in: ['color', 'flat', '3d', 'gradient'] };
+      } else if (style === 'gradient') {
+        filter.style = 'gradient';
+      } else if (style === '3d') {
+        filter.style = '3d';
+      } else {
+        filter.style = style;
+      }
+    }
+
+    // Color Type filter (all | black | gradient | colors)
+    if (colorType && colorType !== 'all') {
+      if (colorType === 'black') {
+        filter.style = { $in: ['outline', 'filled'] };
+      } else if (colorType === 'gradient') {
+        filter.style = 'gradient';
+      } else if (colorType === 'colors') {
+        filter.style = { $in: ['color', 'flat', '3d'] };
+      }
     }
 
     // Premium filter
     if (isPremium !== undefined && isPremium !== '') {
-      filter.isPremium = isPremium === 'true';
+      filter.isPremium = isPremium === 'true' || isPremium === true;
     }
 
     // Color filter
@@ -66,12 +89,18 @@ exports.getIcons = async (req, res, next) => {
       filter.colors = { $in: [color.toLowerCase()] };
     }
 
-    // Sorting (with deterministic _id tie-breaker to prevent pagination duplication)
-    let sortQuery = { downloadCount: -1, _id: 1 };
-    if (sort === 'recent') sortQuery = { _id: -1 };
-    else if (sort === 'downloads') sortQuery = { downloadCount: -1, _id: 1 };
-    else if (sort === 'popular' || sort === 'trending') sortQuery = { downloadCount: -1, _id: 1 };
-    else if (sort === 'title') sortQuery = { title: 1, _id: 1 };
+    // Sorting: Bold/Filled icons ALWAYS come FIRST when category is clicked or default sort is active!
+    let sortQuery = { isFilled: -1, downloadCount: -1, _id: 1 };
+    if (sort === 'recent') {
+      sortQuery = { isFilled: -1, _id: -1 };
+    } else if (sort === 'downloads') {
+      sortQuery = { downloadCount: -1, isFilled: -1, _id: 1 };
+    } else if (sort === 'title') {
+      sortQuery = { title: 1, _id: 1 };
+    } else {
+      // 'trending' / 'popular'
+      sortQuery = { isFilled: -1, downloadCount: -1, _id: 1 };
+    }
 
     const pageNum = parseInt(page, 10) || 1;
     const limitNum = Math.min(parseInt(limit, 10) || 40, 100);
@@ -84,7 +113,7 @@ exports.getIcons = async (req, res, next) => {
         .limit(limitNum)
         .populate('categoryId', 'name slug')
         .populate('packId', 'title slug')
-        .select('title slug path isPremium style tags downloadCount colors categoryId packId'),
+        .select('title slug path isFilled isPremium style tags downloadCount colors categoryId packId'),
       Icon.countDocuments(filter),
     ]);
 

@@ -34,6 +34,11 @@ const iconSchema = new mongoose.Schema({
     type: String,
     default: 'outline',
   },
+  isFilled: {
+    type: Boolean,
+    default: false,
+    index: true,
+  },
   isPremium: {
     type: Boolean,
     default: false,

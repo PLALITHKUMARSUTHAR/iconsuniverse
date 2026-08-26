@@ -102,6 +102,7 @@ const SearchResultsPage = () => {
         q: queryParam || undefined,
         category: categoryParam || undefined,
         style: selectedShape !== 'all' ? selectedShape : undefined,
+        colorType: selectedColorType !== 'all' ? selectedColorType : undefined,
         isPremium: selectedLicense === 'premium' ? true : selectedLicense === 'free' ? false : undefined,
         color: selectedColor || undefined,
         sort: selectedSort,
