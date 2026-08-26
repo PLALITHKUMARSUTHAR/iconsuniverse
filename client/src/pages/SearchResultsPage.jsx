@@ -6,7 +6,7 @@ import BulkDownloadModal from '../components/collections/BulkDownloadModal';
 import CategoryStyleModal from '../components/landing/CategoryStyleModal';
 import AllCategoriesModal from '../components/common/AllCategoriesModal';
 import { iconService } from '../services/iconService';
-import { Search, Sparkles, Download, X, Layers, Check, ArrowRight, Grid3X3, ChevronUp } from 'lucide-react';
+import { Search, Sparkles, Download, X, Layers, Check, ArrowRight, Grid3X3, ChevronUp, ChevronDown } from 'lucide-react';
 import Button from '../components/common/Button';
 import { main17FeaturedCategories } from '../data/categories';
 import { CategoryIconMap } from '../data/categoryIcons';
@@ -26,6 +26,9 @@ const SearchResultsPage = () => {
   // Category progressive pagination stage: 'stage1' (up to 500) | 'stage2' (loading 1000 more) | 'infinite' (after 1500)
   const [stage, setStage] = useState('stage1');
   const [loadingMore1000, setLoadingMore1000] = useState(false);
+
+  // Fixed Bottom Dock footer expansion toggle
+  const [isDockFooterExpanded, setIsDockFooterExpanded] = useState(false);
 
   // Filters State
   const [selectedShape, setSelectedShape] = useState(styleParam !== 'all' ? styleParam : 'all');
@@ -96,6 +99,7 @@ const SearchResultsPage = () => {
   useEffect(() => {
     setPage(1);
     setStage('stage1');
+    setIsDockFooterExpanded(false);
     fetchIconsBatch(1, true, 60);
   }, [queryParam, categoryParam, selectedShape, selectedColorType, selectedColor, selectedLicense, selectedSort]);
 
@@ -238,11 +242,10 @@ const SearchResultsPage = () => {
   const isCategoryMode = Boolean(categoryParam);
   const isCategoryComplete = Boolean(isCategoryMode && icons.length > 0 && (!hasMore || (totalCount > 0 && icons.length >= totalCount)));
   const showLoad1000Button = Boolean(isCategoryMode && stage === 'stage1' && icons.length >= 500 && hasMore);
-  const showExploreSection = Boolean(isCategoryMode && icons.length >= 500);
   const isFixedBottomActive = Boolean(isCategoryMode && (stage === 'stage2' || stage === 'infinite') && !isCategoryComplete);
 
   return (
-    <div className={`flex flex-col gap-4 ${isFixedBottomActive ? 'pb-40' : ''}`}>
+    <div className={`flex flex-col gap-4 ${isFixedBottomActive ? (isDockFooterExpanded ? 'pb-[420px]' : 'pb-36') : ''}`}>
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-subpage-outline-variant/20">
         <div>
@@ -319,7 +322,7 @@ const SearchResultsPage = () => {
       {/* Grouped or Continuous Grid */}
       {renderGroupedIcons()}
 
-      {/* STAGE 1 ACTION: Button to Load 1,000 More Icons (Shown after 500 icons) */}
+      {/* STAGE 1 ACTION: Button to Load 1,000 More Icons (Shown after 500 icons, NO inline categories layout) */}
       {showLoad1000Button && (
         <div className="my-8 p-6 sm:p-8 rounded-3xl bg-white border border-landing-surface-container shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left animate-fade-in">
           <div>
@@ -327,7 +330,7 @@ const SearchResultsPage = () => {
               Showing 500 {categoryParam.replace(/-/g, ' ')} Icons
             </h3>
             <p className="text-xs text-landing-on-surface-variant mt-0.5">
-              Click below to load the next 1,000 icons and keep browsing with sticky categories & footer.
+              Click below to load the next 1,000 icons and keep browsing with the sticky explore bar & footer.
             </p>
           </div>
           <Button
@@ -364,72 +367,16 @@ const SearchResultsPage = () => {
             All {totalCount.toLocaleString()} Icons Loaded
           </h3>
           <p className="text-xs text-landing-on-surface-variant max-w-md">
-            No more icons in <strong className="capitalize">{categoryParam.replace(/-/g, ' ')}</strong>. Explore other categories below!
+            No more icons in <strong className="capitalize">{categoryParam.replace(/-/g, ' ')}</strong>.
           </p>
         </div>
       )}
 
-      {/* INLINE EXPLORE OTHER CATEGORIES (Shown only after 500 icons, when not in fixed bottom mode) */}
-      {showExploreSection && !isFixedBottomActive && (
-        <div className="my-8 pt-8 border-t border-landing-surface-container/80 animate-fade-in">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h2 className="text-base sm:text-lg font-extrabold font-heading text-landing-primary tracking-tight">
-                Explore Other Categories
-              </h2>
-              <p className="text-xs text-landing-on-surface-variant mt-0.5">
-                Browse popular vector collections and icon sets
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {featured11Categories.map((cat) => {
-              const IconComp = CategoryIconMap[cat.iconName] || Layers;
-              return (
-                <button
-                  key={cat.slug}
-                  type="button"
-                  onClick={() => setExploreModalCategory(cat)}
-                  className="group p-3.5 sm:p-4 rounded-2xl bg-white hover:bg-white border border-landing-surface-container hover:border-landing-primary/30 shadow-2xs hover:shadow-xs transition-all duration-150 flex flex-col items-center text-center justify-center gap-2 cursor-pointer"
-                >
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
-                    style={{ backgroundColor: `${cat.color || '#00327d'}15`, color: cat.color || '#00327d' }}
-                  >
-                    <IconComp className="w-5 h-5" />
-                  </div>
-
-                  <h3 className="text-xs font-bold font-heading text-landing-on-surface group-hover:text-landing-primary transition-colors truncate w-full">
-                    {cat.name}
-                  </h3>
-                </button>
-              );
-            })}
-
-            {/* 12th Box: "Others" -> Opens All 163 Remaining Categories Modal */}
-            <button
-              type="button"
-              onClick={() => setIsAllOtherCategoriesModalOpen(true)}
-              className="group p-3.5 sm:p-4 rounded-2xl bg-energy-gradient text-white border border-transparent shadow-xs hover:shadow-md transition-all duration-150 flex flex-col items-center text-center justify-center gap-2 transform hover:-translate-y-0.5 cursor-pointer"
-            >
-              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center transition-transform group-hover:scale-110">
-                <Grid3X3 className="w-5 h-5 text-white" />
-              </div>
-
-              <h3 className="text-xs font-extrabold font-heading text-white tracking-wide">
-                Others
-              </h3>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* FIXED BOTTOM DOCK: Sticks Explore Categories + Compact Footer to screen after Load More is clicked */}
+      {/* FIXED BOTTOM DOCK: Appears when Load 1,000 More Icons is clicked and remains fixed while scrolling */}
       {isFixedBottomActive && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#001e52] border-t border-white/20 shadow-2xl backdrop-blur-xl animate-fade-in">
-          {/* Explore Other Categories Horizontal Strip */}
-          <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-2.5 flex items-center justify-between gap-3 overflow-x-auto no-scrollbar border-b border-white/10">
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#001e52] text-white border-t border-white/20 shadow-2xl backdrop-blur-xl animate-fade-in">
+          {/* Top Row: Explore Other Categories Horizontal Strip */}
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-2.5 flex items-center justify-between gap-3 overflow-x-auto no-scrollbar border-b border-white/15">
             <span className="text-[11px] font-bold uppercase tracking-wider text-landing-electric-teal shrink-0 hidden sm:inline-block">
               Explore:
             </span>
@@ -450,7 +397,7 @@ const SearchResultsPage = () => {
                 );
               })}
 
-              {/* 12th Box: "Others" */}
+              {/* 12th Box: "Others" -> Opens All 163 Remaining Categories Modal */}
               <button
                 type="button"
                 onClick={() => setIsAllOtherCategoriesModalOpen(true)}
@@ -462,14 +409,96 @@ const SearchResultsPage = () => {
             </div>
           </div>
 
-          {/* Compact Sticky Footer Line with Sitemap on Right */}
-          <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-2 flex items-center justify-between text-[11px] text-landing-primary-fixed-dim">
-            <p>© 2026 IconsUniverse. All rights reserved.</p>
+          {/* Full Footer Expander Section (Zero black color, pure white and electric teal) */}
+          {isDockFooterExpanded ? (
+            <div className="max-w-[1440px] mx-auto px-6 sm:px-8 pt-8 pb-6 animate-fade-in text-white max-h-[320px] overflow-y-auto">
+              <div className="flex justify-end mb-3">
+                <button
+                  type="button"
+                  onClick={() => setIsDockFooterExpanded(false)}
+                  className="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white text-xs font-semibold transition-colors cursor-pointer"
+                  title="Collapse Footer"
+                >
+                  <span>Collapse Footer</span>
+                  <ChevronDown className="w-4 h-4 text-landing-electric-teal" />
+                </button>
+              </div>
 
-            <Link to="/sitemap" className="text-white hover:text-landing-electric-teal font-semibold transition-colors">
-              Sitemap
-            </Link>
-          </div>
+              {/* 4 Columns Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 pb-6 border-b border-white/15">
+                {/* Brand */}
+                <div className="flex flex-col gap-2">
+                  <span className="font-heading font-extrabold text-lg text-white tracking-tight">
+                    Icons<span className="text-landing-vibrant-coral">Universe</span>
+                  </span>
+                  <p className="text-xs text-white leading-relaxed">
+                    Clean vector icons with in-browser recoloring and Google Drive synchronization.
+                  </p>
+                </div>
+
+                {/* Content */}
+                <div>
+                  <h4 className="font-heading font-bold text-xs uppercase tracking-wider text-landing-electric-teal mb-2">
+                    Content
+                  </h4>
+                  <ul className="flex flex-col gap-1.5 text-xs text-white/80">
+                    <li><Link to="/search" className="text-white/85 hover:text-white">Categories</Link></li>
+                  </ul>
+                </div>
+
+                {/* Tools */}
+                <div>
+                  <h4 className="font-heading font-bold text-xs uppercase tracking-wider text-landing-electric-teal mb-2">
+                    Tools
+                  </h4>
+                  <ul className="flex flex-col gap-1.5 text-xs text-white/80">
+                    <li><Link to="/docs" className="text-white/85 hover:text-white">API</Link></li>
+                  </ul>
+                </div>
+
+                {/* Help */}
+                <div>
+                  <h4 className="font-heading font-bold text-xs uppercase tracking-wider text-landing-electric-teal mb-2">
+                    Help
+                  </h4>
+                  <ul className="flex flex-col gap-1.5 text-xs text-white/80">
+                    <li><Link to="/about" className="text-white/85 hover:text-white">About Us</Link></li>
+                    <li><Link to="/contact" className="text-white/85 hover:text-white">Contact Us</Link></li>
+                    <li><Link to="/whats-new" className="text-white/85 hover:text-white">What's New</Link></li>
+                    <li><Link to="/terms" className="text-white/85 hover:text-white">Terms and Conditions</Link></li>
+                    <li><Link to="/privacy" className="text-white/85 hover:text-white">Privacy Policy</Link></li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Bottom Copyright & Sitemap */}
+              <div className="pt-4 flex items-center justify-between text-[11px] text-white/80">
+                <p className="text-white/90">© 2026 IconsUniverse. All rights reserved.</p>
+                <Link to="/sitemap" className="text-white hover:text-landing-electric-teal font-semibold">
+                  Sitemap
+                </Link>
+              </div>
+            </div>
+          ) : (
+            /* Compact Collapsed Footer Bar */
+            <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-2 flex items-center justify-between text-[11px] text-white/80">
+              <p className="text-white/90 font-medium">© 2026 IconsUniverse. All rights reserved.</p>
+
+              <button
+                type="button"
+                onClick={() => setIsDockFooterExpanded(true)}
+                className="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition-colors cursor-pointer"
+                title="Expand Full Footer"
+              >
+                <span>Full Footer & Links</span>
+                <ChevronUp className="w-3.5 h-3.5 text-landing-electric-teal" />
+              </button>
+
+              <Link to="/sitemap" className="text-white hover:text-landing-electric-teal font-semibold transition-colors">
+                Sitemap
+              </Link>
+            </div>
+          )}
         </div>
       )}
 

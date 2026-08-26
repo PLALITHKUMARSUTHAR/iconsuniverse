@@ -10,19 +10,19 @@ const Footer = ({ collapsible = false }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <footer className="w-full bg-[#001e52] text-white transition-all duration-300 mt-12 border-t border-white/10 relative z-20">
+    <footer className="w-full bg-[#001e52] text-white transition-all duration-300 mt-12 border-t border-white/15 relative z-20">
       {/* If collapsible and currently collapsed, show the sleek expander bar */}
       {shouldBeCollapsible && !isExpanded ? (
-        <div className="max-w-[1440px] mx-auto px-6 py-3.5 flex items-center justify-between text-xs text-landing-primary-fixed-dim">
-          <p>© 2026 IconsUniverse. All rights reserved.</p>
+        <div className="max-w-[1440px] mx-auto px-6 py-3.5 flex items-center justify-between text-xs text-white/80">
+          <p className="text-white/90 font-medium">© 2026 IconsUniverse. All rights reserved.</p>
 
           <button
             type="button"
             onClick={() => setIsExpanded(true)}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors shadow-xs"
-            title="Expand Footer"
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition-colors shadow-xs cursor-pointer"
+            title="Expand Full Footer"
           >
-            <span>Footer Links</span>
+            <span>Full Footer & Links</span>
             <ChevronUp className="w-4 h-4 text-landing-electric-teal" />
           </button>
 
@@ -31,14 +31,14 @@ const Footer = ({ collapsible = false }) => {
           </Link>
         </div>
       ) : (
-        <div className="max-w-[1440px] mx-auto px-6 sm:px-8 pt-10 pb-8 animate-fade-in">
+        <div className="max-w-[1440px] mx-auto px-6 sm:px-8 pt-10 pb-8 animate-fade-in text-white">
           {/* If collapsible and expanded, show collapse button at top right */}
           {shouldBeCollapsible && (
             <div className="flex justify-end mb-4">
               <button
                 type="button"
                 onClick={() => setIsExpanded(false)}
-                className="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors"
+                className="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white text-xs font-semibold transition-colors cursor-pointer"
                 title="Collapse Footer"
               >
                 <span>Collapse Footer</span>
@@ -48,7 +48,7 @@ const Footer = ({ collapsible = false }) => {
           )}
 
           {/* Main 4-Column Grid: Brand + Content + Tools + Help */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 pb-8 border-b border-white/10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 pb-8 border-b border-white/15">
             {/* Brand & Description */}
             <div className="flex flex-col gap-3">
               <Link to="/" className="flex items-center gap-2.5">
@@ -71,9 +71,9 @@ const Footer = ({ collapsible = false }) => {
               <h4 className="font-heading font-bold text-xs uppercase tracking-wider text-landing-electric-teal mb-3">
                 Content
               </h4>
-              <ul className="flex flex-col gap-2 text-xs text-landing-primary-fixed-dim">
+              <ul className="flex flex-col gap-2 text-xs text-white/80">
                 <li>
-                  <Link to="/search" className="hover:text-white transition-colors">
+                  <Link to="/search" className="text-white/85 hover:text-white transition-colors">
                     Categories
                   </Link>
                 </li>
@@ -85,9 +85,9 @@ const Footer = ({ collapsible = false }) => {
               <h4 className="font-heading font-bold text-xs uppercase tracking-wider text-landing-electric-teal mb-3">
                 Tools
               </h4>
-              <ul className="flex flex-col gap-2 text-xs text-landing-primary-fixed-dim">
+              <ul className="flex flex-col gap-2 text-xs text-white/80">
                 <li>
-                  <Link to="/docs" className="hover:text-white transition-colors">
+                  <Link to="/docs" className="text-white/85 hover:text-white transition-colors">
                     API
                   </Link>
                 </li>
@@ -99,29 +99,29 @@ const Footer = ({ collapsible = false }) => {
               <h4 className="font-heading font-bold text-xs uppercase tracking-wider text-landing-electric-teal mb-3">
                 Help
               </h4>
-              <ul className="flex flex-col gap-2 text-xs text-landing-primary-fixed-dim">
+              <ul className="flex flex-col gap-2 text-xs text-white/80">
                 <li>
-                  <Link to="/about" className="hover:text-white transition-colors">
+                  <Link to="/about" className="text-white/85 hover:text-white transition-colors">
                     About Us
                   </Link>
                 </li>
                 <li>
-                  <Link to="/contact" className="hover:text-white transition-colors">
+                  <Link to="/contact" className="text-white/85 hover:text-white transition-colors">
                     Contact Us
                   </Link>
                 </li>
                 <li>
-                  <Link to="/whats-new" className="hover:text-white transition-colors">
+                  <Link to="/whats-new" className="text-white/85 hover:text-white transition-colors">
                     What's New
                   </Link>
                 </li>
                 <li>
-                  <Link to="/terms" className="hover:text-white transition-colors">
+                  <Link to="/terms" className="text-white/85 hover:text-white transition-colors">
                     Terms and Conditions
                   </Link>
                 </li>
                 <li>
-                  <Link to="/privacy" className="hover:text-white transition-colors">
+                  <Link to="/privacy" className="text-white/85 hover:text-white transition-colors">
                     Privacy Policy
                   </Link>
                 </li>
@@ -130,8 +130,8 @@ const Footer = ({ collapsible = false }) => {
           </div>
 
           {/* Bottom Bar: Copyright on left, Sitemap on right */}
-          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-landing-primary-fixed-dim gap-3">
-            <p>© 2026 IconsUniverse. All rights reserved.</p>
+          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-white/80 gap-3">
+            <p className="text-white/90">© 2026 IconsUniverse. All rights reserved.</p>
 
             <Link to="/sitemap" className="text-white hover:text-landing-electric-teal font-semibold transition-colors">
               Sitemap
