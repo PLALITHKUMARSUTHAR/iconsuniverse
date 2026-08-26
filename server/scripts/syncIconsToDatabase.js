@@ -6,7 +6,9 @@ const Icon = require('../models/Icon');
 const Category = require('../models/Category');
 
 const ICONS_DIR = path.resolve(__dirname, '../../all icons');
-const BATCH_SIZE = 5000;
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || 'https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev';
+const BATCH_SIZE = 4000;
+const PROGRESS_FILE = path.resolve(__dirname, '.db_sync_progress.json');
 
 function formatTitle(filename) {
   return filename
@@ -24,25 +26,72 @@ function formatSlug(relPath) {
     .replace(/^-+|-+$/g, '');
 }
 
+async function safeBulkWrite(batch, retries = 7) {
+  if (!batch || batch.length === 0) return;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      await Icon.bulkWrite(batch, { ordered: false });
+      return;
+    } catch (err) {
+      if (err.name === 'MongoBulkWriteError') {
+        const nonDuplicateErrors = (err.writeErrors || []).filter(e => e.code !== 11000);
+        if (nonDuplicateErrors.length === 0 && (!err.hasWriteConcernError || !err.hasWriteConcernError())) {
+          return;
+        }
+      }
+
+      const isTransient =
+        err.name === 'MongoBulkWriteError' ||
+        err.name === 'MongoNetworkError' ||
+        err.name === 'MongoServerSelectionError' ||
+        err.name === 'MongoTimeoutError' ||
+        err.code === 'ECONNRESET' ||
+        err.code === 'ETIMEDOUT' ||
+        (err.message && (
+          err.message.includes('ECONNRESET') ||
+          err.message.includes('ETIMEDOUT') ||
+          err.message.includes('socket') ||
+          err.message.includes('connection timed out') ||
+          err.message.includes('buffering timed out') ||
+          err.message.includes('Topology is closed')
+        ));
+
+      if (isTransient && attempt < retries) {
+        const delay = Math.min(2000 * Math.pow(1.5, attempt - 1), 10000);
+        console.warn(`[Network Retry] Transient issue (Attempt ${attempt}/${retries}). Retrying in ${Math.round(delay/1000)}s...`);
+        await new Promise(r => setTimeout(r, delay));
+        try {
+          if (mongoose.connection.readyState !== 1) {
+            await mongoose.connect(process.env.MONGODB_URI, {
+              socketTimeoutMS: 90000,
+              connectTimeoutMS: 45000,
+              serverSelectionTimeoutMS: 45000,
+            });
+          }
+        } catch (reconnErr) {
+          console.warn(`[Reconnect attempt warning]: ${reconnErr.message}`);
+        }
+      } else {
+        throw err;
+      }
+    }
+  }
+}
+
 async function syncToDatabase() {
   console.log('====================================================');
-  console.log('  ULTRA-COMPACT 1M ICONS MONGODB SYNC PIPELINE     ');
+  console.log('    STREAMLINED 1M ICONS MONGODB SYNC PIPELINE      ');
   console.log('====================================================\n');
 
   console.log('[1/4] Connecting to MongoDB Atlas...');
   await mongoose.connect(process.env.MONGODB_URI, {
     socketTimeoutMS: 90000,
     connectTimeoutMS: 45000,
+    serverSelectionTimeoutMS: 45000,
   });
   console.log('[Database] Connected successfully.');
 
-  console.log('[2/4] Resetting and dropping bloated collection to reclaim 100% free disk space...');
-  try {
-    await mongoose.connection.db.collection('icons').drop();
-    console.log('[Database] Dropped icons collection.');
-  } catch (e) {}
-
-  console.log('\n[3/4] Initializing categories...');
+  // Pre-load / cache categories
   const categories = fs.readdirSync(ICONS_DIR);
   const categoryMap = {};
   for (const catName of categories) {
@@ -58,73 +107,123 @@ async function syncToDatabase() {
     categoryMap[catName] = catDoc._id;
   }
 
-  console.log('\n[4/4] Ingesting ultra-compact icon records (under 120MB total database size)...');
-  let totalProcessed = 0;
+  // Load progress
+  let progress = { completedCategories: {} };
+  if (fs.existsSync(PROGRESS_FILE)) {
+    try {
+      progress = JSON.parse(fs.readFileSync(PROGRESS_FILE, 'utf8'));
+    } catch (e) {}
+  }
+
+  const initialCount = await Icon.countDocuments();
+  console.log(`\n[2/4] MongoDB currently has ${initialCount.toLocaleString()} icons.`);
+
+  const pendingCategories = categories.filter(c => {
+    const fullCatPath = path.join(ICONS_DIR, c);
+    return fs.statSync(fullCatPath).isDirectory() && !progress.completedCategories[c];
+  });
+
+  console.log(`[Status] ${Object.keys(progress.completedCategories).length} categories already completed, ${pendingCategories.length} categories remaining.\n`);
+
+  console.log('[3/4] Ingesting remaining icons with retry protection...');
+  let totalProcessed = initialCount;
   let batch = [];
   const startTime = Date.now();
+  let catIndex = 0;
 
   for (const catName of categories) {
+    if (progress.completedCategories[catName]) continue;
+
     const fullCatPath = path.join(ICONS_DIR, catName);
     if (!fs.statSync(fullCatPath).isDirectory()) continue;
 
+    catIndex++;
     const catId = categoryMap[catName];
     const files = fs.readdirSync(fullCatPath);
+    let catIconsCount = 0;
 
     for (const file of files) {
       if (!file.endsWith('.svg') && !file.endsWith('.png')) continue;
 
       const relPath = `${catName}/${file}`;
+      const cdnUrl = `${R2_PUBLIC_URL}/icons/${relPath}`;
       const slug = formatSlug(relPath);
       const title = formatTitle(file);
 
       batch.push({
-        insertOne: {
-          document: {
-            title,
-            slug,
-            path: relPath,
-            categoryId: catId,
-            style: 'outline',
-            status: 'approved',
-          }
+        updateOne: {
+          filter: { slug },
+          update: {
+            $setOnInsert: {
+              title,
+              slug,
+              svgUrl: cdnUrl,
+              categoryId: catId,
+              style: 'outline',
+              status: 'approved',
+            }
+          },
+          upsert: true
         }
       });
-
-      totalProcessed++;
+      catIconsCount++;
 
       if (batch.length >= BATCH_SIZE) {
-        await Icon.bulkWrite(batch, { ordered: false });
+        await safeBulkWrite(batch);
+        totalProcessed += batch.length;
         batch = [];
-        console.log(`[DB Ingestion] Synced ${totalProcessed.toLocaleString()} / 1,000,000 icons into MongoDB...`);
       }
     }
-  }
 
-  if (batch.length > 0) {
-    await Icon.bulkWrite(batch, { ordered: false });
-  }
+    if (batch.length > 0) {
+      await safeBulkWrite(batch);
+      totalProcessed += batch.length;
+      batch = [];
+    }
 
-  // Update Category counts & sample previews
-  console.log('\n[Post-Processing] Updating category icon counts and thumbnails...');
-  const allDbCategories = await Category.find();
-  for (const cat of allDbCategories) {
-    const count = await Icon.countDocuments({ categoryId: cat._id });
-    const firstIcon = await Icon.findOne({ categoryId: cat._id });
-    const thumb = firstIcon ? firstIcon.svgUrl : null;
-    await Category.updateOne(
-      { _id: cat._id },
-      { $set: { iconCount: count, coverImageUrl: thumb } }
-    );
+    progress.completedCategories[catName] = true;
+    fs.writeFileSync(PROGRESS_FILE, JSON.stringify(progress));
+    console.log(`[Category ${catIndex}/${pendingCategories.length}] "${catName}" synced (${catIconsCount.toLocaleString()} icons). Total in DB: ~${totalProcessed.toLocaleString()} / 1,000,000`);
   }
 
   const finalCount = await Icon.countDocuments();
   const durationSec = Math.round((Date.now() - startTime) / 1000);
+
+  console.log('\n[4/4] Fast aggregating category counts and thumbnails...');
+  const counts = await Icon.aggregate([
+    {
+      $group: {
+        _id: '$categoryId',
+        count: { $sum: 1 },
+        firstSvgUrl: { $first: '$svgUrl' }
+      }
+    }
+  ]);
+  
+  const catBulk = counts.map(item => ({
+    updateOne: {
+      filter: { _id: item._id },
+      update: {
+        $set: {
+          iconCount: item.count,
+          iconThumbnailUrl: item.firstSvgUrl
+        }
+      }
+    }
+  }));
+
+  if (catBulk.length > 0) {
+    await Category.bulkWrite(catBulk);
+  }
+  console.log(`[Post-Processing] Updated ${catBulk.length} categories with counts and thumbnails.`);
+
   const stats = await mongoose.connection.db.stats();
 
   console.log(`\n====================================================`);
   console.log(`[SUCCESS] Database Sync Completed!`);
-  console.log(`Total Icons in MongoDB: ${finalCount.toLocaleString()}`);
-  console.log(`Total Database Storage Used: ~${Math.round(stats.dataSize / 1024 / 1024)} MB (Out of 512 MB Free Quota)`);
+  console.log(`Total Icons in MongoDB: ${finalCount.toLocaleString()} / 1,000,000`);
+  console.log(`Data Size: ~${(stats.dataSize / 1024 / 1024).toFixed(2)} MB`);
+  console.log(`Total Quota Used: ~${((stats.dataSize + stats.indexSize) / 1024 / 1024).toFixed(2)} MB / 512 MB`);
   console.log(`Time Elapsed: ${durationSec} seconds`);
   console.log(`====================================================\n`);
 
