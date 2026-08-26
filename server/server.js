@@ -22,6 +22,16 @@ const app = express();
 // Connect to MongoDB Atlas
 connectDB();
 
+// Pre-register all Mongoose Models
+require('./models/User');
+require('./models/Category');
+require('./models/Pack');
+require('./models/Icon');
+require('./models/Collection');
+require('./models/Download');
+require('./models/Subscription');
+require('./models/DriveSyncLog');
+
 // Security Middlewares
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }

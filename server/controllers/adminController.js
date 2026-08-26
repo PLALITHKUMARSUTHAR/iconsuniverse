@@ -69,11 +69,11 @@ exports.getAnalytics = async (req, res, next) => {
   try {
     const [totalUsers, totalIcons, totalPacks, totalDownloads, activeSubscriptions, topIcons] = await Promise.all([
       User.countDocuments(),
-      Icon.countDocuments({ status: 'approved' }),
+      Icon.countDocuments({ status: { $ne: 'rejected' } }),
       Pack.countDocuments({ status: 'approved' }),
       Download.countDocuments(),
       Subscription.countDocuments({ status: 'active' }),
-      Icon.find({ status: 'approved' }).sort({ downloadCount: -1 }).limit(8).select('title slug downloadCount pngPreviewUrl isPremium'),
+      Icon.find({ status: { $ne: 'rejected' } }).sort({ downloadCount: -1 }).limit(8).select('title slug path downloadCount isPremium'),
     ]);
 
     res.status(200).json({

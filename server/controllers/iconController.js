@@ -1,5 +1,6 @@
 const Icon = require('../models/Icon');
 const Category = require('../models/Category');
+const Pack = require('../models/Pack');
 const Download = require('../models/Download');
 const User = require('../models/User');
 const { sanitizeSVG, extractColorsFromSVG, svgToDataUrl } = require('../utils/svgSanitizer');
@@ -10,11 +11,16 @@ const { sanitizeSVG, extractColorsFromSVG, svgToDataUrl } = require('../utils/sv
 exports.getIcons = async (req, res, next) => {
   try {
     const { q, category, style, isPremium, color, sort = 'popular', page = 1, limit = 40 } = req.query;
-    const filter = { status: 'approved' };
+    const filter = { status: { $ne: 'rejected' } };
 
-    // Text search
+    // Text search (title, slug, tags)
     if (q && q.trim()) {
-      filter.$text = { $search: q.trim() };
+      const searchRegex = new RegExp(q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      filter.$or = [
+        { title: searchRegex },
+        { slug: searchRegex },
+        { tags: { $in: [searchRegex] } },
+      ];
     }
 
     // Category filter
@@ -22,8 +28,26 @@ exports.getIcons = async (req, res, next) => {
       if (category.match(/^[0-9a-fA-F]{24}$/)) {
         filter.categoryId = category;
       } else {
-        const cat = await Category.findOne({ slug: category });
-        if (cat) filter.categoryId = cat._id;
+        const cleanCatSlug = category.toLowerCase().trim();
+        const cat = await Category.findOne({
+          $or: [
+            { slug: cleanCatSlug },
+            { name: new RegExp(`^${cleanCatSlug.replace(/-/g, ' ')}$`, 'i') },
+          ]
+        });
+        if (cat) {
+          filter.categoryId = cat._id;
+        } else {
+          return res.status(200).json({
+            success: true,
+            data: {
+              icons: [],
+              total: 0,
+              page: parseInt(page, 10) || 1,
+              totalPages: 0,
+            },
+          });
+        }
       }
     }
 
@@ -59,7 +83,7 @@ exports.getIcons = async (req, res, next) => {
         .limit(limitNum)
         .populate('categoryId', 'name slug')
         .populate('packId', 'title slug')
-        .select('title slug svgContent svgUrl pngPreviewUrl isPremium style tags downloadCount colors categoryId packId'),
+        .select('title slug path isPremium style tags downloadCount colors categoryId packId'),
       Icon.countDocuments(filter),
     ]);
 
@@ -82,7 +106,7 @@ exports.getIcons = async (req, res, next) => {
 // @access  Public
 exports.getIconBySlug = async (req, res, next) => {
   try {
-    const icon = await Icon.findOne({ slug: req.params.slug, status: 'approved' })
+    const icon = await Icon.findOne({ slug: req.params.slug, status: { $ne: 'rejected' } })
       .populate('categoryId', 'name slug iconThumbnailUrl')
       .populate('packId', 'title slug description coverImageUrl iconCount isPremium')
       .populate('contributorId', 'name avatarUrl');
@@ -95,10 +119,10 @@ exports.getIconBySlug = async (req, res, next) => {
     const related = await Icon.find({
       categoryId: icon.categoryId,
       _id: { $ne: icon._id },
-      status: 'approved',
+      status: { $ne: 'rejected' },
     })
       .limit(12)
-      .select('title slug svgContent pngPreviewUrl isPremium style');
+      .select('title slug path isPremium style');
 
     res.status(200).json({
       success: true,
@@ -160,15 +184,25 @@ exports.downloadIcon = async (req, res, next) => {
 
     const filename = `${icon.slug || 'icon'}.${format === 'base64' ? 'json' : format}`;
 
+    let svgData = icon.svgContent;
+    if (!svgData && icon.svgUrl) {
+      try {
+        const fetchRes = await fetch(icon.svgUrl);
+        if (fetchRes.ok) {
+          svgData = await fetchRes.text();
+        }
+      } catch (e) {}
+    }
+
     if (format === 'base64') {
-      const dataUri = svgToDataUrl(icon.svgContent);
+      const dataUri = svgData ? svgToDataUrl(svgData) : '';
       return res.status(200).json({
         success: true,
         data: {
           title: icon.title,
           format: 'base64',
           dataUri,
-          svgContent: icon.svgContent,
+          svgContent: svgData,
         },
       });
     }
@@ -176,13 +210,13 @@ exports.downloadIcon = async (req, res, next) => {
     if (format === 'svg') {
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      return res.send(icon.svgContent);
+      return res.send(svgData || '');
     }
 
-    // Fallback: return SVG or Data URI stream
+    // Fallback: return SVG
     res.setHeader('Content-Type', 'image/svg+xml');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    return res.send(icon.svgContent);
+    return res.send(svgData || '');
   } catch (err) {
     next(err);
   }

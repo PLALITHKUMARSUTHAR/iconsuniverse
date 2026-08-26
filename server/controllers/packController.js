@@ -48,8 +48,8 @@ exports.getPackBySlug = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Icon pack not found' });
     }
 
-    const icons = await Icon.find({ packId: pack._id, status: 'approved' })
-      .select('title slug svgContent pngPreviewUrl isPremium style tags');
+    const icons = await Icon.find({ packId: pack._id, status: { $ne: 'rejected' } })
+      .select('title slug path isPremium style tags');
 
     res.status(200).json({
       success: true,
@@ -60,9 +60,9 @@ exports.getPackBySlug = async (req, res, next) => {
   }
 };
 
-// @desc    Download full pack as a ZIP archive
+// @desc    Download entire icon pack as ZIP
 // @route   GET /api/packs/:id/download
-// @access  Public / Pro Protected
+// @access  Public (Pro / Free limits)
 exports.downloadPack = async (req, res, next) => {
   try {
     const pack = await Pack.findById(req.params.id);
@@ -70,16 +70,18 @@ exports.downloadPack = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Pack not found' });
     }
 
-    const isPro = req.user && (req.user.plan === 'pro_monthly' || req.user.plan === 'pro_annual');
+    const user = req.user;
+    const isPro = user && (user.plan === 'pro_monthly' || user.plan === 'pro_annual');
+
     if (pack.isPremium && !isPro) {
       return res.status(403).json({
         success: false,
-        message: 'This pack requires an active Pro subscription to download.',
+        message: 'This pack is for Pro subscribers only. Upgrade to download full packs!',
         isPremiumLocked: true,
       });
     }
 
-    const icons = await Icon.find({ packId: pack._id, status: 'approved' });
+    const icons = await Icon.find({ packId: pack._id, status: { $ne: 'rejected' } });
     if (!icons.length) {
       return res.status(400).json({ success: false, message: 'This pack contains no icons yet' });
     }

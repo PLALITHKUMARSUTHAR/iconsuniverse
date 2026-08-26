@@ -23,9 +23,9 @@ exports.getCategoryBySlug = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Category not found' });
     }
 
-    const icons = await Icon.find({ categoryId: category._id, status: 'approved' })
+    const icons = await Icon.find({ categoryId: category._id, status: { $ne: 'rejected' } })
       .limit(20)
-      .select('title slug svgContent pngPreviewUrl isPremium style');
+      .select('title slug path isPremium style');
 
     res.status(200).json({ success: true, data: { category, icons } });
   } catch (err) {

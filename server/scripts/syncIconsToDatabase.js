@@ -5,18 +5,11 @@ const mongoose = require('mongoose');
 const Icon = require('../models/Icon');
 const Category = require('../models/Category');
 
+const { cleanIconTitle } = require('../utils/titleCleaner');
+
 const ICONS_DIR = path.resolve(__dirname, '../../all icons');
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || 'https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev';
 const BATCH_SIZE = 4000;
 const PROGRESS_FILE = path.resolve(__dirname, '.db_sync_progress.json');
-
-function formatTitle(filename) {
-  return filename
-    .replace(/\.(svg|png)$/i, '')
-    .replace(/[-_]+/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-    .trim();
-}
 
 function formatSlug(relPath) {
   return relPath
@@ -146,9 +139,8 @@ async function syncToDatabase() {
       if (!file.endsWith('.svg') && !file.endsWith('.png')) continue;
 
       const relPath = `${catName}/${file}`;
-      const cdnUrl = `${R2_PUBLIC_URL}/icons/${relPath}`;
       const slug = formatSlug(relPath);
-      const title = formatTitle(file);
+      const title = cleanIconTitle(file);
 
       batch.push({
         updateOne: {
@@ -157,7 +149,7 @@ async function syncToDatabase() {
             $setOnInsert: {
               title,
               slug,
-              svgUrl: cdnUrl,
+              path: relPath,
               categoryId: catId,
               style: 'outline',
               status: 'approved',
