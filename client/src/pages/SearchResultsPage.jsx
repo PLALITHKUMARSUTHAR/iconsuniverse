@@ -376,12 +376,12 @@ const SearchResultsPage = () => {
       {isFixedBottomActive && (
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#001e52] text-white border-t border-white/20 shadow-2xl backdrop-blur-xl animate-fade-in">
           {/* Top Row: Explore Other Categories Horizontal Strip */}
-          <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-2.5 flex items-center justify-between gap-3 overflow-x-auto no-scrollbar border-b border-white/15">
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-2 flex items-center justify-between gap-3 overflow-hidden border-b border-white/15">
             <span className="text-[11px] font-bold uppercase tracking-wider text-landing-electric-teal shrink-0 hidden sm:inline-block">
               Explore:
             </span>
 
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {featured11Categories.map((cat) => {
                 const IconComp = CategoryIconMap[cat.iconName] || Layers;
                 return (
@@ -389,7 +389,7 @@ const SearchResultsPage = () => {
                     key={cat.slug}
                     type="button"
                     onClick={() => setExploreModalCategory(cat)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold shrink-0 transition-all cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold shrink-0 transition-colors cursor-pointer"
                   >
                     <IconComp className="w-3.5 h-3.5" style={{ color: cat.color }} />
                     <span className="truncate max-w-[110px]">{cat.name}</span>
@@ -401,7 +401,7 @@ const SearchResultsPage = () => {
               <button
                 type="button"
                 onClick={() => setIsAllOtherCategoriesModalOpen(true)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-energy-gradient text-white text-xs font-extrabold shrink-0 shadow-sm hover:scale-105 transition-transform cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-energy-gradient text-white text-xs font-extrabold shrink-0 shadow-sm hover:brightness-110 active:opacity-90 transition-all cursor-pointer"
               >
                 <Grid3X3 className="w-3.5 h-3.5 text-white" />
                 <span>Others</span>
