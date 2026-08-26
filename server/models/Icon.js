@@ -60,11 +60,13 @@ const iconSchema = new mongoose.Schema({
 
 // Dynamic Virtual Getters: Produces svgUrl and pngPreviewUrl in all API responses with 0 database storage!
 iconSchema.virtual('svgUrl').get(function() {
-  return `${process.env.R2_PUBLIC_URL || CDN_BASE}/icons/${this.path}`;
+  const safePath = this.path ? encodeURI(this.path) : '';
+  return `${process.env.R2_PUBLIC_URL || CDN_BASE}/icons/${safePath}`;
 });
 
 iconSchema.virtual('pngPreviewUrl').get(function() {
-  return `${process.env.R2_PUBLIC_URL || CDN_BASE}/icons/${this.path}`;
+  const safePath = this.path ? encodeURI(this.path) : '';
+  return `${process.env.R2_PUBLIC_URL || CDN_BASE}/icons/${safePath}`;
 });
 
 module.exports = mongoose.model('Icon', iconSchema);

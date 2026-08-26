@@ -11,6 +11,8 @@ const styleOptions = [
   { id: 'all', label: 'All Styles', icon: Grid3X3, desc: 'Complete category collection' },
 ];
 
+const previewCache = new Map();
+
 const CategoryStyleModal = ({ isOpen, onClose, category }) => {
   const navigate = useNavigate();
   const [selectedStyle, setSelectedStyle] = useState('filled');
@@ -19,6 +21,13 @@ const CategoryStyleModal = ({ isOpen, onClose, category }) => {
 
   useEffect(() => {
     if (!isOpen || !category) return;
+
+    const cacheKey = `${category.slug}_${selectedStyle}`;
+    if (previewCache.has(cacheKey)) {
+      setPreviewIcons(previewCache.get(cacheKey));
+      setLoadingPreview(false);
+      return;
+    }
 
     let isMounted = true;
     const fetchPreviews = async () => {
@@ -32,7 +41,9 @@ const CategoryStyleModal = ({ isOpen, onClose, category }) => {
         };
         const res = await iconService.getIcons(params);
         if (isMounted && res.data && res.data.icons) {
-          setPreviewIcons(res.data.icons.slice(0, 5));
+          const list = res.data.icons.slice(0, 5);
+          previewCache.set(cacheKey, list);
+          setPreviewIcons(list);
         }
       } catch (err) {
         if (isMounted) setPreviewIcons([]);
@@ -154,6 +165,7 @@ const CategoryStyleModal = ({ isOpen, onClose, category }) => {
                       alt={ic.title}
                       className="w-7 h-7 object-contain group-hover:scale-110 transition-transform"
                       loading="lazy"
+                      decoding="async"
                       onError={(e) => {
                         e.target.style.display = 'none';
                       }}

@@ -64,6 +64,7 @@ const IconCard = ({
             alt={icon.title}
             className="w-full h-full object-contain"
             loading="lazy"
+            decoding="async"
           />
         )}
       </div>

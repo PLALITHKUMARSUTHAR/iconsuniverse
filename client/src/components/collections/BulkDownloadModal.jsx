@@ -47,6 +47,8 @@ const BulkDownloadModal = ({
 
   // Per-icon customization dictionary: { [iconId]: { ...customization } }
   const [iconCustomMap, setIconCustomMap] = useState({});
+  // Raw SVG content dictionary: { [iconId]: rawSvgString }
+  const [svgStringsMap, setSvgStringsMap] = useState({});
 
   // History stack for Undo / Redo
   const [history, setHistory] = useState([]);
@@ -57,7 +59,7 @@ const BulkDownloadModal = ({
   const [downloadsUsedToday, setDownloadsUsedToday] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Initialize iconCustomMap and select all icons by default
+  // Initialize iconCustomMap and select all icons by default + fetch SVG contents
   useEffect(() => {
     if (sourceIcons && sourceIcons.length > 0) {
       const initialMap = {};
@@ -73,6 +75,23 @@ const BulkDownloadModal = ({
       setActiveSelectedIds(initialIds);
       setHistory([initialMap]);
       setHistoryIndex(0);
+
+      // Asynchronously fetch raw SVG strings for live vector editing and ZIP exports
+      sourceIcons.forEach(async (icon) => {
+        const id = icon._id || icon.slug;
+        const targetUrl = icon.svgUrl || icon.pngPreviewUrl;
+        if (targetUrl && !icon.svgContent) {
+          try {
+            const res = await fetch(targetUrl);
+            const text = await res.text();
+            if (text.includes('<svg')) {
+              setSvgStringsMap((prev) => ({ ...prev, [id]: text }));
+            }
+          } catch (err) {}
+        } else if (icon.svgContent) {
+          setSvgStringsMap((prev) => ({ ...prev, [id]: icon.svgContent }));
+        }
+      });
     }
   }, [sourceIcons]);
 
@@ -167,7 +186,11 @@ const BulkDownloadModal = ({
   const processIconSvg = (icon) => {
     const id = icon._id || icon.slug;
     const custom = iconCustomMap[id] || defaultCustomization;
-    let content = icon.svgContent || `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/></svg>`;
+    let content = svgStringsMap[id] || icon.svgContent;
+
+    if (!content) {
+      return null;
+    }
 
     if (!custom.useOriginalColor && custom.color) {
       content = content.replace(/currentColor/gi, custom.color);
@@ -198,12 +221,28 @@ const BulkDownloadModal = ({
       const folderName = activeName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       const folder = zip.folder(folderName);
 
-      targetIcons.forEach((icon) => {
+      for (const icon of targetIcons) {
         const id = icon._id || icon.slug;
         const filename = `${icon.slug || icon.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.${format}`;
-        const processed = processIconSvg(icon);
-        folder.file(filename, processed);
-      });
+        let processed = processIconSvg(icon);
+
+        // If SVG was not preloaded, fetch it on the fly
+        if (!processed && (icon.svgUrl || icon.pngPreviewUrl)) {
+          try {
+            const res = await fetch(icon.svgUrl || icon.pngPreviewUrl);
+            const text = await res.text();
+            const custom = iconCustomMap[id] || defaultCustomization;
+            processed = text;
+            if (!custom.useOriginalColor && custom.color) {
+              processed = processed.replace(/currentColor/gi, custom.color);
+            }
+          } catch (e) {
+            processed = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>${icon.title}</title></svg>`;
+          }
+        }
+
+        folder.file(filename, processed || `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>${icon.title}</title></svg>`);
+      }
 
       folder.file(
         'LICENSE.txt',
@@ -621,13 +660,23 @@ const BulkDownloadModal = ({
                         transform: `rotate(${custom.rotation}deg) scaleX(${custom.flipH ? -1 : 1}) scaleY(${custom.flipV ? -1 : 1})`,
                       }}
                     >
-                      <div
-                        className={`flex items-center justify-center ${custom.shape !== 'none' ? 'w-8 h-8' : 'w-10 h-10'} text-landing-primary [&>svg]:w-full [&>svg]:h-full`}
-                        style={{
-                          color: !custom.useOriginalColor ? custom.color : '#00327d',
-                        }}
-                        dangerouslySetInnerHTML={{ __html: processIconSvg(icon) }}
-                      />
+                      {processIconSvg(icon) ? (
+                        <div
+                          className={`flex items-center justify-center ${custom.shape !== 'none' ? 'w-8 h-8' : 'w-10 h-10'} text-landing-primary [&>svg]:w-full [&>svg]:h-full`}
+                          style={{
+                            color: !custom.useOriginalColor ? custom.color : '#00327d',
+                          }}
+                          dangerouslySetInnerHTML={{ __html: processIconSvg(icon) }}
+                        />
+                      ) : (
+                        <img
+                          src={icon.svgUrl || icon.pngPreviewUrl}
+                          alt={icon.title}
+                          className={`${custom.shape !== 'none' ? 'w-8 h-8' : 'w-10 h-10'} object-contain`}
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      )}
                     </div>
 
                     <span className="text-[10px] font-bold text-landing-on-surface truncate w-full mt-1">
