@@ -26,7 +26,7 @@ const AllCategoriesModal = ({ isOpen, onClose, onSelectCategory, excludeSlug = '
           </div>
           <div>
             <h2 className="font-heading font-extrabold text-base sm:text-lg text-landing-primary">
-              All 163 Categories — Full List
+              All Categories — Full List
             </h2>
             <p className="text-xs text-landing-on-surface-variant">
               Browse or search across all categories
@@ -42,7 +42,7 @@ const AllCategoriesModal = ({ isOpen, onClose, onSelectCategory, excludeSlug = '
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search 163 categories..."
+              placeholder="Search all categories..."
               className="w-full pl-10 pr-8 py-2 rounded-2xl bg-landing-surface-container-low border border-landing-outline-variant/30 text-xs font-medium text-landing-on-surface focus:outline-none focus:ring-2 focus:ring-landing-primary"
               autoFocus
             />

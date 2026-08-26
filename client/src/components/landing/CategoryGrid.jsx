@@ -30,7 +30,7 @@ const CategoryGrid = () => {
               Featured Categories
             </h2>
             <p className="text-xs text-landing-on-surface-variant mt-0.5">
-              Explore curated categories or click Full List to view all 163 categories
+              Explore curated categories or click Full List to view all categories
             </p>
           </div>
 
