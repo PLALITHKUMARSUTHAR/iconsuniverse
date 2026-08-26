@@ -66,11 +66,12 @@ exports.getIcons = async (req, res, next) => {
       filter.colors = { $in: [color.toLowerCase()] };
     }
 
-    // Sorting
-    let sortQuery = { downloadCount: -1 };
-    if (sort === 'recent') sortQuery = { createdAt: -1 };
-    else if (sort === 'downloads') sortQuery = { downloadCount: -1 };
-    else if (sort === 'popular') sortQuery = { downloadCount: -1, createdAt: -1 };
+    // Sorting (with deterministic _id tie-breaker to prevent pagination duplication)
+    let sortQuery = { downloadCount: -1, _id: 1 };
+    if (sort === 'recent') sortQuery = { _id: -1 };
+    else if (sort === 'downloads') sortQuery = { downloadCount: -1, _id: 1 };
+    else if (sort === 'popular' || sort === 'trending') sortQuery = { downloadCount: -1, _id: 1 };
+    else if (sort === 'title') sortQuery = { title: 1, _id: 1 };
 
     const pageNum = parseInt(page, 10) || 1;
     const limitNum = Math.min(parseInt(limit, 10) || 40, 100);

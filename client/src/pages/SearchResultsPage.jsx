@@ -112,13 +112,20 @@ const SearchResultsPage = () => {
       const res = await iconService.getIcons(params);
       if (res.data && res.data.icons) {
         const newBatch = res.data.icons;
-        setIcons((prev) => (isReset ? newBatch : [...prev, ...newBatch]));
+        setIcons((prev) => {
+          if (isReset) return newBatch;
+          const seen = new Set(prev.map((i) => i._id || i.slug));
+          const uniqueNew = newBatch.filter((i) => !seen.has(i._id || i.slug));
+          return [...prev, ...uniqueNew];
+        });
         setHasMore(pageNum < (res.data.totalPages || 1));
       }
     } catch (err) {
-      const streamBatch = getFilteredIcons(pageNum);
-      setIcons((prev) => (isReset ? streamBatch : [...prev, ...streamBatch]));
-      setHasMore(pageNum < 6);
+      if (isReset) {
+        const streamBatch = getFilteredIcons(1);
+        setIcons(streamBatch);
+        setHasMore(false);
+      }
     } finally {
       setLoading(false);
       loadingRef.current = false;
