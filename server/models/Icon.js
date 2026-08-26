@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 
+const CDN_BASE = process.env.R2_PUBLIC_URL || 'https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev';
+
 const iconSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -13,11 +15,7 @@ const iconSchema = new mongoose.Schema({
     lowercase: true,
     index: true,
   },
-  svgUrl: {
-    type: String,
-    required: true,
-  },
-  pngPreviewUrl: {
+  path: {
     type: String,
     required: true,
   },
@@ -34,7 +32,6 @@ const iconSchema = new mongoose.Schema({
   },
   style: {
     type: String,
-    enum: ['outline', 'filled', 'color', 'flat', 'gradient', 'hand-drawn', '3d'],
     default: 'outline',
   },
   isPremium: {
@@ -47,9 +44,22 @@ const iconSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected'],
     default: 'approved',
   },
-}, { timestamps: false, versionKey: false });
+}, { 
+  timestamps: false, 
+  versionKey: false,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+});
+
+// Dynamic Virtual Getters: Produces svgUrl and pngPreviewUrl in all API responses with 0 database storage!
+iconSchema.virtual('svgUrl').get(function() {
+  return `${process.env.R2_PUBLIC_URL || CDN_BASE}/icons/${this.path}`;
+});
+
+iconSchema.virtual('pngPreviewUrl').get(function() {
+  return `${process.env.R2_PUBLIC_URL || CDN_BASE}/icons/${this.path}`;
+});
 
 module.exports = mongoose.model('Icon', iconSchema);

@@ -6,7 +6,6 @@ const Icon = require('../models/Icon');
 const Category = require('../models/Category');
 
 const ICONS_DIR = path.resolve(__dirname, '../../all icons');
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || 'https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev';
 const BATCH_SIZE = 5000;
 
 function formatTitle(filename) {
@@ -27,23 +26,24 @@ function formatSlug(relPath) {
 
 async function syncToDatabase() {
   console.log('====================================================');
-  console.log('    STREAMLINED 1M ICONS MONGODB SYNC PIPELINE      ');
+  console.log('  ULTRA-COMPACT 1M ICONS MONGODB SYNC PIPELINE     ');
   console.log('====================================================\n');
 
   console.log('[1/4] Connecting to MongoDB Atlas...');
-  await mongoose.connect(process.env.MONGODB_URI);
-  console.log('[Database] Connected.');
+  await mongoose.connect(process.env.MONGODB_URI, {
+    socketTimeoutMS: 90000,
+    connectTimeoutMS: 45000,
+  });
+  console.log('[Database] Connected successfully.');
 
-  console.log('[2/4] Resetting and optimizing Icons collection...');
+  console.log('[2/4] Resetting and dropping bloated collection to reclaim 100% free disk space...');
   try {
     await mongoose.connection.db.collection('icons').drop();
-    console.log('[Database] Dropped old collection to reclaim 100% free disk space.');
+    console.log('[Database] Dropped icons collection.');
   } catch (e) {}
 
-  console.log('\n[3/4] Scanning categories and files...');
+  console.log('\n[3/4] Initializing categories...');
   const categories = fs.readdirSync(ICONS_DIR);
-  console.log(`Found ${categories.length} category folders.`);
-
   const categoryMap = {};
   for (const catName of categories) {
     const fullCatPath = path.join(ICONS_DIR, catName);
@@ -58,7 +58,7 @@ async function syncToDatabase() {
     categoryMap[catName] = catDoc._id;
   }
 
-  console.log('\n[4/4] Ingesting 1,000,000 lightweight icon records in chunks of 5,000...');
+  console.log('\n[4/4] Ingesting ultra-compact icon records (under 120MB total database size)...');
   let totalProcessed = 0;
   let batch = [];
   const startTime = Date.now();
@@ -74,7 +74,6 @@ async function syncToDatabase() {
       if (!file.endsWith('.svg') && !file.endsWith('.png')) continue;
 
       const relPath = `${catName}/${file}`;
-      const cdnUrl = `${R2_PUBLIC_URL}/icons/${relPath}`;
       const slug = formatSlug(relPath);
       const title = formatTitle(file);
 
@@ -83,8 +82,7 @@ async function syncToDatabase() {
           document: {
             title,
             slug,
-            svgUrl: cdnUrl,
-            pngPreviewUrl: cdnUrl,
+            path: relPath,
             categoryId: catId,
             style: 'outline',
             status: 'approved',
@@ -106,11 +104,27 @@ async function syncToDatabase() {
     await Icon.bulkWrite(batch, { ordered: false });
   }
 
+  // Update Category counts & sample previews
+  console.log('\n[Post-Processing] Updating category icon counts and thumbnails...');
+  const allDbCategories = await Category.find();
+  for (const cat of allDbCategories) {
+    const count = await Icon.countDocuments({ categoryId: cat._id });
+    const firstIcon = await Icon.findOne({ categoryId: cat._id });
+    const thumb = firstIcon ? firstIcon.svgUrl : null;
+    await Category.updateOne(
+      { _id: cat._id },
+      { $set: { iconCount: count, coverImageUrl: thumb } }
+    );
+  }
+
+  const finalCount = await Icon.countDocuments();
   const durationSec = Math.round((Date.now() - startTime) / 1000);
   const stats = await mongoose.connection.db.stats();
+
   console.log(`\n====================================================`);
-  console.log(`[COMPLETED] All ${totalProcessed.toLocaleString()} icons synced to MongoDB!`);
-  console.log(`Total Database Storage Used: ~${Math.round(stats.dataSize / 1024 / 1024)} MB (out of 512 MB Free Quota)`);
+  console.log(`[SUCCESS] Database Sync Completed!`);
+  console.log(`Total Icons in MongoDB: ${finalCount.toLocaleString()}`);
+  console.log(`Total Database Storage Used: ~${Math.round(stats.dataSize / 1024 / 1024)} MB (Out of 512 MB Free Quota)`);
   console.log(`Time Elapsed: ${durationSec} seconds`);
   console.log(`====================================================\n`);
 
