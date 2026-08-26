@@ -44,7 +44,7 @@ const LoginPage = () => {
           </div>
           <h1 className="text-2xl font-extrabold font-heading text-subpage-primary">Sign in to IconsUniverse</h1>
           <p className="text-xs text-subpage-on-surface-variant mt-1">
-            Access your saved collections, custom webfonts, and Pro downloads.
+            Access your saved collections, vector assets, and Pro downloads.
           </p>
         </div>
 

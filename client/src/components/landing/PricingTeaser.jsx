@@ -91,7 +91,7 @@ const PricingTeaser = () => {
                 </li>
                 <li className="flex items-center gap-3">
                   <Check className="w-4 h-4 text-landing-electric-teal shrink-0" />
-                  <span className="text-white font-medium">Bulk Pack ZIP & Custom WebFont Bundles</span>
+                  <span className="text-white font-medium">Bulk Pack ZIP & Collection Asset Bundles</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <Check className="w-4 h-4 text-landing-electric-teal shrink-0" />

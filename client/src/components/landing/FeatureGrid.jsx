@@ -16,8 +16,8 @@ const features = [
   },
   {
     icon: Code2,
-    title: 'Custom WebFont Compiler',
-    description: 'Select your favorite icons into a collection and compile them into standalone CSS WebFonts and SVG Sprite sheets.',
+    title: 'High-Speed Global CDN',
+    description: 'Instant loading and streaming across 1,000,000 vector assets with global edge caching and zero latency.',
     color: '#6366f1',
   },
   {

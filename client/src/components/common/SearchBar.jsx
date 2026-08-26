@@ -4,7 +4,7 @@ import { Search, Sparkles, X, ArrowRight } from 'lucide-react';
 
 const popularKeywords = ['cart', 'user', 'arrow', 'cloud', 'ai', 'settings', 'crypto', 'heart', 'phone'];
 
-const SearchBar = ({ initialQuery = '', placeholder = 'Search 50,000+ vector icons, packs, and stickers...', isHero = false }) => {
+const SearchBar = ({ initialQuery = '', placeholder = 'Search 10,00,000 icons...', isHero = false }) => {
   const [query, setQuery] = useState(initialQuery);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedStyle, setSelectedStyle] = useState('all');

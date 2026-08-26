@@ -23,7 +23,7 @@ const HeroSection = () => {
         </h1>
 
         <p className="text-sm sm:text-base text-landing-on-surface-variant max-w-xl mx-auto mb-8 font-normal leading-relaxed">
-          Search, recolor live, and download SVG, PNG, or bulk ZIP packages with custom WebFonts.
+          Search, recolor live, and download SVG, PNG, or bulk ZIP packages.
         </p>
 
         {/* Hero Search Bar */}

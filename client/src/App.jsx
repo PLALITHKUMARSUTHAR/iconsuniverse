@@ -13,6 +13,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import UserProfilePage from './pages/UserProfilePage';
+import InfoPage from './pages/InfoPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
@@ -35,6 +36,13 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/profile" element={<UserProfilePage />} />
+        <Route path="/about" element={<InfoPage />} />
+        <Route path="/contact" element={<InfoPage />} />
+        <Route path="/whats-new" element={<InfoPage />} />
+        <Route path="/terms" element={<InfoPage />} />
+        <Route path="/privacy" element={<InfoPage />} />
+        <Route path="/sitemap" element={<InfoPage />} />
+        <Route path="/docs" element={<InfoPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

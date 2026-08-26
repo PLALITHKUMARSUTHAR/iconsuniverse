@@ -90,7 +90,7 @@ const PricingPage = () => {
           Supercharge Your Workflow with IconsUniverse Pro
         </h1>
         <p className="text-sm sm:text-base text-subpage-on-surface-variant font-normal">
-          Attribution-free downloads, full pack ZIP archives, and custom WebFonts for teams and designers.
+          Attribution-free downloads, full pack ZIP archives, and commercial licensing for teams and designers.
         </p>
 
         {/* Monthly vs Annual Cadence Toggle */}
@@ -110,91 +110,95 @@ const PricingPage = () => {
           <button
             type="button"
             onClick={() => setBillingCycle('annual')}
-            className={`px-5 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-5 py-2 rounded-full text-xs font-bold transition-all ${
               billingCycle === 'annual'
                 ? 'bg-subpage-primary text-white shadow-sm'
                 : 'text-subpage-on-surface-variant hover:text-subpage-primary'
             }`}
           >
-            <span>Annual Billing</span>
-            <span className="px-2 py-0.5 rounded-full bg-energy-gradient text-white text-[10px] font-extrabold">
-              SAVE 20%
-            </span>
+            Annual Billing (Save 20%)
           </button>
         </div>
       </div>
 
-      {/* Pricing Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-        {/* Free Plan */}
-        <div className="p-8 sm:p-10 rounded-4xl glass-subpage bg-white/90 border border-white/80 shadow-glass flex flex-col justify-between">
+      {/* Pricing Cards Grid */}
+      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+        {/* Free Tier Card */}
+        <div className="p-8 rounded-4xl bg-white border border-subpage-surface-container shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-extrabold uppercase tracking-wider text-subpage-on-surface-variant">
-                Free Starter
-              </span>
-              <span className="px-3 py-1 rounded-full bg-subpage-surface-container text-xs font-bold text-subpage-primary">
-                Free Tier
+              <h3 className="text-xl font-bold font-heading text-subpage-on-surface">Starter Free</h3>
+              <span className="px-3 py-1 rounded-full bg-subpage-surface-container text-subpage-on-surface text-xs font-bold">
+                Personal
               </span>
             </div>
+            <p className="text-xs text-subpage-on-surface-variant mb-6">
+              Ideal for hobbyists, personal prototypes, and learning projects.
+            </p>
 
-            <div className="flex items-baseline gap-1 mb-6">
-              <span className="text-4xl sm:text-5xl font-extrabold font-heading text-subpage-primary">₹0</span>
-              <span className="text-xs text-subpage-on-surface-variant">/ month</span>
+            <div className="flex items-baseline gap-1 mb-8">
+              <span className="text-4xl font-extrabold font-heading text-subpage-primary">₹0</span>
+              <span className="text-xs text-subpage-on-surface-variant">/ forever</span>
             </div>
 
-            <ul className="flex flex-col gap-3.5 text-sm text-subpage-on-surface-variant mb-8">
+            <ul className="flex flex-col gap-3.5 text-xs text-subpage-on-surface-variant mb-8">
               <li className="flex items-center gap-3">
-                <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Search 40,000+ vector icons</span>
+                <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>Access to 1,000,000 free vector icons</span>
               </li>
               <li className="flex items-center gap-3">
-                <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>In-browser vector recolor & transform editor</span>
+                <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>Daily download quota (20 icons/day)</span>
               </li>
               <li className="flex items-center gap-3">
-                <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Standard SVG & PNG downloads</span>
+                <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>In-browser vector editor & recoloring</span>
               </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>20 downloads / day with link attribution</span>
+              <li className="flex items-center gap-3 text-subpage-outline">
+                <span className="w-4 text-center font-bold">✕</span>
+                <span>Attribution link required in published projects</span>
               </li>
             </ul>
           </div>
 
-          <Button variant="outline" size="lg" className="w-full" disabled={!isPro}>
-            {isPro ? 'Switch to Free' : 'Current Active Plan'}
-          </Button>
+          <Link to="/search" className="w-full">
+            <Button variant="secondary" size="lg" className="w-full">
+              Explore Free Icons
+            </Button>
+          </Link>
         </div>
 
-        {/* Pro Plan */}
-        <div className="relative p-8 sm:p-10 rounded-4xl bg-gradient-to-br from-[#001e52] to-[#00327d] text-white shadow-2xl border border-white/20 flex flex-col justify-between">
-          <div className="absolute -top-4 right-8 px-4 py-1.5 rounded-full bg-energy-gradient text-white text-xs font-extrabold shadow-coral">
-            MOST POPULAR
-          </div>
+        {/* Pro Tier Card (Elevated Gradient Border) */}
+        <div className="p-8 rounded-4xl bg-subpage-primary text-white shadow-2xl relative flex flex-col justify-between overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-energy-gradient opacity-20 blur-3xl pointer-events-none" />
 
           <div>
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-extrabold uppercase tracking-wider text-landing-electric-teal flex items-center gap-1.5">
-                <Crown className="w-4 h-4" />
-                <span>Pro Unlimited</span>
+              <div className="flex items-center gap-2">
+                <Crown className="w-5 h-5 text-landing-electric-teal" />
+                <h3 className="text-xl font-bold font-heading text-white">IconsUniverse Pro</h3>
+              </div>
+              <span className="px-3 py-1 rounded-full bg-white/20 text-landing-electric-teal text-xs font-extrabold">
+                RECOMMENDED
+              </span>
+            </div>
+            <p className="text-xs text-landing-primary-fixed-dim mb-6">
+              Complete commercial freedom for professional designers, agencies, and app developers.
+            </p>
+
+            <div className="flex items-baseline gap-1 mb-8">
+              <span className="text-4xl font-extrabold font-heading text-white">
+                {billingCycle === 'annual' ? '₹299' : '₹399'}
+              </span>
+              <span className="text-xs text-landing-primary-fixed-dim">
+                {billingCycle === 'annual' ? '/ month (billed annually)' : '/ month'}
               </span>
             </div>
 
-            <div className="flex items-baseline gap-1 mb-6">
-              <span className="text-4xl sm:text-5xl font-extrabold font-heading text-white">
-                {billingCycle === 'annual' ? '₹990' : '₹99'}
-              </span>
-              <span className="text-xs text-landing-primary-container">
-                {billingCycle === 'annual' ? '/ year' : '/ month'}
-              </span>
-            </div>
-
-            <ul className="flex flex-col gap-3.5 text-sm text-landing-primary-fixed-dim mb-8">
+            <ul className="flex flex-col gap-3.5 text-xs text-landing-primary-fixed-dim mb-8">
               <li className="flex items-center gap-3">
                 <Check className="w-4 h-4 text-landing-electric-teal shrink-0" />
-                <span className="text-white font-semibold">Unlimited downloads with zero daily quotas</span>
+                <span className="text-white font-semibold">Unlimited high-speed downloads (No daily caps)</span>
               </li>
               <li className="flex items-center gap-3">
                 <Check className="w-4 h-4 text-landing-electric-teal shrink-0" />
@@ -206,7 +210,7 @@ const PricingPage = () => {
               </li>
               <li className="flex items-center gap-3">
                 <Check className="w-4 h-4 text-landing-electric-teal shrink-0" />
-                <span className="text-white font-semibold">Custom WebFont compiler & SVG sprite generator</span>
+                <span className="text-white font-semibold">Unlimited collection boards & color presets</span>
               </li>
               <li className="flex items-center gap-3">
                 <Check className="w-4 h-4 text-landing-electric-teal shrink-0" />

@@ -63,14 +63,6 @@ const Navbar = ({ isLanding = false }) => {
             </Link>
 
             <Link
-              to="/editor"
-              className="text-xs font-bold text-landing-on-surface-variant hover:text-landing-primary transition-colors flex items-center gap-1"
-            >
-              <Palette className="w-3.5 h-3.5 text-landing-vibrant-coral" />
-              <span>Vector Editor</span>
-            </Link>
-
-            <Link
               to="/pricing"
               className={`text-xs font-bold transition-colors ${
                 isCurrent('/pricing') ? 'text-landing-vibrant-coral' : 'text-landing-on-surface-variant hover:text-landing-primary'
@@ -207,14 +199,6 @@ const Navbar = ({ isLanding = false }) => {
               className="font-bold text-xs text-landing-on-surface hover:text-landing-vibrant-coral py-1.5"
             >
               Icon Packs
-            </Link>
-            <Link
-              to="/editor"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="font-bold text-xs text-landing-on-surface hover:text-landing-vibrant-coral py-1.5 flex items-center gap-1.5"
-            >
-              <Palette className="w-3.5 h-3.5 text-landing-vibrant-coral" />
-              <span>Vector Editor</span>
             </Link>
             <Link
               to="/pricing"
