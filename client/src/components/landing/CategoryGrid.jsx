@@ -1,19 +1,24 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
   main17FeaturedCategories,
   all163CategoriesWithIcons,
 } from '../../data/categories';
 import { CategoryIconMap } from '../../data/categoryIcons';
 import { ArrowRight, Grid3X3, Search, X, Layers, Folder } from 'lucide-react';
+import CategoryStyleModal from './CategoryStyleModal';
 
 const CategoryGrid = () => {
   const [isAllCategoriesOpen, setIsAllCategoriesOpen] = useState(false);
   const [categorySearchQuery, setCategorySearchQuery] = useState('');
+  const [activeCategoryModal, setActiveCategoryModal] = useState(null);
 
   const filtered163 = all163CategoriesWithIcons.filter((cat) =>
     cat.name.toLowerCase().includes(categorySearchQuery.toLowerCase())
   );
+
+  const handleCategoryClick = (cat) => {
+    setActiveCategoryModal(cat);
+  };
 
   return (
     <section className="w-full py-12 sm:py-16">
@@ -43,10 +48,11 @@ const CategoryGrid = () => {
           {main17FeaturedCategories.map((cat) => {
             const IconComp = CategoryIconMap[cat.iconName] || Layers;
             return (
-              <Link
+              <button
                 key={cat.slug}
-                to={`/search?category=${cat.slug}`}
-                className="group p-3.5 sm:p-4 rounded-2xl bg-white hover:bg-white border border-landing-surface-container hover:border-landing-primary/30 shadow-2xs hover:shadow-xs transition-all duration-150 flex flex-col items-center text-center justify-center gap-2"
+                type="button"
+                onClick={() => handleCategoryClick(cat)}
+                className="group p-3.5 sm:p-4 rounded-2xl bg-white hover:bg-white border border-landing-surface-container hover:border-landing-primary/30 shadow-2xs hover:shadow-xs transition-all duration-150 flex flex-col items-center text-center justify-center gap-2 cursor-pointer"
               >
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
@@ -58,7 +64,7 @@ const CategoryGrid = () => {
                 <h3 className="text-xs font-bold font-heading text-landing-on-surface group-hover:text-landing-primary transition-colors truncate w-full">
                   {cat.name}
                 </h3>
-              </Link>
+              </button>
             );
           })}
 
@@ -138,11 +144,14 @@ const CategoryGrid = () => {
               {filtered163.map((cat) => {
                 const IconComp = CategoryIconMap[cat.iconName] || Folder;
                 return (
-                  <Link
+                  <button
                     key={cat.slug}
-                    to={`/search?category=${cat.slug}`}
-                    onClick={() => setIsAllCategoriesOpen(false)}
-                    className="group p-3 rounded-2xl bg-white hover:bg-white border border-landing-surface-container/80 hover:border-landing-primary/30 shadow-2xs hover:shadow-xs transition-all duration-150 flex flex-col items-center text-center justify-center gap-2"
+                    type="button"
+                    onClick={() => {
+                      setIsAllCategoriesOpen(false);
+                      handleCategoryClick(cat);
+                    }}
+                    className="group p-3 rounded-2xl bg-white hover:bg-white border border-landing-surface-container/80 hover:border-landing-primary/30 shadow-2xs hover:shadow-xs transition-all duration-150 flex flex-col items-center text-center justify-center gap-2 cursor-pointer"
                   >
                     <div
                       className="w-9 h-9 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
@@ -154,12 +163,21 @@ const CategoryGrid = () => {
                     <h3 className="text-[11px] font-bold font-heading text-landing-on-surface group-hover:text-landing-primary transition-colors truncate w-full">
                       {cat.name}
                     </h3>
-                  </Link>
+                  </button>
                 );
               })}
             </div>
           </div>
         </div>
+      )}
+
+      {/* Interactive Category Style Picker Modal with Live 5-Icon Preview */}
+      {activeCategoryModal && (
+        <CategoryStyleModal
+          isOpen={!!activeCategoryModal}
+          onClose={() => setActiveCategoryModal(null)}
+          category={activeCategoryModal}
+        />
       )}
     </section>
   );

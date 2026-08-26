@@ -51,20 +51,23 @@ exports.getIcons = async (req, res, next) => {
       }
     }
 
-    // Shape / Style filter (all | outline | filled | color | flat | gradient | hand-drawn | 3d)
+    // Shape / Style filter
+    const isStrict = req.query.strict === 'true';
     if (style && style !== 'all') {
-      if (style === 'filled') {
-        filter.$or = [{ style: 'filled' }, { isFilled: true }];
-      } else if (style === 'outline') {
-        filter.style = 'outline';
-      } else if (style === 'color' || style === 'flat') {
-        filter.style = { $in: ['color', 'flat', '3d', 'gradient'] };
-      } else if (style === 'gradient') {
-        filter.style = 'gradient';
-      } else if (style === '3d') {
-        filter.style = '3d';
-      } else {
-        filter.style = style;
+      if (isStrict) {
+        if (style === 'filled') {
+          filter.$or = [{ style: 'filled' }, { isFilled: true }];
+        } else if (style === 'outline') {
+          filter.style = 'outline';
+        } else if (style === 'color' || style === 'flat') {
+          filter.style = { $in: ['color', 'flat', '3d', 'gradient'] };
+        } else if (style === 'gradient') {
+          filter.style = 'gradient';
+        } else if (style === '3d') {
+          filter.style = '3d';
+        } else {
+          filter.style = style;
+        }
       }
     }
 
@@ -89,17 +92,20 @@ exports.getIcons = async (req, res, next) => {
       filter.colors = { $in: [color.toLowerCase()] };
     }
 
-    // Sorting: Bold/Filled icons ALWAYS come FIRST when category is clicked or default sort is active!
+    // Sorting: prioritize selected style first, then downloadCount, then deterministic _id
     let sortQuery = { isFilled: -1, downloadCount: -1, _id: 1 };
-    if (sort === 'recent') {
+    if (style === 'outline') {
+      sortQuery = { isFilled: 1, downloadCount: -1, _id: 1 };
+    } else if (style === 'color') {
+      sortQuery = { style: 1, isFilled: 1, downloadCount: -1, _id: 1 };
+    } else if (style === 'filled') {
+      sortQuery = { isFilled: -1, downloadCount: -1, _id: 1 };
+    } else if (sort === 'recent') {
       sortQuery = { isFilled: -1, _id: -1 };
     } else if (sort === 'downloads') {
       sortQuery = { downloadCount: -1, isFilled: -1, _id: 1 };
     } else if (sort === 'title') {
       sortQuery = { title: 1, _id: 1 };
-    } else {
-      // 'trending' / 'popular'
-      sortQuery = { isFilled: -1, downloadCount: -1, _id: 1 };
     }
 
     const pageNum = parseInt(page, 10) || 1;
