@@ -112,17 +112,26 @@ exports.getIcons = async (req, res, next) => {
     const limitNum = Math.min(parseInt(limit, 10) || 40, 100);
     const skip = (pageNum - 1) * limitNum;
 
-    const [icons, total] = await Promise.all([
+    const [rawIcons, total] = await Promise.all([
       Icon.find(filter)
         .sort(sortQuery)
         .skip(skip)
         .limit(limitNum)
         .populate('categoryId', 'name slug')
         .populate('packId', 'title slug')
-        .select('title slug path isFilled isPremium style tags downloadCount colors categoryId packId'),
+        .select('title slug path isFilled isPremium style tags downloadCount colors categoryId packId')
+        .lean(),
       Icon.countDocuments(filter),
     ]);
 
+    const cdnBase = process.env.R2_PUBLIC_URL || 'https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev';
+    const icons = rawIcons.map((icon) => ({
+      ...icon,
+      svgUrl: icon.path ? `${cdnBase}/icons/${encodeURI(icon.path)}` : null,
+      pngPreviewUrl: icon.path ? `${cdnBase}/icons/${encodeURI(icon.path)}` : null,
+    }));
+
+    res.set('Cache-Control', 'public, max-age=600, stale-while-revalidate=86400');
     res.status(200).json({
       success: true,
       data: {

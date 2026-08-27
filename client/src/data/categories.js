@@ -27,7 +27,6 @@ export const all163CategoriesWithIcons = [
   { name: "Alerts", slug: "alerts", iconName: "AlertCircle", color: "#ef4444" },
   { name: "Animals", slug: "animals", iconName: "Cat", color: "#f97316" },
   { name: "Art", slug: "art", iconName: "Palette", color: "#FF5F52" },
-  { name: "Awards", slug: "awards", iconName: "Trophy", color: "#FFD54F" },
   { name: "Body Parts", slug: "body-parts", iconName: "Hand", color: "#d97706" },
   { name: "Brands", slug: "brands", iconName: "Bookmark", color: "#e11d48" },
   { name: "Buildings", slug: "buildings", iconName: "Building2", color: "#475569" },

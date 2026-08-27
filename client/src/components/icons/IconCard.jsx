@@ -1,5 +1,4 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { memo } from 'react';
 import { Crown, CheckSquare, Square } from 'lucide-react';
 
 const IconCard = ({
@@ -9,13 +8,13 @@ const IconCard = ({
 }) => {
   return (
     <div
-      className={`group relative flex flex-col items-center justify-between p-2 rounded-xl bg-white transition-all duration-150 transform hover:-translate-y-0.5 cursor-pointer ${
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '80px 96px' }}
+      className={`group relative flex flex-col items-center justify-between p-2 rounded-xl bg-white transition-all duration-150 transform hover:-translate-y-0.5 cursor-pointer select-none ${
         isSelected
           ? 'ring-2 ring-landing-primary border-transparent bg-landing-primary/5 shadow-sm'
           : 'border border-landing-surface-container/70 hover:border-landing-primary/30 shadow-2xs hover:shadow-xs'
       }`}
-      onClick={(e) => {
-        // If clicking anywhere on the card, toggle select if onToggleSelect is provided
+      onClick={() => {
         if (onToggleSelect) {
           onToggleSelect(icon);
         }
@@ -27,7 +26,7 @@ const IconCard = ({
           {icon.isPremium && <Crown className="w-2.5 h-2.5 text-amber-500 shrink-0" />}
         </div>
 
-        {/* Select Box on the Right Side Only */}
+        {/* Select Box on Right Side Only */}
         {onToggleSelect && (
           <button
             type="button"
@@ -51,7 +50,7 @@ const IconCard = ({
         )}
       </div>
 
-      {/* Center SVG Icon */}
+      {/* Center SVG Icon with high-speed async loading */}
       <div className="my-1.5 w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-landing-primary group-hover:scale-110 transition-transform duration-150">
         {icon.svgContent ? (
           <div
@@ -60,11 +59,12 @@ const IconCard = ({
           />
         ) : (
           <img
-            src={icon.pngPreviewUrl || icon.svgUrl}
+            src={icon.svgUrl || icon.pngPreviewUrl}
             alt={icon.title}
-            className="w-full h-full object-contain"
+            className="w-full h-full object-contain pointer-events-none"
             loading="lazy"
             decoding="async"
+            fetchPriority="low"
           />
         )}
       </div>
@@ -82,4 +82,10 @@ const IconCard = ({
   );
 };
 
-export default IconCard;
+export default memo(IconCard, (prevProps, nextProps) => {
+  return (
+    prevProps.isSelected === nextProps.isSelected &&
+    (prevProps.icon._id || prevProps.icon.slug) === (nextProps.icon._id || nextProps.icon.slug) &&
+    prevProps.icon.title === nextProps.icon.title
+  );
+});

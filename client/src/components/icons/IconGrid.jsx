@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import IconCard from './IconCard';
 import { SearchX } from 'lucide-react';
 
@@ -53,4 +53,4 @@ const IconGrid = ({
   );
 };
 
-export default IconGrid;
+export default memo(IconGrid);
