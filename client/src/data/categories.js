@@ -1,4 +1,4 @@
-// 17 Main Featured Categories for Homepage (Clean 6x3 symmetric layout with Others)
+// 17 Main Featured Categories for Homepage (Clean 6x3 symmetric layout with Others as the 18th box)
 export const main17FeaturedCategories = [
   { name: "Interface", slug: "interface", iconName: "Layers", color: "#6366f1" },
   { name: "Emoji", slug: "emoji", iconName: "Smile", color: "#FFD54F" },
@@ -10,7 +10,7 @@ export const main17FeaturedCategories = [
   { name: "Business", slug: "business", iconName: "Briefcase", color: "#00327d" },
   { name: "Food", slug: "food", iconName: "Utensils", color: "#ef4444" },
   { name: "Transport", slug: "transport", iconName: "Truck", color: "#14b8a6" },
-  { name: "Weather", slug: "weather", iconName: "CloudSun", color: "#00327d" },
+  { name: "Weather", slug: "weather", iconName: "CloudSun", color: "#0284c7" },
   { name: "Music", slug: "music", iconName: "Music", color: "#ec4899" },
   { name: "Media", slug: "media", iconName: "Film", color: "#9333ea" },
   { name: "Security", slug: "security", iconName: "ShieldCheck", color: "#059669" },
@@ -19,7 +19,7 @@ export const main17FeaturedCategories = [
   { name: "Education", slug: "education", iconName: "GraduationCap", color: "#4338ca" },
 ];
 
-// All 63 Clean Canonical Categories with Dedicated Icons & Vibrant Colors
+// All 61 Canonical Categories with Dedicated Icons & Vibrant Colors (Others placed at the end)
 export const all163CategoriesWithIcons = [
   { name: "Abstract", slug: "abstract", iconName: "Shapes", color: "#6366f1" },
   { name: "Accessibility", slug: "accessibility", iconName: "Eye", color: "#0ea5e9" },
@@ -27,11 +27,10 @@ export const all163CategoriesWithIcons = [
   { name: "Alerts", slug: "alerts", iconName: "AlertCircle", color: "#ef4444" },
   { name: "Animals", slug: "animals", iconName: "Cat", color: "#f97316" },
   { name: "Art", slug: "art", iconName: "Palette", color: "#FF5F52" },
-  { name: "Audio", slug: "audio", iconName: "Headphones", color: "#8b5cf6" },
   { name: "Awards", slug: "awards", iconName: "Trophy", color: "#FFD54F" },
   { name: "Body Parts", slug: "body-parts", iconName: "Hand", color: "#d97706" },
   { name: "Brands", slug: "brands", iconName: "Bookmark", color: "#e11d48" },
-  { name: "Buildings", slug: "buildings", iconName: "Building", color: "#475569" },
+  { name: "Buildings", slug: "buildings", iconName: "Building2", color: "#475569" },
   { name: "Business", slug: "business", iconName: "Briefcase", color: "#00327d" },
   { name: "Calendar", slug: "calendar", iconName: "Calendar", color: "#2563eb" },
   { name: "Charts", slug: "charts", iconName: "BarChart3", color: "#00F5D4" },
@@ -62,12 +61,10 @@ export const all163CategoriesWithIcons = [
   { name: "Mail", slug: "mail", iconName: "Mail", color: "#dc2626" },
   { name: "Maps", slug: "maps", iconName: "MapPin", color: "#059669" },
   { name: "Media", slug: "media", iconName: "Film", color: "#9333ea" },
-  { name: "Miscellaneous", slug: "miscellaneous", iconName: "Grid3X3", color: "#64748b" },
   { name: "Music", slug: "music", iconName: "Music", color: "#ec4899" },
   { name: "Nature", slug: "nature", iconName: "Trees", color: "#15803d" },
   { name: "Network", slug: "network", iconName: "Network", color: "#0284c7" },
   { name: "Notifications", slug: "notifications", iconName: "Bell", color: "#f59e0b" },
-  { name: "Others", slug: "others", iconName: "Grid3X3", color: "#00327d" },
   { name: "People", slug: "people", iconName: "Users", color: "#4f46e5" },
   { name: "Photography", slug: "photography", iconName: "Camera", color: "#475569" },
   { name: "Science", slug: "science", iconName: "FlaskConical", color: "#8b5cf6" },
@@ -83,7 +80,9 @@ export const all163CategoriesWithIcons = [
   { name: "Time", slug: "time", iconName: "Clock", color: "#f97316" },
   { name: "Tools", slug: "tools", iconName: "Wrench", color: "#00327d" },
   { name: "Transport", slug: "transport", iconName: "Truck", color: "#14b8a6" },
-  { name: "Weather", slug: "weather", iconName: "CloudSun", color: "#00327d" },
+  { name: "Weather", slug: "weather", iconName: "CloudSun", color: "#0284c7" },
+  // "Others" placed at the very end of all categories list
+  { name: "Others", slug: "others", iconName: "Grid3X3", color: "#00327d" },
 ];
 
 export const allCanonicalCategoriesWithIcons = all163CategoriesWithIcons;
