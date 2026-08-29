@@ -15,71 +15,52 @@ const IconCard = ({
 }) => {
   const iconId = icon._id || icon.slug;
   const directCdnUrl = getDirectR2Url(icon);
-  const proxyUrl = icon.svgUrl ? getSafeIconUrl(icon.svgUrl) : '';
-  const primaryUrl = directCdnUrl || proxyUrl;
-  const fallbackUrl = proxyUrl && proxyUrl !== directCdnUrl ? proxyUrl : null;
+  const proxyUrl = icon.svgUrl && icon.svgUrl.startsWith('/api') ? icon.svgUrl : (icon._id ? `/api/icons/svg/${icon._id}` : '');
 
   const [svgContent, setSvgContent] = useState(() => {
     if (icon.svgContent) return normalizeSvgForCanvas(icon.svgContent, iconId);
-    const cached = getCachedSvg(iconId) || getCachedSvg(primaryUrl) || getCachedSvg(directCdnUrl);
+    const cached = getCachedSvg(iconId) || getCachedSvg(proxyUrl) || getCachedSvg(directCdnUrl);
     return cached ? normalizeSvgForCanvas(cached, iconId) : null;
   });
 
-  const [hasError, setHasError] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
   const [isLoaded, setIsLoaded] = useState(Boolean(svgContent));
 
   useEffect(() => {
     if (icon.svgContent) {
       setSvgContent(normalizeSvgForCanvas(icon.svgContent, iconId));
       setIsLoaded(true);
-      setHasError(false);
       return;
     }
 
-    const cached = getCachedSvg(iconId) || getCachedSvg(primaryUrl) || getCachedSvg(directCdnUrl);
+    const cached = getCachedSvg(iconId) || getCachedSvg(proxyUrl) || getCachedSvg(directCdnUrl);
     if (cached) {
       setSvgContent(normalizeSvgForCanvas(cached, iconId));
       setIsLoaded(true);
-      setHasError(false);
       return;
     }
 
-    if (!primaryUrl) {
-      setHasError(true);
-      setIsLoaded(true);
-      return;
-    }
-
-    setSvgContent(null);
-    setIsLoaded(false);
-    setHasError(false);
-
+    // Try fetching SVG vector via proxy with CORS enabled (falls back cleanly to direct CDN img)
     let isMounted = true;
-    // Multi-tier fetch: Primary Direct R2 CDN with automatic fallback to proxyUrl
-    fetchAndCacheSvg(primaryUrl, iconId, fallbackUrl)
-      .then((raw) => {
-        if (isMounted) {
-          if (raw) {
+    const fetchUrl = proxyUrl || directCdnUrl;
+
+    if (fetchUrl) {
+      fetchAndCacheSvg(fetchUrl, iconId)
+        .then((raw) => {
+          if (isMounted && raw) {
             setSvgContent(normalizeSvgForCanvas(raw, iconId));
             setIsLoaded(true);
-            setHasError(false);
-          } else {
-            setHasError(true);
-            setIsLoaded(true);
           }
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setHasError(true);
-          setIsLoaded(true);
-        }
-      });
+        })
+        .catch(() => {
+          // Silent fallback: <img src={directCdnUrl}> handles display seamlessly
+        });
+    }
 
     return () => {
       isMounted = false;
     };
-  }, [iconId, primaryUrl, fallbackUrl, icon.svgContent]);
+  }, [iconId, proxyUrl, directCdnUrl, icon.svgContent]);
 
   return (
     <div
@@ -132,7 +113,7 @@ const IconCard = ({
             className="w-full h-full flex items-center justify-center text-landing-primary [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:m-auto [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:overflow-visible"
             dangerouslySetInnerHTML={{ __html: svgContent }}
           />
-        ) : hasError ? (
+        ) : imgFailed ? (
           <div className="w-full h-full flex items-center justify-center text-slate-300">
             <ImageOff className="w-5 h-5" />
           </div>
@@ -142,14 +123,14 @@ const IconCard = ({
               <div className="absolute inset-0 bg-slate-100/70 rounded-lg animate-pulse" />
             )}
             <img
-              src={primaryUrl}
+              src={directCdnUrl}
               alt={icon.title}
               className={`w-full h-full object-contain m-auto pointer-events-none transition-opacity duration-150 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
               loading="lazy"
               decoding="async"
               onLoad={() => setIsLoaded(true)}
               onError={() => {
-                setHasError(true);
+                setImgFailed(true);
                 setIsLoaded(true);
               }}
             />
