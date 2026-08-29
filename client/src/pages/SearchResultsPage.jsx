@@ -8,6 +8,7 @@ import AllCategoriesModal from '../components/common/AllCategoriesModal';
 import { iconService } from '../services/iconService';
 import { Search, Sparkles, Download, X, Layers, Check, ArrowRight, Grid3X3, CircleDot, Palette } from 'lucide-react';
 import Button from '../components/common/Button';
+import Footer from '../components/common/Footer';
 import { main17FeaturedCategories } from '../data/categories';
 import { CategoryIconMap } from '../data/categoryIcons';
 
