@@ -45,7 +45,7 @@ const IconCard = ({
     const fetchUrl = proxyUrl || directCdnUrl;
 
     if (fetchUrl) {
-      fetchAndCacheSvg(fetchUrl, iconId)
+      fetchAndCacheSvg(fetchUrl, iconId, directCdnUrl)
         .then((raw) => {
           if (isMounted && raw) {
             setSvgContent(normalizeSvgForCanvas(raw, iconId));
@@ -106,11 +106,11 @@ const IconCard = ({
         )}
       </div>
 
-      {/* Inner 32x32 px SVG Icon Box Container with high-speed async loading and optical centering */}
-      <div className="my-2 w-8 h-8 p-0.5 flex items-center justify-center text-landing-primary group-hover:scale-110 transition-transform duration-150 relative m-auto shrink-0">
+      {/* Inner 36x36 px SVG Icon Box Container with high-speed async loading and optical centering */}
+      <div className="my-1.5 w-9 h-9 p-0.5 flex items-center justify-center text-slate-800 group-hover:scale-110 group-hover:text-landing-primary transition-all duration-150 relative m-auto shrink-0">
         {svgContent ? (
           <div
-            className="w-full h-full flex items-center justify-center text-landing-primary [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:m-auto [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:overflow-visible"
+            className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:m-auto [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:overflow-visible"
             dangerouslySetInnerHTML={{ __html: svgContent }}
           />
         ) : imgFailed ? (
