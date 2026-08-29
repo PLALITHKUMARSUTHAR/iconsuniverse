@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Download, Copy, Check, Sparkles, FolderPlus, Layers, RotateCw, Palette, Shield } from 'lucide-react';
 import Modal from '../common/Modal';
 import Button from '../common/Button';
@@ -8,6 +8,7 @@ import TransformControls from './TransformControls';
 import ShapeBadgeControls from './ShapeBadgeControls';
 import { useToast } from '../../context/ToastContext';
 import { useCollections } from '../../context/CollectionsContext';
+import { fetchAndCacheSvg, getCachedSvg, getSafeIconUrl, recolorSvg, normalizeSvgForCanvas } from '../../services/svgCacheService';
 
 const IconEditorModal = ({ isOpen, onClose, icon }) => {
   const [activeTab, setActiveTab] = useState('colors'); // 'colors' | 'transforms' | 'badge'
@@ -23,12 +24,37 @@ const IconEditorModal = ({ isOpen, onClose, icon }) => {
   const [badgeOpacity, setBadgeOpacity] = useState(100);
   const [hasCopied, setHasCopied] = useState(false);
 
+  const [rawSvg, setRawSvg] = useState('');
+
   const { addToast } = useToast();
   const { toggleIcon, isIconInCollection } = useCollections();
 
+  useEffect(() => {
+    if (!icon) return;
+    const id = icon._id || icon.slug;
+    const safeUrl = getSafeIconUrl(icon.svgUrl || icon.pngPreviewUrl || (icon.path ? `https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev/icons/${icon.path}` : ''));
+
+    if (icon.svgContent) {
+      setRawSvg(icon.svgContent);
+      return;
+    }
+
+    const cached = getCachedSvg(id) || getCachedSvg(safeUrl);
+    if (cached) {
+      setRawSvg(cached);
+      return;
+    }
+
+    if (safeUrl) {
+      fetchAndCacheSvg(safeUrl, id).then((svg) => {
+        if (svg) setRawSvg(svg);
+      });
+    }
+  }, [icon]);
+
   if (!icon) return null;
 
-  const rawSvg = icon.svgContent || `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>`;
+  const currentSvg = rawSvg || `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>`;
 
   const handleUpdateTransform = (updates) => {
     if (updates.rotation !== undefined) setRotation(updates.rotation);
@@ -55,25 +81,72 @@ const IconEditorModal = ({ isOpen, onClose, icon }) => {
     setLayerColorOverrides({});
   };
 
-  // Export customized SVG
+  // Export customized SVG in 512x512 px
   const handleDownloadCustomSvg = () => {
-    let finalSvg = rawSvg;
-    finalSvg = finalSvg.replace(/currentColor/gi, color);
-    finalSvg = finalSvg.replace(/stroke="#[0-9a-fA-F]{3,6}"/gi, `stroke="${color}"`);
+    let finalSvg = currentSvg;
+    if (color) {
+      finalSvg = recolorSvg(finalSvg, color);
+    }
+    finalSvg = normalizeSvgForCanvas(finalSvg);
 
-    const blob = new Blob([finalSvg], { type: 'image/svg+xml' });
+    const blob = new Blob([finalSvg], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${icon.slug || 'custom-icon'}-edited.svg`;
+    a.download = `${icon.slug || 'custom-icon'}-512px.svg`;
     a.click();
     URL.revokeObjectURL(url);
-    addToast('Downloaded customized SVG!', 'success');
+    addToast('Downloaded 512 × 512 px SVG!', 'success');
+  };
+
+  // Export customized PNG in 512x512 px
+  const handleDownloadCustomPng = (resolution = 512) => {
+    let finalSvg = currentSvg;
+    if (color) {
+      finalSvg = recolorSvg(finalSvg, color);
+    }
+    finalSvg = normalizeSvgForCanvas(finalSvg);
+
+    const img = new Image();
+    const blob = new Blob([finalSvg], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = resolution;
+      canvas.height = resolution;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, resolution, resolution);
+      ctx.drawImage(img, 0, 0, resolution, resolution);
+      URL.revokeObjectURL(url);
+
+      canvas.toBlob((pngBlob) => {
+        if (!pngBlob) return;
+        const pngUrl = URL.createObjectURL(pngBlob);
+        const a = document.createElement('a');
+        a.href = pngUrl;
+        a.download = `${icon.slug || 'custom-icon'}-${resolution}px.png`;
+        a.click();
+        URL.revokeObjectURL(pngUrl);
+        addToast(`Downloaded ${resolution} × ${resolution} px PNG!`, 'success');
+      }, 'image/png');
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      addToast('Failed to export PNG', 'error');
+    };
+
+    img.src = url;
   };
 
   // Copy SVG Code
   const handleCopySvg = () => {
-    let finalSvg = rawSvg.replace(/currentColor/gi, color);
+    let finalSvg = currentSvg;
+    if (color) {
+      finalSvg = recolorSvg(finalSvg, color);
+    }
+    finalSvg = normalizeSvgForCanvas(finalSvg);
     navigator.clipboard.writeText(finalSvg);
     setHasCopied(true);
     addToast('SVG markup copied to clipboard!', 'success');
@@ -181,7 +254,7 @@ const IconEditorModal = ({ isOpen, onClose, icon }) => {
           </div>
 
           {/* Action Export Buttons */}
-          <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-landing-surface-container">
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-landing-surface-container">
             <Button
               variant="primary"
               size="sm"
@@ -189,16 +262,26 @@ const IconEditorModal = ({ isOpen, onClose, icon }) => {
               icon={Download}
               className="flex-1"
             >
-              Download SVG
+              SVG (512px)
             </Button>
 
             <Button
               variant="glass"
               size="sm"
+              onClick={() => handleDownloadCustomPng(512)}
+              icon={Download}
+              className="flex-1 text-landing-primary border-landing-primary/30"
+            >
+              PNG (512px)
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleCopySvg}
               icon={hasCopied ? Check : Copy}
             >
-              {hasCopied ? 'Copied' : 'Copy SVG'}
+              {hasCopied ? 'Copied' : 'Copy'}
             </Button>
 
             <Button

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Download, Palette, Copy, Check, FolderPlus, Crown, ArrowLeft } from 'lucide-react';
+import { Download, Palette, Copy, Check, FolderPlus, Crown, ArrowLeft, ImageOff } from 'lucide-react';
 import { iconService } from '../services/iconService';
 import { useCollections } from '../context/CollectionsContext';
 import { useToast } from '../context/ToastContext';
@@ -10,12 +10,20 @@ import AttributionModal from '../components/icons/AttributionModal';
 import FormatDownloadMenu from '../components/icons/FormatDownloadMenu';
 import IconCard from '../components/icons/IconCard';
 import { seedIcons } from '../data/seedData';
+import {
+  fetchAndCacheSvg,
+  getSafeIconUrl,
+  getDirectR2Url,
+  normalizeSvgForCanvas,
+} from '../services/svgCacheService';
 
 const IconDetailPage = () => {
   const { slug } = useParams();
   const [icon, setIcon] = useState(null);
   const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [svgData, setSvgData] = useState(null);
+  const [svgLoading, setSvgLoading] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isAttributionOpen, setIsAttributionOpen] = useState(false);
   const [pendingFormat, setPendingFormat] = useState('svg');
@@ -30,12 +38,33 @@ const IconDetailPage = () => {
       setLoading(true);
       try {
         const res = await iconService.getIconBySlug(slug);
-        setIcon(res.data.icon);
+        const iconDoc = res.data.icon;
+        setIcon(iconDoc);
         setRelated(res.data.related || []);
+
+        // Fetch vector content if not directly embedded
+        const iconId = iconDoc._id || iconDoc.slug;
+        if (iconDoc.svgContent) {
+          setSvgData(normalizeSvgForCanvas(iconDoc.svgContent, iconId));
+        } else {
+          setSvgLoading(true);
+          const directCdnUrl = getDirectR2Url(iconDoc);
+          const proxyUrl = iconDoc.svgUrl ? getSafeIconUrl(iconDoc.svgUrl) : '';
+          const targetUrl = proxyUrl || directCdnUrl;
+
+          const raw = await fetchAndCacheSvg(targetUrl, iconId, directCdnUrl);
+          if (raw) {
+            setSvgData(normalizeSvgForCanvas(raw, iconId));
+          }
+          setSvgLoading(false);
+        }
       } catch (err) {
         const match = seedIcons.find((i) => i.slug === slug) || seedIcons[0];
         setIcon(match);
         setRelated(seedIcons.filter((i) => i.slug !== slug).slice(0, 8));
+        if (match && match.svgContent) {
+          setSvgData(normalizeSvgForCanvas(match.svgContent, match._id || match.slug));
+        }
       } finally {
         setLoading(false);
       }
@@ -55,11 +84,14 @@ const IconDetailPage = () => {
   const isSaved = isIconInCollection(icon._id || icon.slug);
 
   const handleCopySvg = () => {
-    if (icon.svgContent) {
-      navigator.clipboard.writeText(icon.svgContent);
+    const contentToCopy = svgData || icon.svgContent;
+    if (contentToCopy) {
+      navigator.clipboard.writeText(contentToCopy);
       setHasCopiedSvg(true);
       addToast('SVG markup copied to clipboard!', 'success');
       setTimeout(() => setHasCopiedSvg(false), 2000);
+    } else {
+      addToast('Loading SVG markup, please try again in a moment.', 'info');
     }
   };
 
@@ -95,10 +127,20 @@ const IconDetailPage = () => {
             )}
           </div>
 
-          <div
-            className="w-36 h-36 sm:w-48 sm:h-48 my-4 flex items-center justify-center text-subpage-primary [&>svg]:w-full [&>svg]:h-full transition-transform hover:scale-105"
-            dangerouslySetInnerHTML={{ __html: icon.svgContent || `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>` }}
-          />
+          <div className="w-36 h-36 sm:w-48 sm:h-48 my-4 p-2 flex items-center justify-center text-subpage-primary transition-transform hover:scale-105 relative">
+            {svgData ? (
+              <div
+                className="w-full h-full flex items-center justify-center text-subpage-primary [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:m-auto [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:overflow-visible"
+                dangerouslySetInnerHTML={{ __html: svgData }}
+              />
+            ) : svgLoading ? (
+              <div className="w-8 h-8 border-3 border-subpage-primary border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-slate-300">
+                <ImageOff className="w-8 h-8" />
+              </div>
+            )}
+          </div>
 
           <span className="text-[11px] font-bold text-subpage-on-surface-variant">
             Scalable Vector Format (SVG / PNG)
@@ -197,7 +239,7 @@ const IconDetailPage = () => {
         <IconEditorModal
           isOpen={isEditorOpen}
           onClose={() => setIsEditorOpen(false)}
-          icon={icon}
+          icon={{ ...icon, svgContent: svgData || icon.svgContent }}
         />
       )}
 

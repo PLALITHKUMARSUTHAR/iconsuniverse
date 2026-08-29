@@ -1,6 +1,7 @@
 const express = require('express');
 const {
   getIcons,
+  getIconSvg,
   getIconBySlug,
   downloadIcon,
   createIcon,
@@ -13,6 +14,7 @@ const upload = require('../middleware/upload');
 const router = express.Router();
 
 router.get('/', getIcons);
+router.get('/svg/:id', getIconSvg);
 router.get('/:slug', getIconBySlug);
 router.get('/:id/download', optionalAuth, downloadIcon);
 router.post('/', protect, authorize('contributor', 'editor', 'admin'), upload.single('svgFile'), createIcon);

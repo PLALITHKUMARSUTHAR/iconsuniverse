@@ -7,6 +7,15 @@ import { useCollections } from '../../context/CollectionsContext';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import JSZip from 'jszip';
+import {
+  fetchAndCacheSvg,
+  recolorSvg,
+  normalizeSvgForCanvas,
+  getSafeIconUrl,
+  getDirectR2Url,
+  normalizeHexColor,
+  getCachedSvg,
+} from '../../services/svgCacheService';
 
 const resolutions = [16, 24, 32, 64, 128, 256, 512];
 
@@ -16,7 +25,7 @@ const defaultCustomization = {
   rotation: 0,
   flipH: false,
   flipV: false,
-  padding: 12,
+  padding: 4,
   shape: 'none',
   badgeColor: '#f4f3fa',
   badgeOpacity: 100,
@@ -76,20 +85,21 @@ const BulkDownloadModal = ({
       setHistory([initialMap]);
       setHistoryIndex(0);
 
-      // Asynchronously fetch raw SVG strings for live vector editing and ZIP exports
+      // Eagerly prefetch and cache raw SVG strings for all icons with dual-tier failover
       sourceIcons.forEach(async (icon) => {
         const id = icon._id || icon.slug;
-        const targetUrl = icon.svgUrl || icon.pngPreviewUrl;
-        if (targetUrl && !icon.svgContent) {
-          try {
-            const res = await fetch(targetUrl);
-            const text = await res.text();
-            if (text.includes('<svg')) {
-              setSvgStringsMap((prev) => ({ ...prev, [id]: text }));
+        if (icon.svgContent) {
+          setSvgStringsMap((prev) => ({ ...prev, [id]: normalizeSvgForCanvas(icon.svgContent, id) }));
+        } else {
+          const directCdnUrl = getDirectR2Url(icon);
+          const proxyUrl = icon.svgUrl ? getSafeIconUrl(icon.svgUrl) : '';
+          const targetUrl = proxyUrl || directCdnUrl;
+          if (targetUrl) {
+            const svgText = await fetchAndCacheSvg(targetUrl, id, directCdnUrl);
+            if (svgText) {
+              setSvgStringsMap((prev) => ({ ...prev, [id]: normalizeSvgForCanvas(svgText, id) }));
             }
-          } catch (err) {}
-        } else if (icon.svgContent) {
-          setSvgStringsMap((prev) => ({ ...prev, [id]: icon.svgContent }));
+          }
         }
       });
     }
@@ -114,13 +124,11 @@ const BulkDownloadModal = ({
     setIconCustomMap((prevMap) => {
       const nextMap = { ...prevMap };
 
-      // Apply changes ONLY to the currently selected icons
       activeSelectedIds.forEach((id) => {
         const current = nextMap[id] || { ...defaultCustomization };
         nextMap[id] = updaterFn(current);
       });
 
-      // Update history stack
       const newHistory = history.slice(0, historyIndex + 1);
       newHistory.push(nextMap);
       setHistory(newHistory);
@@ -186,21 +194,17 @@ const BulkDownloadModal = ({
   const processIconSvg = (icon) => {
     const id = icon._id || icon.slug;
     const custom = iconCustomMap[id] || defaultCustomization;
-    let content = svgStringsMap[id] || icon.svgContent;
+    let content = svgStringsMap[id] || icon.svgContent || getCachedSvg(id);
 
     if (!content) {
       return null;
     }
 
     if (!custom.useOriginalColor && custom.color) {
-      content = content.replace(/currentColor/gi, custom.color);
-      content = content.replace(/stroke="#[0-9a-fA-F]{3,6}"/gi, `stroke="${custom.color}"`);
-      if (!/stroke=/i.test(content) && /fill=/i.test(content)) {
-        content = content.replace(/fill="#[0-9a-fA-F]{3,6}"/gi, `fill="${custom.color}"`);
-      }
+      content = recolorSvg(content, custom.color);
     }
 
-    return content;
+    return normalizeSvgForCanvas(content);
   };
 
   // Generic download function: downloads either specific targetIcons or all sourceIcons
@@ -224,29 +228,61 @@ const BulkDownloadModal = ({
       for (const icon of targetIcons) {
         const id = icon._id || icon.slug;
         const filename = `${icon.slug || icon.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.${format}`;
+        const custom = iconCustomMap[id] || defaultCustomization;
         let processed = processIconSvg(icon);
 
-        // If SVG was not preloaded, fetch it on the fly
-        if (!processed && (icon.svgUrl || icon.pngPreviewUrl)) {
-          try {
-            const res = await fetch(icon.svgUrl || icon.pngPreviewUrl);
-            const text = await res.text();
-            const custom = iconCustomMap[id] || defaultCustomization;
-            processed = text;
-            if (!custom.useOriginalColor && custom.color) {
-              processed = processed.replace(/currentColor/gi, custom.color);
+        if (!processed) {
+          const targetUrl = getSafeIconUrl(
+            icon.svgUrl || icon.pngPreviewUrl || (icon.path ? `https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev/icons/${icon.path}` : ''),
+            id
+          );
+          if (targetUrl) {
+            const raw = await fetchAndCacheSvg(targetUrl, id);
+            if (raw) {
+              processed = !custom.useOriginalColor && custom.color ? recolorSvg(raw, custom.color) : raw;
+              processed = normalizeSvgForCanvas(processed);
             }
-          } catch (e) {
-            processed = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>${icon.title}</title></svg>`;
           }
         }
 
-        folder.file(filename, processed || `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>${icon.title}</title></svg>`);
+        const validSvg = processed || `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><title>${icon.title}</title></svg>`;
+
+        if (format === 'png') {
+          const pngBlob = await new Promise((resolve) => {
+            const img = new Image();
+            const svgBlob = new Blob([validSvg], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(svgBlob);
+            img.onload = () => {
+              const resSize = pngResolution || 512;
+              const canvas = document.createElement('canvas');
+              canvas.width = resSize;
+              canvas.height = resSize;
+              const ctx = canvas.getContext('2d');
+              ctx.clearRect(0, 0, resSize, resSize);
+              ctx.drawImage(img, 0, 0, resSize, resSize);
+              URL.revokeObjectURL(url);
+              canvas.toBlob((b) => resolve(b), 'image/png');
+            };
+            img.onerror = () => {
+              URL.revokeObjectURL(url);
+              resolve(null);
+            };
+            img.src = url;
+          });
+
+          if (pngBlob) {
+            folder.file(filename, pngBlob);
+          } else {
+            folder.file(filename.replace(/\.png$/, '.svg'), validSvg);
+          }
+        } else {
+          folder.file(filename, validSvg);
+        }
       }
 
       folder.file(
         'LICENSE.txt',
-        `IconsUniverse Download Package\n==============================\nTotal: ${targetIcons.length} icons\nFormat: ${format.toUpperCase()}\nDownloaded from https://iconsuniverse.com`
+        `IconsUniverse Download Package\n==============================\nTotal: ${targetIcons.length} icons\nFormat: ${format.toUpperCase()}\nDimensions: ${format === 'png' ? pngResolution : '512'}x${format === 'png' ? pngResolution : '512'}px\nDownloaded from https://iconsuniverse.com`
       );
 
       const blob = await zip.generateAsync({ type: 'blob' });
@@ -319,7 +355,7 @@ const BulkDownloadModal = ({
             type="button"
             onClick={handleUndo}
             disabled={historyIndex <= 0}
-            className="p-2 rounded-xl text-xs font-bold bg-landing-surface-container-low hover:bg-landing-surface-container text-landing-on-surface disabled:opacity-30 transition-colors flex items-center gap-1"
+            className="p-2 rounded-xl text-xs font-bold bg-landing-surface-container-low hover:bg-landing-surface-container text-landing-on-surface disabled:opacity-30 transition-colors flex items-center gap-1 cursor-pointer"
             title="Undo (Ctrl+Z)"
           >
             <Undo2 className="w-4 h-4" />
@@ -330,7 +366,7 @@ const BulkDownloadModal = ({
             type="button"
             onClick={handleRedo}
             disabled={historyIndex >= history.length - 1}
-            className="p-2 rounded-xl text-xs font-bold bg-landing-surface-container-low hover:bg-landing-surface-container text-landing-on-surface disabled:opacity-30 transition-colors flex items-center gap-1"
+            className="p-2 rounded-xl text-xs font-bold bg-landing-surface-container-low hover:bg-landing-surface-container text-landing-on-surface disabled:opacity-30 transition-colors flex items-center gap-1 cursor-pointer"
             title="Redo"
           >
             <Redo2 className="w-4 h-4" />
@@ -340,7 +376,7 @@ const BulkDownloadModal = ({
           <button
             type="button"
             onClick={handleReset}
-            className="p-2 rounded-xl text-xs font-bold bg-landing-surface-container-low hover:bg-landing-surface-container text-landing-on-surface transition-colors flex items-center gap-1"
+            className="p-2 rounded-xl text-xs font-bold bg-landing-surface-container-low hover:bg-landing-surface-container text-landing-on-surface transition-colors flex items-center gap-1 cursor-pointer"
             title="Reset All to Original"
           >
             <RotateCcw className="w-4 h-4 text-landing-vibrant-coral" />
@@ -350,7 +386,7 @@ const BulkDownloadModal = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-landing-on-surface-variant hover:text-landing-primary hover:bg-landing-surface-container-low transition-colors ml-2"
+            className="p-2 rounded-xl text-landing-on-surface-variant hover:text-landing-primary hover:bg-landing-surface-container-low transition-colors ml-2 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -370,7 +406,7 @@ const BulkDownloadModal = ({
               <button
                 type="button"
                 onClick={() => setFormat('svg')}
-                className={`py-2.5 px-4 rounded-2xl text-xs font-bold border transition-all ${
+                className={`py-2.5 px-4 rounded-2xl text-xs font-bold border transition-all cursor-pointer ${
                   format === 'svg'
                     ? 'bg-landing-primary text-white border-landing-primary shadow-xs'
                     : 'bg-white text-landing-on-surface border-landing-surface-container hover:bg-landing-surface-container-low'
@@ -382,7 +418,7 @@ const BulkDownloadModal = ({
               <button
                 type="button"
                 onClick={() => setFormat('png')}
-                className={`py-2.5 px-4 rounded-2xl text-xs font-bold border transition-all ${
+                className={`py-2.5 px-4 rounded-2xl text-xs font-bold border transition-all cursor-pointer ${
                   format === 'png'
                     ? 'bg-landing-primary text-white border-landing-primary shadow-xs'
                     : 'bg-white text-landing-on-surface border-landing-surface-container hover:bg-landing-surface-container-low'
@@ -404,7 +440,7 @@ const BulkDownloadModal = ({
                       key={res}
                       type="button"
                       onClick={() => setPngResolution(res)}
-                      className={`px-2.5 py-1 rounded-xl text-xs font-mono font-bold transition-colors ${
+                      className={`px-2.5 py-1 rounded-xl text-xs font-mono font-bold transition-colors cursor-pointer ${
                         pngResolution === res
                           ? 'bg-landing-primary text-white'
                           : 'bg-landing-surface-container-low text-landing-on-surface hover:bg-landing-primary/10'
@@ -425,12 +461,14 @@ const BulkDownloadModal = ({
             </label>
 
             {/* Tabs Bar */}
-            <div className="flex p-1 rounded-2xl bg-landing-surface-container-low border border-landing-outline-variant/30 mb-3">
+            <div className="flex p-1 rounded-2xl bg-landing-surface-container-low border border-landing-surface-container mb-3">
               <button
                 type="button"
                 onClick={() => setActiveTab('color')}
-                className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
-                  activeTab === 'color' ? 'bg-white shadow-xs text-landing-primary' : 'text-landing-on-surface-variant'
+                className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  activeTab === 'color'
+                    ? 'bg-white shadow-xs text-landing-primary'
+                    : 'text-landing-on-surface-variant hover:text-landing-primary'
                 }`}
               >
                 <Palette className="w-3.5 h-3.5" />
@@ -440,8 +478,10 @@ const BulkDownloadModal = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('transform')}
-                className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
-                  activeTab === 'transform' ? 'bg-white shadow-xs text-landing-primary' : 'text-landing-on-surface-variant'
+                className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  activeTab === 'transform'
+                    ? 'bg-white shadow-xs text-landing-primary'
+                    : 'text-landing-on-surface-variant hover:text-landing-primary'
                 }`}
               >
                 <RotateCw className="w-3.5 h-3.5" />
@@ -451,8 +491,10 @@ const BulkDownloadModal = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('badge')}
-                className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
-                  activeTab === 'badge' ? 'bg-white shadow-xs text-landing-primary' : 'text-landing-on-surface-variant'
+                className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  activeTab === 'badge'
+                    ? 'bg-white shadow-xs text-landing-primary'
+                    : 'text-landing-on-surface-variant hover:text-landing-primary'
                 }`}
               >
                 <Shield className="w-3.5 h-3.5" />
@@ -462,10 +504,10 @@ const BulkDownloadModal = ({
 
             {/* Tab Body */}
             <div className="p-4 rounded-3xl bg-white border border-landing-surface-container shadow-xs min-h-[220px]">
-              {/* TAB 1: Custom Hex Color Section Only */}
+              {/* TAB 1: Custom Hex Color Section */}
               {activeTab === 'color' && (
                 <div className="flex flex-col gap-4">
-                  {/* Keep Original Colors button for selected icons */}
+                  {/* Keep Original Colors button */}
                   <button
                     type="button"
                     onClick={() => {
@@ -475,7 +517,7 @@ const BulkDownloadModal = ({
                       }));
                       addToast('Kept original colors for selected icons', 'info');
                     }}
-                    className={`w-full py-2.5 px-3 rounded-2xl text-xs font-bold border transition-all flex items-center justify-center gap-2 ${
+                    className={`w-full py-2.5 px-3 rounded-2xl text-xs font-bold border transition-all flex items-center justify-center gap-2 cursor-pointer ${
                       sampleActiveCustom.useOriginalColor
                         ? 'bg-landing-primary text-white border-landing-primary shadow-xs'
                         : 'bg-landing-surface-container-low text-landing-on-surface border-landing-surface-container hover:bg-landing-surface-container'
@@ -497,7 +539,7 @@ const BulkDownloadModal = ({
                       <label className="w-11 h-11 rounded-2xl overflow-hidden cursor-pointer border border-landing-surface-container shrink-0 shadow-xs flex items-center justify-center bg-white hover:scale-105 transition-transform">
                         <input
                           type="color"
-                          value={sampleActiveCustom.color || '#00327d'}
+                          value={normalizeHexColor(sampleActiveCustom.color, '#00327d')}
                           onChange={(e) => {
                             const val = e.target.value;
                             updateCustomizations((prev) => ({
@@ -514,7 +556,10 @@ const BulkDownloadModal = ({
                         type="text"
                         value={sampleActiveCustom.color || '#00327D'}
                         onChange={(e) => {
-                          const val = e.target.value;
+                          let val = e.target.value.trim();
+                          if (val && !val.startsWith('#')) {
+                            val = '#' + val;
+                          }
                           updateCustomizations((prev) => ({
                             ...prev,
                             color: val,
@@ -530,7 +575,7 @@ const BulkDownloadModal = ({
                 </div>
               )}
 
-              {/* TAB 2: Transforms (No zoom/scale slider) */}
+              {/* TAB 2: Transforms */}
               {activeTab === 'transform' && (
                 <TransformControls
                   rotation={sampleActiveCustom.rotation}
@@ -549,13 +594,13 @@ const BulkDownloadModal = ({
                       rotation: 0,
                       flipH: false,
                       flipV: false,
-                      padding: 12,
+                      padding: 4,
                     }));
                   }}
                 />
               )}
 
-              {/* TAB 3: Backdrop Shape Badges */}
+              {/* TAB 3: Backdrop Shapes */}
               {activeTab === 'badge' && (
                 <ShapeBadgeControls
                   shape={sampleActiveCustom.shape}
@@ -567,6 +612,14 @@ const BulkDownloadModal = ({
                       ...up,
                     }));
                   }}
+                  onReset={() => {
+                    updateCustomizations((prev) => ({
+                      ...prev,
+                      shape: 'none',
+                      badgeColor: '#f4f3fa',
+                      badgeOpacity: 100,
+                    }));
+                  }}
                 />
               )}
             </div>
@@ -574,24 +627,23 @@ const BulkDownloadModal = ({
         </div>
 
         {/* Right Side: Big Live Preview Section (8 columns) */}
-        <div className="lg:col-span-8 bg-[radial-gradient(#e2e2e9_1px,transparent_1px)] [background-size:16px_16px] bg-[#faf8ff] p-6 overflow-y-auto flex flex-col justify-between">
+        <div className="lg:col-span-8 p-5 flex flex-col justify-between overflow-y-auto bg-white">
           <div>
-            {/* Live Preview Header Toolbar */}
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-4 bg-white/90 p-3 rounded-2xl border border-landing-surface-container shadow-xs">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-landing-primary">
-                  Live Preview Canvas
-                </span>
-                <span className="text-xs text-landing-on-surface-variant font-medium">
-                  (Click any icon to select/deselect for editing)
-                </span>
+            <div className="flex items-center justify-between pb-3 border-b border-landing-surface-container mb-4">
+              <div>
+                <h3 className="text-sm font-extrabold font-heading text-landing-primary">
+                  Live Preview & Target Selection
+                </h3>
+                <p className="text-xs text-landing-on-surface-variant">
+                  Click icon cards to toggle customization target.
+                </p>
               </div>
 
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handleSelectAllPreview}
-                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-landing-surface-container-low hover:bg-landing-surface-container text-landing-primary transition-colors"
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-landing-surface-container-low hover:bg-landing-surface-container text-landing-primary transition-colors cursor-pointer"
                 >
                   {activeSelectedIds.size === sourceIcons.length ? 'Deselect All' : 'Select All Icons'}
                 </button>
@@ -604,6 +656,7 @@ const BulkDownloadModal = ({
                 const id = icon._id || icon.slug;
                 const isSelected = activeSelectedIds.has(id);
                 const custom = iconCustomMap[id] || defaultCustomization;
+                const processedSvg = processIconSvg(icon);
 
                 // Shape styling
                 const opacityHex = Math.round((custom.badgeOpacity / 100) * 255)
@@ -628,10 +681,10 @@ const BulkDownloadModal = ({
                   <div
                     key={id}
                     onClick={() => handleTogglePreviewSelect(id)}
-                    className={`group relative p-3 rounded-2xl border transition-all cursor-pointer flex flex-col items-center justify-between text-center bg-white ${
+                    className={`group relative p-2.5 rounded-2xl border transition-all cursor-pointer flex flex-col items-center justify-between text-center bg-white ${
                       isSelected
-                        ? 'ring-2 ring-landing-primary border-transparent shadow-sm'
-                        : 'border-landing-surface-container/80 opacity-70 hover:opacity-100 shadow-2xs'
+                        ? 'ring-2 ring-landing-primary border-transparent shadow-xs'
+                        : 'border-landing-surface-container/80 opacity-75 hover:opacity-100 shadow-2xs'
                     }`}
                   >
                     {/* Top Checkbox */}
@@ -642,7 +695,7 @@ const BulkDownloadModal = ({
                           e.stopPropagation();
                           handleTogglePreviewSelect(id);
                         }}
-                        className="text-landing-primary p-0.5"
+                        className="text-landing-primary p-0.5 cursor-pointer"
                       >
                         {isSelected ? (
                           <CheckSquare className="w-4 h-4 fill-landing-primary text-white" />
@@ -654,25 +707,24 @@ const BulkDownloadModal = ({
 
                     {/* Centered Canvas Preview with backdrop shapes and transforms */}
                     <div
-                      className="w-14 h-14 my-2 flex items-center justify-center transition-all shadow-xs"
-                      style={{
-                        ...getShapeStyle(),
-                        transform: `rotate(${custom.rotation}deg) scaleX(${custom.flipH ? -1 : 1}) scaleY(${custom.flipV ? -1 : 1})`,
-                      }}
+                      className="w-14 h-14 my-1.5 flex items-center justify-center transition-all shadow-2xs overflow-hidden m-auto relative"
+                      style={getShapeStyle()}
                     >
-                      {processIconSvg(icon) ? (
+                      {processedSvg ? (
                         <div
-                          className={`flex items-center justify-center ${custom.shape !== 'none' ? 'w-8 h-8' : 'w-10 h-10'} text-landing-primary [&>svg]:w-full [&>svg]:h-full`}
+                          className="w-full h-full flex items-center justify-center m-auto text-landing-primary [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:m-auto [&>svg]:max-w-full [&>svg]:max-h-full"
                           style={{
-                            color: !custom.useOriginalColor ? custom.color : '#00327d',
+                            transform: `rotate(${custom.rotation || 0}deg) scaleX(${custom.flipH ? -1 : 1}) scaleY(${custom.flipV ? -1 : 1})`,
+                            padding: custom.shape !== 'none' ? `${Math.max(6, custom.padding || 8)}px` : `${custom.padding || 2}px`,
+                            color: !custom.useOriginalColor && custom.color ? custom.color : '#00327d',
                           }}
-                          dangerouslySetInnerHTML={{ __html: processIconSvg(icon) }}
+                          dangerouslySetInnerHTML={{ __html: processedSvg }}
                         />
                       ) : (
                         <img
-                          src={icon.svgUrl || icon.pngPreviewUrl}
+                          src={getSafeIconUrl(icon.svgUrl || icon.pngPreviewUrl || (icon.path ? `https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev/icons/${icon.path}` : ''))}
                           alt={icon.title}
-                          className={`${custom.shape !== 'none' ? 'w-8 h-8' : 'w-10 h-10'} object-contain`}
+                          className="w-8 h-8 object-contain m-auto"
                           loading="lazy"
                           decoding="async"
                         />
@@ -689,7 +741,7 @@ const BulkDownloadModal = ({
           </div>
 
           {/* Bottom Sticky Action Footer with Download Selected (Left) and Download All (Right) */}
-          <div className="p-4 bg-white rounded-3xl border border-landing-surface-container shadow-md flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
+          <div className="p-4 bg-white rounded-3xl border border-landing-surface-container shadow-md flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0 mt-4">
             <div className="text-xs text-landing-on-surface-variant">
               <span>{activeSelectedIds.size} Selected • {sourceIcons.length} Total in Studio</span>
             </div>

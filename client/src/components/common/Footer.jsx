@@ -2,50 +2,10 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 
-const Footer = ({ collapsible = false }) => {
-  const location = useLocation();
-  const isSearchPage = location.pathname === '/search';
-  const shouldBeCollapsible = collapsible || isSearchPage;
-
-  const [isExpanded, setIsExpanded] = useState(false);
-
+const Footer = () => {
   return (
     <footer className="w-full bg-[#001e52] text-white transition-all duration-300 mt-12 border-t border-white/15 relative z-20">
-      {/* If collapsible and currently collapsed, show the sleek expander bar */}
-      {shouldBeCollapsible && !isExpanded ? (
-        <div className="max-w-[1440px] mx-auto px-6 py-3.5 flex items-center justify-between text-xs text-white/80">
-          <p className="text-white/90 font-medium">© 2026 IconsUniverse. All rights reserved.</p>
-
-          <button
-            type="button"
-            onClick={() => setIsExpanded(true)}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition-colors shadow-xs cursor-pointer"
-            title="Expand Full Footer"
-          >
-            <span>Full Footer & Links</span>
-            <ChevronUp className="w-4 h-4 text-landing-electric-teal" />
-          </button>
-
-          <Link to="/sitemap" className="text-white hover:text-landing-electric-teal font-semibold transition-colors">
-            Sitemap
-          </Link>
-        </div>
-      ) : (
-        <div className="max-w-[1440px] mx-auto px-6 sm:px-8 pt-10 pb-8 animate-fade-in text-white">
-          {/* If collapsible and expanded, show collapse button at top right */}
-          {shouldBeCollapsible && (
-            <div className="flex justify-end mb-4">
-              <button
-                type="button"
-                onClick={() => setIsExpanded(false)}
-                className="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white text-xs font-semibold transition-colors cursor-pointer"
-                title="Collapse Footer"
-              >
-                <span>Collapse Footer</span>
-                <ChevronDown className="w-4 h-4 text-landing-electric-teal" />
-              </button>
-            </div>
-          )}
+      <div className="max-w-[1440px] mx-auto px-6 sm:px-8 pt-10 pb-8 animate-fade-in text-white">
 
           {/* Main 4-Column Grid: Brand + Content + Tools + Help */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 pb-8 border-b border-white/15">
@@ -138,7 +98,6 @@ const Footer = ({ collapsible = false }) => {
             </Link>
           </div>
         </div>
-      )}
     </footer>
   );
 };

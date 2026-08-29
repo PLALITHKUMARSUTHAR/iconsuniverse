@@ -1,11 +1,86 @@
-import React, { memo } from 'react';
-import { Crown, CheckSquare, Square } from 'lucide-react';
+import React, { memo, useState, useEffect } from 'react';
+import { Crown, CheckSquare, Square, ImageOff } from 'lucide-react';
+import {
+  getSafeIconUrl,
+  getDirectR2Url,
+  fetchAndCacheSvg,
+  getCachedSvg,
+  normalizeSvgForCanvas,
+} from '../../services/svgCacheService';
 
 const IconCard = ({
   icon,
   isSelected = false,
   onToggleSelect = null,
 }) => {
+  const iconId = icon._id || icon.slug;
+  const directCdnUrl = getDirectR2Url(icon);
+  const proxyUrl = icon.svgUrl ? getSafeIconUrl(icon.svgUrl) : '';
+  const primaryUrl = directCdnUrl || proxyUrl;
+  const fallbackUrl = proxyUrl && proxyUrl !== directCdnUrl ? proxyUrl : null;
+
+  const [svgContent, setSvgContent] = useState(() => {
+    if (icon.svgContent) return normalizeSvgForCanvas(icon.svgContent, iconId);
+    const cached = getCachedSvg(iconId) || getCachedSvg(primaryUrl) || getCachedSvg(directCdnUrl);
+    return cached ? normalizeSvgForCanvas(cached, iconId) : null;
+  });
+
+  const [hasError, setHasError] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(Boolean(svgContent));
+
+  useEffect(() => {
+    if (icon.svgContent) {
+      setSvgContent(normalizeSvgForCanvas(icon.svgContent, iconId));
+      setIsLoaded(true);
+      setHasError(false);
+      return;
+    }
+
+    const cached = getCachedSvg(iconId) || getCachedSvg(primaryUrl) || getCachedSvg(directCdnUrl);
+    if (cached) {
+      setSvgContent(normalizeSvgForCanvas(cached, iconId));
+      setIsLoaded(true);
+      setHasError(false);
+      return;
+    }
+
+    if (!primaryUrl) {
+      setHasError(true);
+      setIsLoaded(true);
+      return;
+    }
+
+    setSvgContent(null);
+    setIsLoaded(false);
+    setHasError(false);
+
+    let isMounted = true;
+    // Multi-tier fetch: Primary Direct R2 CDN with automatic fallback to proxyUrl
+    fetchAndCacheSvg(primaryUrl, iconId, fallbackUrl)
+      .then((raw) => {
+        if (isMounted) {
+          if (raw) {
+            setSvgContent(normalizeSvgForCanvas(raw, iconId));
+            setIsLoaded(true);
+            setHasError(false);
+          } else {
+            setHasError(true);
+            setIsLoaded(true);
+          }
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setHasError(true);
+          setIsLoaded(true);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [iconId, primaryUrl, fallbackUrl, icon.svgContent]);
+
   return (
     <div
       style={{ contentVisibility: 'auto', containIntrinsicSize: '80px 96px' }}
@@ -50,22 +125,35 @@ const IconCard = ({
         )}
       </div>
 
-      {/* Center SVG Icon with high-speed async loading */}
-      <div className="my-1.5 w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-landing-primary group-hover:scale-110 transition-transform duration-150">
-        {icon.svgContent ? (
+      {/* Inner 32x32 px SVG Icon Box Container with high-speed async loading and optical centering */}
+      <div className="my-2 w-8 h-8 p-0.5 flex items-center justify-center text-landing-primary group-hover:scale-110 transition-transform duration-150 relative m-auto shrink-0">
+        {svgContent ? (
           <div
-            className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:max-w-full [&>svg]:max-h-full"
-            dangerouslySetInnerHTML={{ __html: icon.svgContent }}
+            className="w-full h-full flex items-center justify-center text-landing-primary [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:m-auto [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:overflow-visible"
+            dangerouslySetInnerHTML={{ __html: svgContent }}
           />
+        ) : hasError ? (
+          <div className="w-full h-full flex items-center justify-center text-slate-300">
+            <ImageOff className="w-5 h-5" />
+          </div>
         ) : (
-          <img
-            src={icon.svgUrl || icon.pngPreviewUrl}
-            alt={icon.title}
-            className="w-full h-full object-contain pointer-events-none"
-            loading="lazy"
-            decoding="async"
-            fetchPriority="low"
-          />
+          <>
+            {!isLoaded && (
+              <div className="absolute inset-0 bg-slate-100/70 rounded-lg animate-pulse" />
+            )}
+            <img
+              src={primaryUrl}
+              alt={icon.title}
+              className={`w-full h-full object-contain m-auto pointer-events-none transition-opacity duration-150 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+              loading="lazy"
+              decoding="async"
+              onLoad={() => setIsLoaded(true)}
+              onError={() => {
+                setHasError(true);
+                setIsLoaded(true);
+              }}
+            />
+          </>
         )}
       </div>
 

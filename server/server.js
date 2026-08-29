@@ -60,8 +60,13 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-// Apply rate limiter to general API calls
-app.use('/api', apiLimiter);
+// Apply rate limiter to general API calls (excluding public SVG proxying)
+app.use('/api', (req, res, next) => {
+  if (req.path.startsWith('/icons/svg')) {
+    return next();
+  }
+  return apiLimiter(req, res, next);
+});
 
 // Mount REST API Routes
 app.use('/api/auth', authRoutes);

@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { recolorSvg, normalizeSvgForCanvas } from '../../services/svgCacheService';
 
 const IconEditorCanvas = ({
   rawSvg = '',
@@ -21,21 +22,16 @@ const IconEditorCanvas = ({
     let content = rawSvg;
 
     // Apply layer color replacements
-    Object.entries(layerColorOverrides).forEach(([original, replacement]) => {
-      const regex = new RegExp(original, 'gi');
-      content = content.replace(regex, replacement);
-    });
-
-    // If global color is specified and no granular layer overrides
-    if (Object.keys(layerColorOverrides).length === 0) {
-      content = content.replace(/currentColor/gi, color);
-      content = content.replace(/stroke="#[0-9a-fA-F]{3,6}"/gi, `stroke="${color}"`);
-      if (!/stroke=/i.test(content) && /fill=/i.test(content)) {
-        content = content.replace(/fill="#[0-9a-fA-F]{3,6}"/gi, `fill="${color}"`);
-      }
+    if (Object.keys(layerColorOverrides).length > 0) {
+      Object.entries(layerColorOverrides).forEach(([original, replacement]) => {
+        const regex = new RegExp(original, 'gi');
+        content = content.replace(regex, replacement);
+      });
+    } else if (color) {
+      content = recolorSvg(content, color);
     }
 
-    return content;
+    return normalizeSvgForCanvas(content);
   }, [rawSvg, color, layerColorOverrides]);
 
   const opacityHex = Math.round((badgeOpacity / 100) * 255)
@@ -92,7 +88,7 @@ const IconEditorCanvas = ({
     <div className="relative flex items-center justify-center p-6 bg-[radial-gradient(#e2e2e9_1px,transparent_1px)] [background-size:16px_16px] rounded-3xl border border-landing-surface-container bg-white/80 overflow-hidden shadow-inner">
       {/* Outer Backdrop Shape Container */}
       <div
-        className="relative flex items-center justify-center transition-all duration-300 shadow-sm"
+        className="relative flex items-center justify-center transition-all duration-300 shadow-sm overflow-hidden m-auto"
         style={{
           width: `${previewSize}px`,
           height: `${previewSize}px`,
@@ -101,7 +97,7 @@ const IconEditorCanvas = ({
       >
         {/* Inner Centered Icon */}
         <div
-          className="w-full h-full flex items-center justify-center text-landing-primary [&>svg]:w-full [&>svg]:h-full [&>svg]:max-w-full [&>svg]:max-h-full"
+          className="w-full h-full flex items-center justify-center m-auto text-landing-primary [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:m-auto [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:overflow-visible"
           style={{
             ...transformStyle,
             padding: `${padding}px`,

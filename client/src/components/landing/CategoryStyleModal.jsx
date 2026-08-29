@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { CategoryIconMap } from '../../data/categoryIcons';
 import { iconService } from '../../services/iconService';
 import { X, Search, Sparkles, Check, Layers, CircleDot, Palette, Grid3X3, ArrowRight } from 'lucide-react';
+import { getSafeIconUrl } from '../../services/svgCacheService';
 
 const styleOptions = [
   { id: 'filled', label: 'Fill / Bold', icon: CircleDot, desc: 'Solid filled glyphs' },
@@ -161,7 +162,7 @@ const CategoryStyleModal = ({ isOpen, onClose, category }) => {
                     title={ic.title}
                   >
                     <img
-                      src={ic.svgUrl || ic.pngPreviewUrl}
+                      src={getSafeIconUrl(ic.svgUrl || ic.pngPreviewUrl || (ic.path ? `https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev/icons/${ic.path}` : ''))}
                       alt={ic.title}
                       className="w-7 h-7 object-contain group-hover:scale-110 transition-transform"
                       loading="lazy"
