@@ -8,133 +8,273 @@ const { sanitizeSVG, extractColorsFromSVG, svgToDataUrl } = require('../utils/sv
 // In-memory vector cache for high-speed serving
 const svgCache = new Map();
 
-function getPathBoundingBox(d) {
-  if (!d || typeof d !== 'string') return null;
+function parseSvgPathData(d) {
+  if (!d || typeof d !== 'string') return [];
 
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  let curX = 0, curY = 0, startX = 0, startY = 0;
+  const commands = [];
+  let i = 0;
+  const len = d.length;
 
-  function updateBounds(x, y) {
-    if (Number.isFinite(x) && Number.isFinite(y)) {
-      if (x < minX) minX = x;
-      if (y < minY) minY = y;
-      if (x > maxX) maxX = x;
-      if (y > maxY) maxY = y;
-    }
+  function isWhitespace(ch) {
+    return ch === ' ' || ch === '\t' || ch === '\r' || ch === '\n' || ch === ',';
   }
 
-  const commandRegex = /([a-df-z])|([+-]?(?:[0-9]*\.[0-9]+|[0-9]+)(?:[eE][+-]?[0-9]+)?)/gi;
-  let match;
-  const tokens = [];
-  while ((match = commandRegex.exec(d)) !== null) {
-    if (match[1]) {
-      tokens.push({ type: 'cmd', val: match[1] });
-    } else if (match[2]) {
-      tokens.push({ type: 'num', val: parseFloat(match[2]) });
-    }
+  function isAlpha(ch) {
+    return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z');
   }
 
-  function processCommand(cmd, params) {
-    if (!cmd) return;
-    let i = 0;
-    const isRel = cmd === cmd.toLowerCase();
-    const type = cmd.toUpperCase();
+  function isDigit(ch) {
+    return ch >= '0' && ch <= '9';
+  }
 
-    while (i < params.length || (params.length === 0 && type === 'Z')) {
-      if (type === 'M') {
-        const x = params[i++], y = params[i++];
-        if (x === undefined || y === undefined) break;
-        if (isRel) { curX += x; curY += y; } else { curX = x; curY = y; }
-        startX = curX; startY = curY;
-        updateBounds(curX, curY);
-        cmd = isRel ? 'l' : 'L';
-      } else if (type === 'L') {
-        const x = params[i++], y = params[i++];
-        if (x === undefined || y === undefined) break;
-        if (isRel) { curX += x; curY += y; } else { curX = x; curY = y; }
-        updateBounds(curX, curY);
-      } else if (type === 'H') {
-        const x = params[i++];
-        if (x === undefined) break;
-        if (isRel) { curX += x; } else { curX = x; }
-        updateBounds(curX, curY);
-      } else if (type === 'V') {
-        const y = params[i++];
-        if (y === undefined) break;
-        if (isRel) { curY += y; } else { curY = y; }
-        updateBounds(curX, curY);
-      } else if (type === 'C') {
-        const x1 = params[i++], y1 = params[i++];
-        const x2 = params[i++], y2 = params[i++];
-        const x = params[i++], y = params[i++];
-        if (x === undefined || y === undefined) break;
-        if (isRel) {
-          updateBounds(curX + x1, curY + y1);
-          updateBounds(curX + x2, curY + y2);
-          curX += x; curY += y;
-        } else {
-          updateBounds(x1, y1);
-          updateBounds(x2, y2);
-          curX = x; curY = y;
-        }
-        updateBounds(curX, curY);
-      } else if (type === 'S') {
-        const x2 = params[i++], y2 = params[i++];
-        const x = params[i++], y = params[i++];
-        if (x === undefined || y === undefined) break;
-        if (isRel) {
-          updateBounds(curX + x2, curY + y2);
-          curX += x; curY += y;
-        } else {
-          updateBounds(x2, y2);
-          curX = x; curY = y;
-        }
-        updateBounds(curX, curY);
-      } else if (type === 'Q') {
-        const x1 = params[i++], y1 = params[i++];
-        const x = params[i++], y = params[i++];
-        if (x === undefined || y === undefined) break;
-        if (isRel) {
-          updateBounds(curX + x1, curY + y1);
-          curX += x; curY += y;
-        } else {
-          updateBounds(x1, y1);
-          curX = x; curY = y;
-        }
-        updateBounds(curX, curY);
-      } else if (type === 'T') {
-        const x = params[i++], y = params[i++];
-        if (x === undefined || y === undefined) break;
-        if (isRel) { curX += x; curY += y; } else { curX = x; curY = y; }
-        updateBounds(curX, curY);
-      } else if (type === 'A') {
-        const rx = params[i++], ry = params[i++], rot = params[i++], large = params[i++], sweep = params[i++];
-        const x = params[i++], y = params[i++];
-        if (x === undefined || y === undefined) break;
-        if (isRel) { curX += x; curY += y; } else { curX = x; curY = y; }
-        updateBounds(curX, curY);
-      } else if (type === 'Z') {
-        curX = startX; curY = startY;
+  function skipWhitespace() {
+    while (i < len && isWhitespace(d[i])) i++;
+  }
+
+  function parseNumber() {
+    skipWhitespace();
+    if (i >= len) return null;
+
+    const start = i;
+    if (d[i] === '+' || d[i] === '-') i++;
+
+    let hasDigits = false;
+    while (i < len && isDigit(d[i])) {
+      hasDigits = true;
+      i++;
+    }
+
+    if (i < len && d[i] === '.') {
+      i++;
+      while (i < len && isDigit(d[i])) {
+        hasDigits = true;
+        i++;
+      }
+    }
+
+    if (!hasDigits) {
+      i = start;
+      return null;
+    }
+
+    if (i < len && (d[i] === 'e' || d[i] === 'E')) {
+      const ePos = i;
+      i++;
+      if (i < len && (d[i] === '+' || d[i] === '-')) i++;
+      let hasExpDigits = false;
+      while (i < len && isDigit(d[i])) {
+        hasExpDigits = true;
+        i++;
+      }
+      if (!hasExpDigits) {
+        i = ePos;
+      }
+    }
+
+    const numStr = d.slice(start, i);
+    const val = parseFloat(numStr);
+    return Number.isFinite(val) ? val : null;
+  }
+
+  function parseFlag() {
+    skipWhitespace();
+    if (i >= len) return null;
+    const ch = d[i];
+    if (ch === '0' || ch === '1') {
+      i++;
+      return ch === '1' ? 1 : 0;
+    }
+    return null;
+  }
+
+  let currentCmd = null;
+
+  while (i < len) {
+    skipWhitespace();
+    if (i >= len) break;
+
+    const ch = d[i];
+    if (isAlpha(ch)) {
+      currentCmd = ch;
+      i++;
+      skipWhitespace();
+    } else if (!currentCmd) {
+      i++;
+      continue;
+    }
+
+    const type = currentCmd.toUpperCase();
+    const isRel = currentCmd === currentCmd.toLowerCase();
+
+    if (type === 'Z') {
+      commands.push({ type: 'Z', isRel, args: [] });
+      currentCmd = null;
+      continue;
+    }
+
+    const args = [];
+    if (type === 'A') {
+      const rx = parseNumber();
+      const ry = parseNumber();
+      const rot = parseNumber();
+      const large = parseFlag();
+      const sweep = parseFlag();
+      const x = parseNumber();
+      const y = parseNumber();
+
+      if (rx !== null && ry !== null && rot !== null && large !== null && sweep !== null && x !== null && y !== null) {
+        commands.push({ type: 'A', isRel, args: [rx, ry, rot, large, sweep, x, y] });
+      } else {
         break;
+      }
+    } else {
+      const expectedArgs = (type === 'H' || type === 'V') ? 1 : (type === 'M' || type === 'L' || type === 'T') ? 2 : (type === 'S' || type === 'Q') ? 4 : (type === 'C') ? 6 : 2;
+      for (let a = 0; a < expectedArgs; a++) {
+        const num = parseNumber();
+        if (num === null) break;
+        args.push(num);
+      }
+      if (args.length === expectedArgs) {
+        commands.push({ type, isRel, args });
+        if (type === 'M') {
+          currentCmd = isRel ? 'l' : 'L';
+        }
       } else {
         break;
       }
     }
   }
 
-  let activeCmd = null;
-  let activeParams = [];
+  return commands;
+}
 
-  for (const token of tokens) {
-    if (token.type === 'cmd') {
-      if (activeCmd) processCommand(activeCmd, activeParams);
-      activeCmd = token.val;
-      activeParams = [];
-    } else {
-      activeParams.push(token.val);
+function parseTransform(transformStr) {
+  if (!transformStr || typeof transformStr !== 'string') return null;
+
+  let tx = 0, ty = 0, sx = 1, sy = 1;
+  let hasTransform = false;
+
+  const translateMatch = transformStr.match(/translate\(\s*([0-9.-]+)(?:[\s,]+([0-9.-]+))?\s*\)/i);
+  if (translateMatch) {
+    tx = parseFloat(translateMatch[1]) || 0;
+    ty = parseFloat(translateMatch[2]) || 0;
+    hasTransform = true;
+  }
+
+  const scaleMatch = transformStr.match(/scale\(\s*([0-9.-]+)(?:[\s,]+([0-9.-]+))?\s*\)/i);
+  if (scaleMatch) {
+    sx = parseFloat(scaleMatch[1]) || 1;
+    sy = scaleMatch[2] ? parseFloat(scaleMatch[2]) : sx;
+    hasTransform = true;
+  }
+
+  const matrixMatch = transformStr.match(/matrix\(\s*([0-9.-]+)[\s,]+([0-9.-]+)[\s,]+([0-9.-]+)[\s,]+([0-9.-]+)[\s,]+([0-9.-]+)[\s,]+([0-9.-]+)\s*\)/i);
+  if (matrixMatch) {
+    const a = parseFloat(matrixMatch[1]), b = parseFloat(matrixMatch[2]);
+    const c = parseFloat(matrixMatch[3]), d = parseFloat(matrixMatch[4]);
+    const e = parseFloat(matrixMatch[5]), f = parseFloat(matrixMatch[6]);
+    return (x, y) => ({ x: a * x + c * y + e, y: b * x + d * y + f });
+  }
+
+  if (!hasTransform) return null;
+  return (x, y) => ({ x: x * sx + tx, y: y * sy + ty });
+}
+
+function getPathBoundingBoxExact(d, transformFn = null) {
+  const commands = parseSvgPathData(d);
+  if (commands.length === 0) return null;
+
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  let curX = 0, curY = 0, startX = 0, startY = 0;
+
+  function updateBounds(x, y) {
+    if (Number.isFinite(x) && Number.isFinite(y)) {
+      let px = x, py = y;
+      if (transformFn) {
+        const pt = transformFn(x, y);
+        px = pt.x;
+        py = pt.y;
+      }
+      if (px < minX) minX = px;
+      if (py < minY) minY = py;
+      if (px > maxX) maxX = px;
+      if (py > maxY) maxY = py;
     }
   }
-  if (activeCmd) processCommand(activeCmd, activeParams);
+
+  for (const cmd of commands) {
+    const { type, isRel, args } = cmd;
+
+    if (type === 'M') {
+      const [x, y] = args;
+      if (isRel) { curX += x; curY += y; } else { curX = x; curY = y; }
+      startX = curX; startY = curY;
+      updateBounds(curX, curY);
+    } else if (type === 'L') {
+      const [x, y] = args;
+      if (isRel) { curX += x; curY += y; } else { curX = x; curY = y; }
+      updateBounds(curX, curY);
+    } else if (type === 'H') {
+      const [x] = args;
+      if (isRel) { curX += x; } else { curX = x; }
+      updateBounds(curX, curY);
+    } else if (type === 'V') {
+      const [y] = args;
+      if (isRel) { curY += y; } else { curY = y; }
+      updateBounds(curX, curY);
+    } else if (type === 'C') {
+      const [x1, y1, x2, y2, x, y] = args;
+      if (isRel) {
+        updateBounds(curX + x1, curY + y1);
+        updateBounds(curX + x2, curY + y2);
+        curX += x; curY += y;
+      } else {
+        updateBounds(x1, y1);
+        updateBounds(x2, y2);
+        curX = x; curY = y;
+      }
+      updateBounds(curX, curY);
+    } else if (type === 'S') {
+      const [x2, y2, x, y] = args;
+      if (isRel) {
+        updateBounds(curX + x2, curY + y2);
+        curX += x; curY += y;
+      } else {
+        updateBounds(x2, y2);
+        curX = x; curY = y;
+      }
+      updateBounds(curX, curY);
+    } else if (type === 'Q') {
+      const [x1, y1, x, y] = args;
+      if (isRel) {
+        updateBounds(curX + x1, curY + y1);
+        curX += x; curY += y;
+      } else {
+        updateBounds(x1, y1);
+        curX = x; curY = y;
+      }
+      updateBounds(curX, curY);
+    } else if (type === 'T') {
+      const [x, y] = args;
+      if (isRel) { curX += x; curY += y; } else { curX = x; curY = y; }
+      updateBounds(curX, curY);
+    } else if (type === 'A') {
+      const [rx, ry, rot, large, sweep, x, y] = args;
+      if (isRel) {
+        updateBounds(curX - rx, curY - ry);
+        updateBounds(curX + rx, curY + ry);
+        curX += x; curY += y;
+      } else {
+        updateBounds(x - rx, y - ry);
+        updateBounds(x + rx, y + ry);
+        curX = x; curY = y;
+      }
+      updateBounds(curX, curY);
+    } else if (type === 'Z') {
+      curX = startX;
+      curY = startY;
+    }
+  }
 
   if (minX === Infinity || maxX === -Infinity) return null;
   return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
@@ -150,75 +290,143 @@ function getCorrectViewBox(svgText) {
     }
   }
 
-  // Extract all shapes: path, circle, rect, polygon, polyline, line
-  const dMatches = Array.from(svgText.matchAll(/<path[^>]*\bd=["']([^"']+)["']/gi)).map(m => m[1]);
   let overallMinX = Infinity, overallMinY = Infinity, overallMaxX = -Infinity, overallMaxY = -Infinity;
 
-  for (const d of dMatches) {
-    const b = getPathBoundingBox(d);
-    if (b) {
-      if (b.minX < overallMinX) overallMinX = b.minX;
-      if (b.minY < overallMinY) overallMinY = b.minY;
-      if (b.maxX > overallMaxX) overallMaxX = b.maxX;
-      if (b.maxY > overallMaxY) overallMaxY = b.maxY;
+  function recordPoint(x, y) {
+    if (Number.isFinite(x) && Number.isFinite(y)) {
+      if (x < overallMinX) overallMinX = x;
+      if (y < overallMinY) overallMinY = y;
+      if (x > overallMaxX) overallMaxX = x;
+      if (y > overallMaxY) overallMaxY = y;
     }
   }
 
-  for (const c of svgText.matchAll(/<circle[^>]*>/gi)) {
-    const cxMatch = c[0].match(/\bcx=["']([0-9.-]+)["']/i);
-    const cyMatch = c[0].match(/\bcy=["']([0-9.-]+)["']/i);
-    const rMatch = c[0].match(/\br=["']([0-9.-]+)["']/i);
-    if (cxMatch && cyMatch && rMatch) {
-      const cx = parseFloat(cxMatch[1]), cy = parseFloat(cyMatch[1]), r = parseFloat(rMatch[1]);
-      if (cx - r < overallMinX) overallMinX = cx - r;
-      if (cy - r < overallMinY) overallMinY = cy - r;
-      if (cx + r > overallMaxX) overallMaxX = cx + r;
-      if (cy + r > overallMaxY) overallMaxY = cy + r;
+  // Paths
+  for (const p of svgText.matchAll(/<path\b([^>]*)>/gi)) {
+    const attrs = p[1];
+    const dMatch = attrs.match(/\bd=["']([^"']+)["']/i);
+    if (dMatch) {
+      const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
+      const tfFn = tfMatch ? parseTransform(tfMatch[1]) : null;
+      const b = getPathBoundingBoxExact(dMatch[1], tfFn);
+      if (b) {
+        if (b.minX < overallMinX) overallMinX = b.minX;
+        if (b.minY < overallMinY) overallMinY = b.minY;
+        if (b.maxX > overallMaxX) overallMaxX = b.maxX;
+        if (b.maxY > overallMaxY) overallMaxY = b.maxY;
+      }
     }
   }
 
-  for (const r of svgText.matchAll(/<rect[^>]*>/gi)) {
-    const xMatch = r[0].match(/\bx=["']([0-9.-]+)["']/i);
-    const yMatch = r[0].match(/\by=["']([0-9.-]+)["']/i);
-    const wMatch = r[0].match(/\bwidth=["']([0-9.-]+)["']/i);
-    const hMatch = r[0].match(/\bheight=["']([0-9.-]+)["']/i);
+  // Circles
+  for (const c of svgText.matchAll(/<circle\b([^>]*)>/gi)) {
+    const attrs = c[1];
+    const cxMatch = attrs.match(/\bcx=["']([0-9.-]+)["']/i);
+    const cyMatch = attrs.match(/\bcy=["']([0-9.-]+)["']/i);
+    const rMatch = attrs.match(/\br=["']([0-9.-]+)["']/i);
+    if (rMatch) {
+      let cx = cxMatch ? parseFloat(cxMatch[1]) : 0;
+      let cy = cyMatch ? parseFloat(cyMatch[1]) : 0;
+      const r = parseFloat(rMatch[1]);
+      const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
+      const tfFn = tfMatch ? parseTransform(tfMatch[1]) : null;
+      if (tfFn) {
+        const pt = tfFn(cx, cy);
+        cx = pt.x; cy = pt.y;
+      }
+      recordPoint(cx - r, cy - r);
+      recordPoint(cx + r, cy + r);
+    }
+  }
+
+  // Ellipses
+  for (const e of svgText.matchAll(/<ellipse\b([^>]*)>/gi)) {
+    const attrs = e[1];
+    const cxMatch = attrs.match(/\bcx=["']([0-9.-]+)["']/i);
+    const cyMatch = attrs.match(/\bcy=["']([0-9.-]+)["']/i);
+    const rxMatch = attrs.match(/\brx=["']([0-9.-]+)["']/i);
+    const ryMatch = attrs.match(/\bry=["']([0-9.-]+)["']/i);
+    if (rxMatch && ryMatch) {
+      let cx = cxMatch ? parseFloat(cxMatch[1]) : 0;
+      let cy = cyMatch ? parseFloat(cyMatch[1]) : 0;
+      const rx = parseFloat(rxMatch[1]);
+      const ry = parseFloat(ryMatch[1]);
+      const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
+      const tfFn = tfMatch ? parseTransform(tfMatch[1]) : null;
+      if (tfFn) {
+        const pt = tfFn(cx, cy);
+        cx = pt.x; cy = pt.y;
+      }
+      recordPoint(cx - rx, cy - ry);
+      recordPoint(cx + rx, cy + ry);
+    }
+  }
+
+  // Rects
+  for (const r of svgText.matchAll(/<rect\b([^>]*)>/gi)) {
+    const attrs = r[1];
+    const xMatch = attrs.match(/\bx=["']([0-9.-]+)["']/i);
+    const yMatch = attrs.match(/\by=["']([0-9.-]+)["']/i);
+    const wMatch = attrs.match(/\bwidth=["']([0-9.-]+)["']/i);
+    const hMatch = attrs.match(/\bheight=["']([0-9.-]+)["']/i);
     const x = xMatch ? parseFloat(xMatch[1]) : 0;
     const y = yMatch ? parseFloat(yMatch[1]) : 0;
     const w = wMatch ? parseFloat(wMatch[1]) : 0;
     const h = hMatch ? parseFloat(hMatch[1]) : 0;
     if (w > 0 && h > 0) {
-      if (x < overallMinX) overallMinX = x;
-      if (y < overallMinY) overallMinY = y;
-      if (x + w > overallMaxX) overallMaxX = x + w;
-      if (y + h > overallMaxY) overallMaxY = y + h;
-    }
-  }
-
-  for (const poly of svgText.matchAll(/<(?:polygon|polyline)[^>]*\bpoints=["']([^"']+)["']/gi)) {
-    const nums = poly[1].trim().split(/[\s,]+/).map(Number);
-    for (let i = 0; i < nums.length; i += 2) {
-      const px = nums[i], py = nums[i + 1];
-      if (Number.isFinite(px) && Number.isFinite(py)) {
-        if (px < overallMinX) overallMinX = px;
-        if (py < overallMinY) overallMinY = py;
-        if (px > overallMaxX) overallMaxX = px;
-        if (py > overallMaxY) overallMaxY = py;
+      const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
+      const tfFn = tfMatch ? parseTransform(tfMatch[1]) : null;
+      if (tfFn) {
+        const p1 = tfFn(x, y);
+        const p2 = tfFn(x + w, y + h);
+        recordPoint(p1.x, p1.y);
+        recordPoint(p2.x, p2.y);
+      } else {
+        recordPoint(x, y);
+        recordPoint(x + w, y + h);
       }
     }
   }
 
-  for (const line of svgText.matchAll(/<line[^>]*>/gi)) {
-    const x1Match = line[0].match(/\bx1=["']([0-9.-]+)["']/i);
-    const y1Match = line[0].match(/\by1=["']([0-9.-]+)["']/i);
-    const x2Match = line[0].match(/\bx2=["']([0-9.-]+)["']/i);
-    const y2Match = line[0].match(/\by2=["']([0-9.-]+)["']/i);
+  // Polygons / Polylines
+  for (const poly of svgText.matchAll(/<(?:polygon|polyline)\b([^>]*)>/gi)) {
+    const attrs = poly[1];
+    const ptsMatch = attrs.match(/\bpoints=["']([^"']+)["']/i);
+    if (ptsMatch) {
+      const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
+      const tfFn = tfMatch ? parseTransform(tfMatch[1]) : null;
+      const nums = ptsMatch[1].trim().split(/[\s,]+/).map(Number);
+      for (let j = 0; j < nums.length; j += 2) {
+        let px = nums[j], py = nums[j + 1];
+        if (Number.isFinite(px) && Number.isFinite(py)) {
+          if (tfFn) {
+            const pt = tfFn(px, py);
+            px = pt.x; py = pt.y;
+          }
+          recordPoint(px, py);
+        }
+      }
+    }
+  }
+
+  // Lines
+  for (const l of svgText.matchAll(/<line\b([^>]*)>/gi)) {
+    const attrs = l[1];
+    const x1Match = attrs.match(/\bx1=["']([0-9.-]+)["']/i);
+    const y1Match = attrs.match(/\by1=["']([0-9.-]+)["']/i);
+    const x2Match = attrs.match(/\bx2=["']([0-9.-]+)["']/i);
+    const y2Match = attrs.match(/\by2=["']([0-9.-]+)["']/i);
     if (x1Match && y1Match && x2Match && y2Match) {
-      const x1 = parseFloat(x1Match[1]), y1 = parseFloat(y1Match[1]);
-      const x2 = parseFloat(x2Match[1]), y2 = parseFloat(y2Match[1]);
-      if (Math.min(x1, x2) < overallMinX) overallMinX = Math.min(x1, x2);
-      if (Math.min(y1, y2) < overallMinY) overallMinY = Math.min(y1, y2);
-      if (Math.max(x1, x2) > overallMaxX) overallMaxX = Math.max(x1, x2);
-      if (Math.max(y1, y2) > overallMaxY) overallMaxY = Math.max(y1, y2);
+      let x1 = parseFloat(x1Match[1]), y1 = parseFloat(y1Match[1]);
+      let x2 = parseFloat(x2Match[1]), y2 = parseFloat(y2Match[1]);
+      const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
+      const tfFn = tfMatch ? parseTransform(tfMatch[1]) : null;
+      if (tfFn) {
+        const p1 = tfFn(x1, y1), p2 = tfFn(x2, y2);
+        x1 = p1.x; y1 = p1.y; x2 = p2.x; y2 = p2.y;
+      }
+      recordPoint(x1, y1);
+      recordPoint(x2, y2);
     }
   }
 
