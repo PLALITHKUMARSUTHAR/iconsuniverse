@@ -260,15 +260,27 @@ function getPathBoundingBoxExact(d, transformFn = null) {
       updateBounds(curX, curY);
     } else if (type === 'A') {
       const [rx, ry, rot, large, sweep, x, y] = args;
-      if (isRel) {
-        updateBounds(curX - rx, curY - ry);
-        updateBounds(curX + rx, curY + ry);
-        curX += x; curY += y;
+      const endX = isRel ? curX + x : x;
+      const endY = isRel ? curY + y : y;
+
+      const dx = endX - curX;
+      const dy = endY - curY;
+      const chord = Math.sqrt(dx * dx + dy * dy);
+      const maxExt = Math.min(Math.max(rx, ry), chord);
+
+      updateBounds(curX, curY);
+      updateBounds(endX, endY);
+      if (large) {
+        updateBounds(curX - maxExt, curY - maxExt);
+        updateBounds(curX + maxExt, curY + maxExt);
       } else {
-        updateBounds(x - rx, y - ry);
-        updateBounds(x + rx, y + ry);
-        curX = x; curY = y;
+        const halfChord = chord / 2;
+        updateBounds(Math.min(curX, endX) - halfChord * 0.5, Math.min(curY, endY) - halfChord * 0.5);
+        updateBounds(Math.max(curX, endX) + halfChord * 0.5, Math.max(curY, endY) + halfChord * 0.5);
       }
+
+      curX = endX;
+      curY = endY;
       updateBounds(curX, curY);
     } else if (type === 'Z') {
       curX = startX;
