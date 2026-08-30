@@ -680,19 +680,6 @@ export function getCorrectViewBox(svgText) {
   const spanY = overallMaxY - overallMinY;
   const maxSpan = Math.max(spanX, spanY);
 
-  if (curVb) {
-    const minDim = Math.min(curVb.w, curVb.h);
-    const fitsInVb =
-      overallMinX >= curVb.x - curVb.w * 0.1 &&
-      overallMaxX <= curVb.x + curVb.w * 1.1 &&
-      overallMinY >= curVb.y - curVb.h * 0.1 &&
-      overallMaxY <= curVb.y + curVb.h * 1.1;
-
-    if (fitsInVb && maxSpan >= minDim * 0.35) {
-      return `${curVb.x} ${curVb.y} ${curVb.w} ${curVb.h}`;
-    }
-  }
-
   if (spanX <= 0 || spanY <= 0 || maxSpan <= 0) {
     if (curVb) {
       return `${curVb.x} ${curVb.y} ${curVb.w} ${curVb.h}`;
@@ -700,8 +687,9 @@ export function getCorrectViewBox(svgText) {
     return '0 0 24 24';
   }
 
-  // Calculate centered, padded square viewBox
-  const pad = Math.max(maxSpan * 0.06, 1);
+  // Calculate centered, tightly padded square viewBox around actual icon shapes
+  // 5% breathing margin guarantees every icon fills the box prominently with zero cutoff
+  const pad = Math.max(maxSpan * 0.05, 0.5);
   const squareSize = Math.round((maxSpan + pad * 2) * 100) / 100;
   const cx = (overallMinX + overallMaxX) / 2;
   const cy = (overallMinY + overallMaxY) / 2;

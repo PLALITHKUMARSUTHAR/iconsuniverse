@@ -446,19 +446,6 @@ function getCorrectViewBox(svgText) {
   const spanY = overallMaxY - overallMinY;
   const maxSpan = Math.max(spanX, spanY);
 
-  if (curVb) {
-    const minDim = Math.min(curVb.w, curVb.h);
-    const fitsInVb =
-      overallMinX >= curVb.x - curVb.w * 0.1 &&
-      overallMaxX <= curVb.x + curVb.w * 1.1 &&
-      overallMinY >= curVb.y - curVb.h * 0.1 &&
-      overallMaxY <= curVb.y + curVb.h * 1.1;
-
-    if (fitsInVb && maxSpan >= minDim * 0.35) {
-      return `${curVb.x} ${curVb.y} ${curVb.w} ${curVb.h}`;
-    }
-  }
-
   if (spanX <= 0 || spanY <= 0 || maxSpan <= 0) {
     if (curVb) {
       return `${curVb.x} ${curVb.y} ${curVb.w} ${curVb.h}`;
@@ -466,8 +453,9 @@ function getCorrectViewBox(svgText) {
     return '0 0 24 24';
   }
 
-  // Calculate centered, padded square viewBox
-  const pad = Math.max(maxSpan * 0.06, 1);
+  // Calculate centered, tightly padded square viewBox around actual icon shapes
+  // 5% breathing margin guarantees every icon fills the box prominently with zero cutoff
+  const pad = Math.max(maxSpan * 0.05, 0.5);
   const squareSize = Math.round((maxSpan + pad * 2) * 100) / 100;
   const cx = (overallMinX + overallMaxX) / 2;
   const cy = (overallMinY + overallMaxY) / 2;
@@ -737,10 +725,16 @@ exports.getIconSvg = async (req, res, next) => {
     }
 
     const cdnBase = process.env.R2_PUBLIC_URL || 'https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev';
-    const safePath = icon.path.split('/').map(encodeURIComponent).join('/');
+    const cleanPath = icon.path.replace(/^\/?icons\//, '').replace(/^\/+/, '');
+    const safePath = cleanPath.split('/').map(seg => encodeURIComponent(decodeURIComponent(seg))).join('/');
     const url = `${cdnBase}/icons/${safePath}`;
 
-    const upstreamRes = await fetch(url);
+    let upstreamRes = await fetch(url);
+    if (!upstreamRes.ok && cleanPath !== icon.path) {
+      const fallbackUrl = `${cdnBase}/icons/${icon.path.split('/').map(encodeURIComponent).join('/')}`;
+      upstreamRes = await fetch(fallbackUrl);
+    }
+
     if (!upstreamRes.ok) {
       return res.status(upstreamRes.status).send('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"></svg>');
     }
