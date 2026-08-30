@@ -128,10 +128,10 @@ const IconDetailPage = () => {
             )}
           </div>
 
-          <div className="w-36 h-36 sm:w-48 sm:h-48 my-4 p-2 flex items-center justify-center text-slate-800 transition-transform hover:scale-105 relative">
+          <div className="w-36 h-36 sm:w-48 sm:h-48 my-4 p-2 flex items-center justify-center text-black transition-transform hover:scale-105 relative">
             {svgData ? (
               <div
-                className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:m-auto [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:overflow-visible"
+                className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:m-auto [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:overflow-hidden"
                 dangerouslySetInnerHTML={{ __html: svgData }}
               />
             ) : svgLoading ? (

@@ -655,6 +655,36 @@ function normalizeAndFixSvg(svgText) {
     result = result.replace(/stroke=["'](?:#fff(?:fff)?|white)["']/gi, 'stroke="currentColor"');
   }
 
+  // 7. Ensure all monochrome filled icons render pure black rgb(0,0,0) / currentColor
+  let hasMultiColor = false;
+  for (const c of allColors) {
+    const clean = c.replace(/^(?:fill|stroke)=["']|["']$/gi, '').trim();
+    if (clean === 'none' || clean === 'transparent' || clean === 'currentcolor' || clean === 'black' || clean === 'white') continue;
+    if (clean.startsWith('#')) {
+      const hex = clean.slice(1);
+      if (hex.length === 3) {
+        if (hex[0] !== hex[1] || hex[1] !== hex[2]) hasMultiColor = true;
+      } else if (hex.length >= 6) {
+        const r = hex.slice(0, 2), g = hex.slice(2, 4), b = hex.slice(4, 6);
+        if (r !== g || g !== b) hasMultiColor = true;
+      }
+    } else if (clean.startsWith('rgb')) {
+      const nums = clean.match(/[0-9]+/g);
+      if (nums && nums.length >= 3) {
+        if (nums[0] !== nums[1] || nums[1] !== nums[2]) hasMultiColor = true;
+      }
+    } else {
+      if (!['gray', 'grey', 'darkgray', 'darkgrey', 'dimgray', 'dimgrey', 'lightgray', 'lightgrey', 'silver'].includes(clean)) {
+        hasMultiColor = true;
+      }
+    }
+  }
+
+  if (!hasMultiColor) {
+    result = result.replace(/fill=["']#(?:[0-9a-fA-F]{3,8})["']/gi, 'fill="currentColor"');
+    result = result.replace(/stroke=["']#(?:[0-9a-fA-F]{3,8})["']/gi, 'stroke="currentColor"');
+  }
+
   return result;
 }
 
