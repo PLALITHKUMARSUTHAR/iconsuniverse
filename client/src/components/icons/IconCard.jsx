@@ -107,10 +107,10 @@ const IconCard = ({
       </div>
 
       {/* Inner SVG Icon Box Container: scaled to 44x44px (sm: 48x48px) for maximum clarity and presence */}
-      <div className="my-1 w-11 h-11 sm:w-12 sm:h-12 p-0.5 flex items-center justify-center text-slate-800 group-hover:scale-110 group-hover:text-landing-primary transition-all duration-150 relative m-auto shrink-0">
+      <div className="my-1 w-11 h-11 sm:w-12 sm:h-12 p-0.5 flex items-center justify-center text-slate-800 group-hover:scale-110 group-hover:text-landing-primary transition-all duration-150 relative m-auto shrink-0 overflow-hidden">
         {svgContent ? (
           <div
-            className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:m-auto [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:overflow-visible"
+            className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:m-auto [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:overflow-hidden"
             dangerouslySetInnerHTML={{ __html: svgContent }}
           />
         ) : imgFailed ? (
@@ -139,7 +139,7 @@ const IconCard = ({
       </div>
 
       {/* Title */}
-      <div className="w-full text-center">
+      <div className="w-full text-center mt-auto pt-0.5">
         <span
           className="block text-[10px] font-semibold text-landing-on-surface hover:text-landing-vibrant-coral truncate transition-colors"
           title={icon.title}

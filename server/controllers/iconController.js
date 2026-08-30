@@ -180,6 +180,85 @@ function parseTransform(transformStr) {
   return (x, y) => ({ x: x * sx + tx, y: y * sy + ty });
 }
 
+function getArcBoundingBoxExact(x1, y1, rx, ry, phiDeg, largeArc, sweep, x2, y2) {
+  if (rx === 0 || ry === 0) {
+    return { minX: Math.min(x1, x2), minY: Math.min(y1, y2), maxX: Math.max(x1, x2), maxY: Math.max(y1, y2) };
+  }
+
+  rx = Math.abs(rx);
+  ry = Math.abs(ry);
+  const phi = ((phiDeg || 0) * Math.PI) / 180;
+  const cosPhi = Math.cos(phi);
+  const sinPhi = Math.sin(phi);
+
+  const dx = (x1 - x2) / 2;
+  const dy = (y1 - y2) / 2;
+  const x1p = cosPhi * dx + sinPhi * dy;
+  const y1p = -sinPhi * dx + cosPhi * dy;
+
+  let lambda = (x1p * x1p) / (rx * rx) + (y1p * y1p) / (ry * ry);
+  if (lambda > 1) {
+    const sqrtLambda = Math.sqrt(lambda);
+    rx *= sqrtLambda;
+    ry *= sqrtLambda;
+  }
+
+  const sign = largeArc === sweep ? -1 : 1;
+  const num = rx * rx * ry * ry - rx * rx * y1p * y1p - ry * ry * x1p * x1p;
+  const den = rx * rx * y1p * y1p + ry * ry * x1p * x1p;
+  const factor = sign * Math.sqrt(Math.max(0, num / den));
+  const cxp = factor * ((rx * y1p) / ry);
+  const cyp = factor * (-(ry * x1p) / rx);
+
+  const cx = cosPhi * cxp - sinPhi * cyp + (x1 + x2) / 2;
+  const cy = sinPhi * cxp + cosPhi * cyp + (y1 + y2) / 2;
+
+  function angle(uX, uY, vX, vY) {
+    const dot = uX * vX + uY * vY;
+    const len = Math.sqrt(uX * uX + uY * uY) * Math.sqrt(vX * vX + vY * vY);
+    let ang = Math.acos(Math.max(-1, Math.min(1, dot / (len || 1))));
+    if (uX * vY - uY * vX < 0) ang = -ang;
+    return ang;
+  }
+
+  const theta1 = angle(1, 0, (x1p - cxp) / rx, (y1p - cyp) / ry);
+  let dTheta = angle((x1p - cxp) / rx, (y1p - cyp) / ry, (-x1p - cxp) / rx, (-y1p - cyp) / ry);
+
+  if (!sweep && dTheta > 0) dTheta -= 2 * Math.PI;
+  if (sweep && dTheta < 0) dTheta += 2 * Math.PI;
+
+  const theta2 = theta1 + dTheta;
+  const startAng = Math.min(theta1, theta2);
+  const endAng = Math.max(theta1, theta2);
+
+  let minX = Math.min(x1, x2);
+  let maxX = Math.max(x1, x2);
+  let minY = Math.min(y1, y2);
+  let maxY = Math.max(y1, y2);
+
+  const tX = Math.atan2(-ry * sinPhi, rx * cosPhi);
+  for (const ang of [tX, tX + Math.PI, tX - Math.PI, tX + 2 * Math.PI]) {
+    const norm = ang - 2 * Math.PI * Math.floor((ang - startAng) / (2 * Math.PI));
+    if (norm >= startAng && norm <= endAng) {
+      const ex = cx + rx * Math.cos(norm) * cosPhi - ry * Math.sin(norm) * sinPhi;
+      if (ex < minX) minX = ex;
+      if (ex > maxX) maxX = ex;
+    }
+  }
+
+  const tY = Math.atan2(ry * cosPhi, rx * sinPhi);
+  for (const ang of [tY, tY + Math.PI, tY - Math.PI, tY + 2 * Math.PI]) {
+    const norm = ang - 2 * Math.PI * Math.floor((ang - startAng) / (2 * Math.PI));
+    if (norm >= startAng && norm <= endAng) {
+      const ey = cy + rx * Math.cos(norm) * sinPhi + ry * Math.sin(norm) * cosPhi;
+      if (ey < minY) minY = ey;
+      if (ey > maxY) maxY = ey;
+    }
+  }
+
+  return { minX, minY, maxX, maxY };
+}
+
 function getPathBoundingBoxExact(d, transformFn = null) {
   const commands = parseSvgPathData(d);
   if (commands.length === 0) return null;
@@ -263,21 +342,9 @@ function getPathBoundingBoxExact(d, transformFn = null) {
       const endX = isRel ? curX + x : x;
       const endY = isRel ? curY + y : y;
 
-      const dx = endX - curX;
-      const dy = endY - curY;
-      const chord = Math.sqrt(dx * dx + dy * dy);
-      const maxExt = Math.min(Math.max(rx, ry), chord);
-
-      updateBounds(curX, curY);
-      updateBounds(endX, endY);
-      if (large) {
-        updateBounds(curX - maxExt, curY - maxExt);
-        updateBounds(curX + maxExt, curY + maxExt);
-      } else {
-        const halfChord = chord / 2;
-        updateBounds(Math.min(curX, endX) - halfChord * 0.5, Math.min(curY, endY) - halfChord * 0.5);
-        updateBounds(Math.max(curX, endX) + halfChord * 0.5, Math.max(curY, endY) + halfChord * 0.5);
-      }
+      const arcB = getArcBoundingBoxExact(curX, curY, rx, ry, rot, large, sweep, endX, endY);
+      updateBounds(arcB.minX, arcB.minY);
+      updateBounds(arcB.maxX, arcB.maxY);
 
       curX = endX;
       curY = endY;
