@@ -693,6 +693,13 @@ export function getCorrectViewBox(svgText) {
     }
   }
 
+  if (spanX <= 0 || spanY <= 0 || maxSpan <= 0) {
+    if (curVb) {
+      return `${curVb.x} ${curVb.y} ${curVb.w} ${curVb.h}`;
+    }
+    return '0 0 24 24';
+  }
+
   // Calculate centered, padded square viewBox
   const pad = Math.max(maxSpan * 0.06, 1);
   const squareSize = Math.round((maxSpan + pad * 2) * 100) / 100;
@@ -737,24 +744,30 @@ export function normalizeSvgForCanvas(svgText, scopeId = null) {
     result = result.replace(/<svg\b([^>]*)>/i, '<svg $1 overflow="visible">');
   }
 
-  // 4. Strip hardcoded width & height attributes on root <svg> and set responsive 100% dimensions
+  // 4. Strip hardcoded width & height attributes and artificial display:none on root <svg>
   result = result.replace(/<svg\b([^>]*)>/i, (match, attrs) => {
     let cleanAttrs = attrs
       .replace(/\bwidth=["'][^"']*["']/gi, '')
-      .replace(/\bheight=["'][^"']*["']/gi, '');
+      .replace(/\bheight=["'][^"']*["']/gi, '')
+      .replace(/\bdisplay=["']none["']/gi, '')
+      .replace(/\bvisibility=["']hidden["']/gi, '');
     return `<svg width="100%" height="100%" ${cleanAttrs.trim()}>`;
   });
 
   // 5. Intelligent stroke & fill recovery for unstyled icons without mutating multi-color assets
-  const hasFillNone = /fill=["']none["']/i.test(result);
-  const hasStroke = /stroke=/i.test(result);
+  const hasVisibleStroke = /stroke=["'](?!none|transparent)[^"']+["']/i.test(result) || /stroke:\s*(?!none|transparent)[^;"]+/i.test(result);
+  const hasVisibleFill = /fill=["'](?!none|transparent)[^"']+["']/i.test(result) || /fill:\s*(?!none|transparent)[^;"]+/i.test(result);
   const hasExplicitColor = /#(?:[0-9a-fA-F]{3,8})|rgb\([^)]+\)|rgba\([^)]+\)/i.test(result);
-  const hasFillAttr = /fill=["'](?!none)[^"']+["']/i.test(result);
+  const hasFillNone = /fill=["']none["']/i.test(result) || /fill:\s*none/i.test(result);
 
-  if (hasFillNone && !hasStroke && !hasFillAttr) {
-    result = result.replace(/<svg\b([^>]*)>/i, '<svg $1 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">');
-  } else if (!hasStroke && !hasFillAttr && !hasFillNone && !hasExplicitColor) {
-    result = result.replace(/<svg\b([^>]*)>/i, '<svg $1 fill="currentColor">');
+  if (!hasVisibleStroke && !hasVisibleFill && !hasExplicitColor) {
+    if (hasFillNone) {
+      result = result.replace(/<svg\b([^>]*)>/i, '<svg $1 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">');
+    } else {
+      result = result.replace(/<svg\b([^>]*)>/i, '<svg $1 fill="currentColor">');
+    }
+  } else if (hasVisibleStroke && !/stroke-width=/i.test(result) && !/stroke-width:/i.test(result)) {
+    result = result.replace(/<svg\b([^>]*)>/i, '<svg $1 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">');
   }
 
   // 6. Fix pure white-on-white ONLY if the ENTIRE icon is monochrome white with zero other colors

@@ -52,10 +52,10 @@ const Footer = ({ collapsible = false, exploreCategoriesSlot = null }) => {
             </div>
           )}
 
-          {/* Main 4-Column Grid: Brand + Content + Tools + Help */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 pb-8 border-b border-white/15">
+          {/* Main 5-Column Grid: Brand + Content + Tools + Legal + Help */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6 pb-8 border-b border-white/15">
             {/* Brand & Description */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 sm:col-span-2 md:col-span-1">
               <Link to="/" className="flex items-center gap-2.5">
                 <img
                   src="/logo.png"
@@ -99,6 +99,25 @@ const Footer = ({ collapsible = false, exploreCategoriesSlot = null }) => {
               </ul>
             </div>
 
+            {/* Legal (Outside on Left of Help) */}
+            <div>
+              <h4 className="font-heading font-bold text-xs uppercase tracking-wider text-landing-electric-teal mb-3">
+                Legal
+              </h4>
+              <ul className="flex flex-col gap-2 text-xs text-white/80">
+                <li>
+                  <Link to="/terms" className="text-white/85 hover:text-white transition-colors">
+                    Terms and Conditions
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/privacy" className="text-white/85 hover:text-white transition-colors">
+                    Privacy Policy
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
             {/* Help */}
             <div>
               <h4 className="font-heading font-bold text-xs uppercase tracking-wider text-landing-electric-teal mb-3">
@@ -118,16 +137,6 @@ const Footer = ({ collapsible = false, exploreCategoriesSlot = null }) => {
                 <li>
                   <Link to="/whats-new" className="text-white/85 hover:text-white transition-colors">
                     What's New
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/terms" className="text-white/85 hover:text-white transition-colors">
-                    Terms and Conditions
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/privacy" className="text-white/85 hover:text-white transition-colors">
-                    Privacy Policy
                   </Link>
                 </li>
               </ul>
