@@ -526,6 +526,15 @@ export function getPathBoundingBoxExact(d, transformFn = null) {
   return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
 }
 
+function composeTransforms(tf1, tf2) {
+  if (!tf1) return tf2;
+  if (!tf2) return tf1;
+  return (x, y) => {
+    const p = tf2(x, y);
+    return tf1(p.x, p.y);
+  };
+}
+
 export function getCorrectViewBox(svgText) {
   const vbMatch = svgText.match(/viewBox=["']([^"']+)["']/i);
   let curVb = null;
@@ -547,181 +556,193 @@ export function getCorrectViewBox(svgText) {
     }
   }
 
-  // Paths (Ignore transparent guide paths like fill="none" d="M0 0h24v24H0z")
-  for (const p of svgText.matchAll(/<path\b([^>]*)>/gi)) {
-    const attrs = p[1];
-    const dMatch = attrs.match(/\bd=["']([^"']+)["']/i);
-    if (dMatch) {
-      const dVal = dMatch[1].trim();
-      const isGuidePath = /^M\s*0\s*0\s*h\s*[0-9.]+\s*v\s*[0-9.]+\s*H\s*0[zZ]?$/i.test(dVal);
-      const isFillNone = /fill=["'](?:none|transparent)["']/i.test(attrs) && !/stroke=/i.test(attrs);
-      if (isGuidePath && isFillNone) {
-        continue; // Skip transparent canvas guide path
-      }
-
-      const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
-      const tfFn = tfMatch ? parseTransform(tfMatch[1]) : null;
-      const b = getPathBoundingBoxExact(dVal, tfFn);
-      if (b) {
-        if (b.minX < overallMinX) overallMinX = b.minX;
-        if (b.minY < overallMinY) overallMinY = b.minY;
-        if (b.maxX > overallMaxX) overallMaxX = b.maxX;
-        if (b.maxY > overallMaxY) overallMaxY = b.maxY;
-      }
-    }
-  }
-
-  // Rects (Ignore transparent canvas guide rects)
-  for (const r of svgText.matchAll(/<rect\b([^>]*)>/gi)) {
-    const attrs = r[1];
-    const isFillNone = (/fill=["'](?:none|transparent)["']/i.test(attrs) || /opacity=["']0["']/i.test(attrs)) && !/stroke=/i.test(attrs);
-    if (isFillNone) {
-      continue; // Skip transparent bounding box rectangle
+  function processSnippet(snippet, inheritedTf = null) {
+    // 1. Process nested/child groups with their own transforms
+    for (const g of snippet.matchAll(/<g\b([^>]*)>([\s\S]*?)<\/g>/gi)) {
+      const gAttrs = g[1];
+      const gContent = g[2];
+      const gTfMatch = gAttrs.match(/\btransform=["']([^"']+)["']/i);
+      const gTf = gTfMatch ? parseTransform(gTfMatch[1]) : null;
+      const combinedTf = composeTransforms(inheritedTf, gTf);
+      processSnippet(gContent, combinedTf);
     }
 
-    const xMatch = attrs.match(/\bx=["']([0-9.-]+)["']/i);
-    const yMatch = attrs.match(/\by=["']([0-9.-]+)["']/i);
-    const wMatch = attrs.match(/\bwidth=["']([0-9.-]+)["']/i);
-    const hMatch = attrs.match(/\bheight=["']([0-9.-]+)["']/i);
-    const x = xMatch ? parseFloat(xMatch[1]) : 0;
-    const y = yMatch ? parseFloat(yMatch[1]) : 0;
-    const w = wMatch ? parseFloat(wMatch[1]) : 0;
-    const h = hMatch ? parseFloat(hMatch[1]) : 0;
-    if (w > 0 && h > 0) {
-      const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
-      const tfFn = tfMatch ? parseTransform(tfMatch[1]) : null;
-      if (tfFn) {
-        const p1 = tfFn(x, y);
-        const p2 = tfFn(x + w, y + h);
-        recordPoint(p1.x, p1.y);
-        recordPoint(p2.x, p2.y);
-      } else {
-        recordPoint(x, y);
-        recordPoint(x + w, y + h);
-      }
-    }
-  }
+    // 2. Paths
+    for (const p of snippet.matchAll(/<path\b([^>]*)>/gi)) {
+      const attrs = p[1];
+      const dMatch = attrs.match(/\bd=["']([^"']+)["']/i);
+      if (dMatch) {
+        const dVal = dMatch[1].trim();
+        const isGuidePath = /^M\s*0\s*0\s*h\s*[0-9.]+\s*v\s*[0-9.]+\s*H\s*0[zZ]?$/i.test(dVal);
+        const isFillNone = /fill=["'](?:none|transparent)["']/i.test(attrs) && !/stroke=/i.test(attrs);
+        if (isGuidePath && isFillNone) continue;
 
-  // Circles
-  for (const c of svgText.matchAll(/<circle\b([^>]*)>/gi)) {
-    const attrs = c[1];
-    if (/opacity=["']0["']/i.test(attrs)) continue;
-
-    const cxMatch = attrs.match(/\bcx=["']([0-9.-]+)["']/i);
-    const cyMatch = attrs.match(/\bcy=["']([0-9.-]+)["']/i);
-    const rMatch = attrs.match(/\br=["']([0-9.-]+)["']/i);
-    if (rMatch) {
-      let cx = cxMatch ? parseFloat(cxMatch[1]) : 0;
-      let cy = cyMatch ? parseFloat(cyMatch[1]) : 0;
-      const r = parseFloat(rMatch[1]);
-      const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
-      const tfFn = tfMatch ? parseTransform(tfMatch[1]) : null;
-      if (tfFn) {
-        const pt = tfFn(cx, cy);
-        cx = pt.x; cy = pt.y;
-      }
-      recordPoint(cx - r, cy - r);
-      recordPoint(cx + r, cy + r);
-    }
-  }
-
-  // Ellipses
-  for (const e of svgText.matchAll(/<ellipse\b([^>]*)>/gi)) {
-    const attrs = e[1];
-    if (/opacity=["']0["']/i.test(attrs)) continue;
-
-    const cxMatch = attrs.match(/\bcx=["']([0-9.-]+)["']/i);
-    const cyMatch = attrs.match(/\bcy=["']([0-9.-]+)["']/i);
-    const rxMatch = attrs.match(/\brx=["']([0-9.-]+)["']/i);
-    const ryMatch = attrs.match(/\bry=["']([0-9.-]+)["']/i);
-    if (rxMatch && ryMatch) {
-      let cx = cxMatch ? parseFloat(cxMatch[1]) : 0;
-      let cy = cyMatch ? parseFloat(cyMatch[1]) : 0;
-      const rx = parseFloat(rxMatch[1]);
-      const ry = parseFloat(ryMatch[1]);
-      const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
-      const tfFn = tfMatch ? parseTransform(tfMatch[1]) : null;
-      if (tfFn) {
-        const pt = tfFn(cx, cy);
-        cx = pt.x; cy = pt.y;
-      }
-      recordPoint(cx - rx, cy - ry);
-      recordPoint(cx + rx, cy + ry);
-    }
-  }
-
-  // Polygons / Polylines
-  for (const poly of svgText.matchAll(/<(?:polygon|polyline)\b([^>]*)>/gi)) {
-    const attrs = poly[1];
-    if (/opacity=["']0["']/i.test(attrs)) continue;
-
-    const ptsMatch = attrs.match(/\bpoints=["']([^"']+)["']/i);
-    if (ptsMatch) {
-      const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
-      const tfFn = tfMatch ? parseTransform(tfMatch[1]) : null;
-      const nums = ptsMatch[1].trim().split(/[\s,]+/).map(Number);
-      for (let j = 0; j < nums.length; j += 2) {
-        let px = nums[j], py = nums[j + 1];
-        if (Number.isFinite(px) && Number.isFinite(py)) {
-          if (tfFn) {
-            const pt = tfFn(px, py);
-            px = pt.x; py = pt.y;
-          }
-          recordPoint(px, py);
+        const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
+        const shapeTf = tfMatch ? parseTransform(tfMatch[1]) : null;
+        const finalTf = composeTransforms(inheritedTf, shapeTf);
+        const b = getPathBoundingBoxExact(dVal, finalTf);
+        if (b) {
+          if (b.minX < overallMinX) overallMinX = b.minX;
+          if (b.minY < overallMinY) overallMinY = b.minY;
+          if (b.maxX > overallMaxX) overallMaxX = b.maxX;
+          if (b.maxY > overallMaxY) overallMaxY = b.maxY;
         }
       }
     }
-  }
 
-  // Lines
-  for (const l of svgText.matchAll(/<line\b([^>]*)>/gi)) {
-    const attrs = l[1];
-    if (/opacity=["']0["']/i.test(attrs)) continue;
+    // 3. Rects
+    for (const r of snippet.matchAll(/<rect\b([^>]*)>/gi)) {
+      const attrs = r[1];
+      const isFillNone = (/fill=["'](?:none|transparent)["']/i.test(attrs) || /opacity=["']0["']/i.test(attrs)) && !/stroke=/i.test(attrs);
+      if (isFillNone) continue;
 
-    const x1Match = attrs.match(/\bx1=["']([0-9.-]+)["']/i);
-    const y1Match = attrs.match(/\by1=["']([0-9.-]+)["']/i);
-    const x2Match = attrs.match(/\bx2=["']([0-9.-]+)["']/i);
-    const y2Match = attrs.match(/\by2=["']([0-9.-]+)["']/i);
-    if (x1Match && y1Match && x2Match && y2Match) {
-      let x1 = parseFloat(x1Match[1]), y1 = parseFloat(y1Match[1]);
-      let x2 = parseFloat(x2Match[1]), y2 = parseFloat(y2Match[1]);
-      const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
-      const tfFn = tfMatch ? parseTransform(tfMatch[1]) : null;
-      if (tfFn) {
-        const p1 = tfFn(x1, y1), p2 = tfFn(x2, y2);
-        x1 = p1.x; y1 = p1.y; x2 = p2.x; y2 = p2.y;
+      const xMatch = attrs.match(/\bx=["']([0-9.-]+)["']/i);
+      const yMatch = attrs.match(/\by=["']([0-9.-]+)["']/i);
+      const wMatch = attrs.match(/\bwidth=["']([0-9.-]+)["']/i);
+      const hMatch = attrs.match(/\bheight=["']([0-9.-]+)["']/i);
+      const x = xMatch ? parseFloat(xMatch[1]) : 0;
+      const y = yMatch ? parseFloat(yMatch[1]) : 0;
+      const w = wMatch ? parseFloat(wMatch[1]) : 0;
+      const h = hMatch ? parseFloat(hMatch[1]) : 0;
+      if (w > 0 && h > 0) {
+        const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
+        const shapeTf = tfMatch ? parseTransform(tfMatch[1]) : null;
+        const tfFn = composeTransforms(inheritedTf, shapeTf);
+        if (tfFn) {
+          const p1 = tfFn(x, y);
+          const p2 = tfFn(x + w, y + h);
+          recordPoint(p1.x, p1.y);
+          recordPoint(p2.x, p2.y);
+        } else {
+          recordPoint(x, y);
+          recordPoint(x + w, y + h);
+        }
       }
-      recordPoint(x1, y1);
-      recordPoint(x2, y2);
+    }
+
+    // 4. Circles
+    for (const c of snippet.matchAll(/<circle\b([^>]*)>/gi)) {
+      const attrs = c[1];
+      if (/opacity=["']0["']/i.test(attrs)) continue;
+      const cxMatch = attrs.match(/\bcx=["']([0-9.-]+)["']/i);
+      const cyMatch = attrs.match(/\bcy=["']([0-9.-]+)["']/i);
+      const rMatch = attrs.match(/\br=["']([0-9.-]+)["']/i);
+      if (rMatch) {
+        let cx = cxMatch ? parseFloat(cxMatch[1]) : 0;
+        let cy = cyMatch ? parseFloat(cyMatch[1]) : 0;
+        const r = parseFloat(rMatch[1]);
+        const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
+        const shapeTf = tfMatch ? parseTransform(tfMatch[1]) : null;
+        const tfFn = composeTransforms(inheritedTf, shapeTf);
+        if (tfFn) {
+          const pt = tfFn(cx, cy);
+          cx = pt.x; cy = pt.y;
+        }
+        recordPoint(cx - r, cy - r);
+        recordPoint(cx + r, cy + r);
+      }
+    }
+
+    // 5. Ellipses
+    for (const e of snippet.matchAll(/<ellipse\b([^>]*)>/gi)) {
+      const attrs = e[1];
+      if (/opacity=["']0["']/i.test(attrs)) continue;
+      const cxMatch = attrs.match(/\bcx=["']([0-9.-]+)["']/i);
+      const cyMatch = attrs.match(/\bcy=["']([0-9.-]+)["']/i);
+      const rxMatch = attrs.match(/\brx=["']([0-9.-]+)["']/i);
+      const ryMatch = attrs.match(/\bry=["']([0-9.-]+)["']/i);
+      if (rxMatch && ryMatch) {
+        let cx = cxMatch ? parseFloat(cxMatch[1]) : 0;
+        let cy = cyMatch ? parseFloat(cyMatch[1]) : 0;
+        const rx = parseFloat(rxMatch[1]);
+        const ry = parseFloat(ryMatch[1]);
+        const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
+        const shapeTf = tfMatch ? parseTransform(tfMatch[1]) : null;
+        const tfFn = composeTransforms(inheritedTf, shapeTf);
+        if (tfFn) {
+          const pt = tfFn(cx, cy);
+          cx = pt.x; cy = pt.y;
+        }
+        recordPoint(cx - rx, cy - ry);
+        recordPoint(cx + rx, cy + ry);
+      }
+    }
+
+    // 6. Polygons / Polylines
+    for (const poly of snippet.matchAll(/<(?:polygon|polyline)\b([^>]*)>/gi)) {
+      const attrs = poly[1];
+      if (/opacity=["']0["']/i.test(attrs)) continue;
+      const ptsMatch = attrs.match(/\bpoints=["']([^"']+)["']/i);
+      if (ptsMatch) {
+        const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
+        const shapeTf = tfMatch ? parseTransform(tfMatch[1]) : null;
+        const tfFn = composeTransforms(inheritedTf, shapeTf);
+        const nums = ptsMatch[1].trim().split(/[\s,]+/).map(Number);
+        for (let j = 0; j < nums.length; j += 2) {
+          let px = nums[j], py = nums[j + 1];
+          if (Number.isFinite(px) && Number.isFinite(py)) {
+            if (tfFn) {
+              const pt = tfFn(px, py);
+              px = pt.x; py = pt.y;
+            }
+            recordPoint(px, py);
+          }
+        }
+      }
+    }
+
+    // 7. Lines
+    for (const l of snippet.matchAll(/<line\b([^>]*)>/gi)) {
+      const attrs = l[1];
+      if (/opacity=["']0["']/i.test(attrs)) continue;
+      const x1Match = attrs.match(/\bx1=["']([0-9.-]+)["']/i);
+      const y1Match = attrs.match(/\by1=["']([0-9.-]+)["']/i);
+      const x2Match = attrs.match(/\bx2=["']([0-9.-]+)["']/i);
+      const y2Match = attrs.match(/\by2=["']([0-9.-]+)["']/i);
+      if (x1Match && y1Match && x2Match && y2Match) {
+        let x1 = parseFloat(x1Match[1]), y1 = parseFloat(y1Match[1]);
+        let x2 = parseFloat(x2Match[1]), y2 = parseFloat(y2Match[1]);
+        const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
+        const shapeTf = tfMatch ? parseTransform(tfMatch[1]) : null;
+        const tfFn = composeTransforms(inheritedTf, shapeTf);
+        if (tfFn) {
+          const p1 = tfFn(x1, y1), p2 = tfFn(x2, y2);
+          x1 = p1.x; y1 = p1.y; x2 = p2.x; y2 = p2.y;
+        }
+        recordPoint(x1, y1);
+        recordPoint(x2, y2);
+      }
     }
   }
+
+  processSnippet(svgText);
 
   if (overallMinX === Infinity) {
-    if (curVb) {
-      return `${curVb.x} ${curVb.y} ${curVb.w} ${curVb.h}`;
-    }
-    const wMatch = svgText.match(/\bwidth=["']([0-9.]+)(?:px)?["']/i);
-    const hMatch = svgText.match(/\bheight=["']([0-9.]+)(?:px)?["']/i);
-    if (wMatch && hMatch && parseFloat(wMatch[1]) > 0 && parseFloat(hMatch[1]) > 0) {
-      return `0 0 ${wMatch[1]} ${hMatch[1]}`;
-    }
+    if (curVb) return `${curVb.x} ${curVb.y} ${curVb.w} ${curVb.h}`;
     return '0 0 24 24';
   }
+
+  // Account for stroke thickness so strokes never clip or exceed boundaries
+  const strokeMatch = svgText.match(/\bstroke-width=["']([0-9.]+)["']|\bstroke-width:\s*([0-9.]+)/i);
+  const strokeWidth = strokeMatch ? parseFloat(strokeMatch[1] || strokeMatch[2]) : (svgText.includes('stroke=') ? 1.5 : 0);
+  const halfStroke = strokeWidth / 2;
+
+  overallMinX -= halfStroke;
+  overallMinY -= halfStroke;
+  overallMaxX += halfStroke;
+  overallMaxY += halfStroke;
 
   const spanX = overallMaxX - overallMinX;
   const spanY = overallMaxY - overallMinY;
   const maxSpan = Math.max(spanX, spanY);
 
   if (spanX <= 0 || spanY <= 0 || maxSpan <= 0) {
-    if (curVb) {
-      return `${curVb.x} ${curVb.y} ${curVb.w} ${curVb.h}`;
-    }
+    if (curVb) return `${curVb.x} ${curVb.y} ${curVb.w} ${curVb.h}`;
     return '0 0 24 24';
   }
 
-  // Calculate centered, tightly padded square viewBox around actual visible icon shapes
-  // 4% breathing margin guarantees every smaller icon expands prominently and fits properly
-  const pad = Math.max(maxSpan * 0.04, 0.4);
+  // Calibrated 8% optical breathing padding ensures icons never exceed boundaries and are centered
+  const pad = Math.max(maxSpan * 0.08, 1.2);
   const squareSize = Math.round((maxSpan + pad * 2) * 100) / 100;
   const cx = (overallMinX + overallMaxX) / 2;
   const cy = (overallMinY + overallMaxY) / 2;
