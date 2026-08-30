@@ -4,6 +4,7 @@ const Pack = require('../models/Pack');
 const Download = require('../models/Download');
 const User = require('../models/User');
 const { sanitizeSVG, extractColorsFromSVG, svgToDataUrl } = require('../utils/svgSanitizer');
+const { cleanIconTitle } = require('../utils/titleCleaner');
 
 // In-memory vector cache for high-speed serving
 const svgCache = new Map();
@@ -797,6 +798,7 @@ exports.getIcons = async (req, res, next) => {
       const proxyUrl = `/api/icons/svg/${icon._id}`;
       return {
         ...icon,
+        title: cleanIconTitle(icon.title),
         svgUrl: proxyUrl,
         r2Url: r2Url,
         pngPreviewUrl: proxyUrl,
@@ -899,6 +901,7 @@ exports.getIconBySlug = async (req, res, next) => {
 
     const icon = {
       ...iconDoc.toJSON(),
+      title: cleanIconTitle(iconDoc.title),
       svgUrl: proxyUrl,
       r2Url: r2Url,
       pngPreviewUrl: proxyUrl,
@@ -918,6 +921,7 @@ exports.getIconBySlug = async (req, res, next) => {
       const relSafePath = rel.path ? rel.path.split('/').map(encodeURIComponent).join('/') : null;
       return {
         ...rel,
+        title: cleanIconTitle(rel.title),
         svgUrl: `/api/icons/svg/${rel._id}`,
         r2Url: relSafePath ? `${cdnBase}/icons/${relSafePath}` : null,
         pngPreviewUrl: `/api/icons/svg/${rel._id}`,

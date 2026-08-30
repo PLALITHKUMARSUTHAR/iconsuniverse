@@ -7,6 +7,7 @@ import {
   getCachedSvg,
   normalizeSvgForCanvas,
 } from '../../services/svgCacheService';
+import { cleanIconTitle } from '../../utils/titleCleaner';
 
 const IconCard = ({
   icon,
@@ -16,6 +17,7 @@ const IconCard = ({
   const iconId = icon._id || icon.slug;
   const directCdnUrl = getDirectR2Url(icon);
   const proxyUrl = icon.svgUrl && icon.svgUrl.startsWith('/api') ? icon.svgUrl : (icon._id ? `/api/icons/svg/${icon._id}` : '');
+  const displayTitle = cleanIconTitle(icon.title);
 
   const [svgContent, setSvgContent] = useState(() => {
     if (icon.svgContent) return normalizeSvgForCanvas(icon.svgContent, iconId);
@@ -106,8 +108,8 @@ const IconCard = ({
         )}
       </div>
 
-      {/* Inner SVG Icon Box Container: scaled to 44x44px (sm: 48x48px) for maximum clarity and presence */}
-      <div className="my-1 w-11 h-11 sm:w-12 sm:h-12 p-0.5 flex items-center justify-center text-slate-800 group-hover:scale-110 group-hover:text-landing-primary transition-all duration-150 relative m-auto shrink-0 overflow-hidden">
+      {/* Inner SVG Icon Box Container: scaled to 44x44px (sm: 48x48px) preserving original colors */}
+      <div className="my-1 w-11 h-11 sm:w-12 sm:h-12 p-0.5 flex items-center justify-center text-slate-800 group-hover:scale-110 transition-all duration-150 relative m-auto shrink-0 overflow-hidden">
         {svgContent ? (
           <div
             className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:m-auto [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:overflow-hidden"
@@ -124,7 +126,7 @@ const IconCard = ({
             )}
             <img
               src={directCdnUrl}
-              alt={icon.title}
+              alt={displayTitle}
               className={`w-full h-full object-contain m-auto pointer-events-none transition-opacity duration-150 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
               loading="lazy"
               decoding="async"
@@ -142,9 +144,9 @@ const IconCard = ({
       <div className="w-full text-center mt-auto pt-0.5">
         <span
           className="block text-[10px] font-semibold text-landing-on-surface hover:text-landing-vibrant-coral truncate transition-colors"
-          title={icon.title}
+          title={displayTitle}
         >
-          {icon.title}
+          {displayTitle}
         </span>
       </div>
     </div>

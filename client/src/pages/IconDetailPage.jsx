@@ -16,6 +16,7 @@ import {
   getDirectR2Url,
   normalizeSvgForCanvas,
 } from '../services/svgCacheService';
+import { cleanIconTitle } from '../utils/titleCleaner';
 
 const IconDetailPage = () => {
   const { slug } = useParams();
@@ -151,7 +152,7 @@ const IconDetailPage = () => {
         <div className="lg:col-span-7 flex flex-col gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold font-heading text-subpage-on-surface tracking-tight mb-1">
-              {icon.title}
+              {cleanIconTitle(icon.title)}
             </h1>
             <p className="text-xs text-subpage-on-surface-variant">
               Vector icon ready for app UI, web interfaces, and graphic design.

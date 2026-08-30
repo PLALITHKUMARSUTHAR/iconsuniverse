@@ -39,8 +39,8 @@ const prefixRegexList = SOURCE_PREFIXES.map(p => {
   return new RegExp(`^${escaped}(?:[\\s_:-]+|$)`, 'i');
 });
 
-function cleanIconTitle(title) {
-  if (!title || typeof title !== 'string') return title;
+export function cleanIconTitle(title) {
+  if (!title || typeof title !== 'string') return title || '';
   let cleaned = title.trim();
 
   // Repeatedly strip matching prefixes (e.g. "V1 Emojione Monotone Goblin" -> "Goblin")
@@ -68,5 +68,3 @@ function cleanIconTitle(title) {
 
   return cleaned || title;
 }
-
-module.exports = { cleanIconTitle, SOURCE_PREFIXES };
