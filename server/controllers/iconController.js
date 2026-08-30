@@ -301,14 +301,21 @@ function getCorrectViewBox(svgText) {
     }
   }
 
-  // Paths
+  // Paths (Ignore transparent guide paths like fill="none" d="M0 0h24v24H0z")
   for (const p of svgText.matchAll(/<path\b([^>]*)>/gi)) {
     const attrs = p[1];
     const dMatch = attrs.match(/\bd=["']([^"']+)["']/i);
     if (dMatch) {
+      const dVal = dMatch[1].trim();
+      const isGuidePath = /^M\s*0\s*0\s*h\s*[0-9.]+\s*v\s*[0-9.]+\s*H\s*0[zZ]?$/i.test(dVal);
+      const isFillNone = /fill=["'](?:none|transparent)["']/i.test(attrs) && !/stroke=/i.test(attrs);
+      if (isGuidePath && isFillNone) {
+        continue; // Skip transparent canvas guide path
+      }
+
       const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
       const tfFn = tfMatch ? parseTransform(tfMatch[1]) : null;
-      const b = getPathBoundingBoxExact(dMatch[1], tfFn);
+      const b = getPathBoundingBoxExact(dVal, tfFn);
       if (b) {
         if (b.minX < overallMinX) overallMinX = b.minX;
         if (b.minY < overallMinY) overallMinY = b.minY;
@@ -318,53 +325,14 @@ function getCorrectViewBox(svgText) {
     }
   }
 
-  // Circles
-  for (const c of svgText.matchAll(/<circle\b([^>]*)>/gi)) {
-    const attrs = c[1];
-    const cxMatch = attrs.match(/\bcx=["']([0-9.-]+)["']/i);
-    const cyMatch = attrs.match(/\bcy=["']([0-9.-]+)["']/i);
-    const rMatch = attrs.match(/\br=["']([0-9.-]+)["']/i);
-    if (rMatch) {
-      let cx = cxMatch ? parseFloat(cxMatch[1]) : 0;
-      let cy = cyMatch ? parseFloat(cyMatch[1]) : 0;
-      const r = parseFloat(rMatch[1]);
-      const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
-      const tfFn = tfMatch ? parseTransform(tfMatch[1]) : null;
-      if (tfFn) {
-        const pt = tfFn(cx, cy);
-        cx = pt.x; cy = pt.y;
-      }
-      recordPoint(cx - r, cy - r);
-      recordPoint(cx + r, cy + r);
-    }
-  }
-
-  // Ellipses
-  for (const e of svgText.matchAll(/<ellipse\b([^>]*)>/gi)) {
-    const attrs = e[1];
-    const cxMatch = attrs.match(/\bcx=["']([0-9.-]+)["']/i);
-    const cyMatch = attrs.match(/\bcy=["']([0-9.-]+)["']/i);
-    const rxMatch = attrs.match(/\brx=["']([0-9.-]+)["']/i);
-    const ryMatch = attrs.match(/\bry=["']([0-9.-]+)["']/i);
-    if (rxMatch && ryMatch) {
-      let cx = cxMatch ? parseFloat(cxMatch[1]) : 0;
-      let cy = cyMatch ? parseFloat(cyMatch[1]) : 0;
-      const rx = parseFloat(rxMatch[1]);
-      const ry = parseFloat(ryMatch[1]);
-      const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
-      const tfFn = tfMatch ? parseTransform(tfMatch[1]) : null;
-      if (tfFn) {
-        const pt = tfFn(cx, cy);
-        cx = pt.x; cy = pt.y;
-      }
-      recordPoint(cx - rx, cy - ry);
-      recordPoint(cx + rx, cy + ry);
-    }
-  }
-
-  // Rects
+  // Rects (Ignore transparent canvas guide rects)
   for (const r of svgText.matchAll(/<rect\b([^>]*)>/gi)) {
     const attrs = r[1];
+    const isFillNone = (/fill=["'](?:none|transparent)["']/i.test(attrs) || /opacity=["']0["']/i.test(attrs)) && !/stroke=/i.test(attrs);
+    if (isFillNone) {
+      continue; // Skip transparent bounding box rectangle
+    }
+
     const xMatch = attrs.match(/\bx=["']([0-9.-]+)["']/i);
     const yMatch = attrs.match(/\by=["']([0-9.-]+)["']/i);
     const wMatch = attrs.match(/\bwidth=["']([0-9.-]+)["']/i);
@@ -388,9 +356,59 @@ function getCorrectViewBox(svgText) {
     }
   }
 
+  // Circles
+  for (const c of svgText.matchAll(/<circle\b([^>]*)>/gi)) {
+    const attrs = c[1];
+    if (/opacity=["']0["']/i.test(attrs)) continue;
+
+    const cxMatch = attrs.match(/\bcx=["']([0-9.-]+)["']/i);
+    const cyMatch = attrs.match(/\bcy=["']([0-9.-]+)["']/i);
+    const rMatch = attrs.match(/\br=["']([0-9.-]+)["']/i);
+    if (rMatch) {
+      let cx = cxMatch ? parseFloat(cxMatch[1]) : 0;
+      let cy = cyMatch ? parseFloat(cyMatch[1]) : 0;
+      const r = parseFloat(rMatch[1]);
+      const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
+      const tfFn = tfMatch ? parseTransform(tfMatch[1]) : null;
+      if (tfFn) {
+        const pt = tfFn(cx, cy);
+        cx = pt.x; cy = pt.y;
+      }
+      recordPoint(cx - r, cy - r);
+      recordPoint(cx + r, cy + r);
+    }
+  }
+
+  // Ellipses
+  for (const e of svgText.matchAll(/<ellipse\b([^>]*)>/gi)) {
+    const attrs = e[1];
+    if (/opacity=["']0["']/i.test(attrs)) continue;
+
+    const cxMatch = attrs.match(/\bcx=["']([0-9.-]+)["']/i);
+    const cyMatch = attrs.match(/\bcy=["']([0-9.-]+)["']/i);
+    const rxMatch = attrs.match(/\brx=["']([0-9.-]+)["']/i);
+    const ryMatch = attrs.match(/\bry=["']([0-9.-]+)["']/i);
+    if (rxMatch && ryMatch) {
+      let cx = cxMatch ? parseFloat(cxMatch[1]) : 0;
+      let cy = cyMatch ? parseFloat(cyMatch[1]) : 0;
+      const rx = parseFloat(rxMatch[1]);
+      const ry = parseFloat(ryMatch[1]);
+      const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
+      const tfFn = tfMatch ? parseTransform(tfMatch[1]) : null;
+      if (tfFn) {
+        const pt = tfFn(cx, cy);
+        cx = pt.x; cy = pt.y;
+      }
+      recordPoint(cx - rx, cy - ry);
+      recordPoint(cx + rx, cy + ry);
+    }
+  }
+
   // Polygons / Polylines
   for (const poly of svgText.matchAll(/<(?:polygon|polyline)\b([^>]*)>/gi)) {
     const attrs = poly[1];
+    if (/opacity=["']0["']/i.test(attrs)) continue;
+
     const ptsMatch = attrs.match(/\bpoints=["']([^"']+)["']/i);
     if (ptsMatch) {
       const tfMatch = attrs.match(/\btransform=["']([^"']+)["']/i);
@@ -412,6 +430,8 @@ function getCorrectViewBox(svgText) {
   // Lines
   for (const l of svgText.matchAll(/<line\b([^>]*)>/gi)) {
     const attrs = l[1];
+    if (/opacity=["']0["']/i.test(attrs)) continue;
+
     const x1Match = attrs.match(/\bx1=["']([0-9.-]+)["']/i);
     const y1Match = attrs.match(/\by1=["']([0-9.-]+)["']/i);
     const x2Match = attrs.match(/\bx2=["']([0-9.-]+)["']/i);
@@ -453,24 +473,9 @@ function getCorrectViewBox(svgText) {
     return '0 0 24 24';
   }
 
-  // Check if icon is already properly sized within its authoring viewBox
-  if (curVb) {
-    const minDim = Math.min(curVb.w, curVb.h);
-    const fitsInVb =
-      overallMinX >= curVb.x - curVb.w * 0.05 &&
-      overallMaxX <= curVb.x + curVb.w * 1.05 &&
-      overallMinY >= curVb.y - curVb.h * 0.05 &&
-      overallMaxY <= curVb.y + curVb.h * 1.05;
-
-    // If icon spans at least 72% of authoring viewBox and fits, it's normally sized
-    if (fitsInVb && maxSpan >= minDim * 0.72) {
-      return `${curVb.x} ${curVb.y} ${curVb.w} ${curVb.h}`;
-    }
-  }
-
-  // For smaller icons (maxSpan < minDim * 0.72 or mismatched canvas):
-  // Calculate a centered, fitted square viewBox with 6% padding to expand the icon size to fit the icon box properly
-  const pad = Math.max(maxSpan * 0.06, 0.5);
+  // Calculate centered, tightly padded square viewBox around actual visible icon shapes
+  // 4% breathing margin guarantees every smaller icon expands prominently and fits properly
+  const pad = Math.max(maxSpan * 0.04, 0.4);
   const squareSize = Math.round((maxSpan + pad * 2) * 100) / 100;
   const cx = (overallMinX + overallMaxX) / 2;
   const cy = (overallMinY + overallMaxY) / 2;
@@ -525,14 +530,12 @@ function normalizeAndFixSvg(svgText) {
   const hasVisibleFill = /fill=["'](?!none|transparent)[^"']+["']/i.test(result) || /fill:\s*(?!none|transparent)[^;"]+/i.test(result);
   const hasExplicitColor = /#(?:[0-9a-fA-F]{3,8})|rgb\([^)]+\)|rgba\([^)]+\)/i.test(result);
   const hasFillNone = /fill=["']none["']/i.test(result) || /fill:\s*none/i.test(result);
-  const hasStrokeHints = /stroke-width|stroke-linecap|stroke-linejoin/i.test(result);
 
   if (!hasVisibleStroke && !hasVisibleFill && !hasExplicitColor) {
-    if (hasFillNone && hasStrokeHints) {
+    if (hasFillNone) {
       result = result.replace(/<svg\b([^>]*)>/i, '<svg $1 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">');
     } else {
-      // Clean root fill="none" if it was erroneously set on a filled silhouette
-      result = result.replace(/<svg\b([^>]*)>/i, (m, a) => `<svg ${a.replace(/\bfill=["']none["']/gi, '')} fill="currentColor">`);
+      result = result.replace(/<svg\b([^>]*)>/i, '<svg $1 fill="currentColor">');
     }
   } else if (hasVisibleStroke && !/stroke-width=/i.test(result) && !/stroke-width:/i.test(result)) {
     result = result.replace(/<svg\b([^>]*)>/i, '<svg $1 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">');
