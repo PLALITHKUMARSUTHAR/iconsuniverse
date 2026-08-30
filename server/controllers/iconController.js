@@ -453,9 +453,24 @@ function getCorrectViewBox(svgText) {
     return '0 0 24 24';
   }
 
-  // Calculate centered, tightly padded square viewBox around actual icon shapes
-  // 5% breathing margin guarantees every icon fills the box prominently with zero cutoff
-  const pad = Math.max(maxSpan * 0.05, 0.5);
+  // Check if icon is already properly sized within its authoring viewBox
+  if (curVb) {
+    const minDim = Math.min(curVb.w, curVb.h);
+    const fitsInVb =
+      overallMinX >= curVb.x - curVb.w * 0.05 &&
+      overallMaxX <= curVb.x + curVb.w * 1.05 &&
+      overallMinY >= curVb.y - curVb.h * 0.05 &&
+      overallMaxY <= curVb.y + curVb.h * 1.05;
+
+    // If icon spans at least 72% of authoring viewBox and fits, it's normally sized
+    if (fitsInVb && maxSpan >= minDim * 0.72) {
+      return `${curVb.x} ${curVb.y} ${curVb.w} ${curVb.h}`;
+    }
+  }
+
+  // For smaller icons (maxSpan < minDim * 0.72 or mismatched canvas):
+  // Calculate a centered, fitted square viewBox with 6% padding to expand the icon size to fit the icon box properly
+  const pad = Math.max(maxSpan * 0.06, 0.5);
   const squareSize = Math.round((maxSpan + pad * 2) * 100) / 100;
   const cx = (overallMinX + overallMaxX) / 2;
   const cy = (overallMinY + overallMaxY) / 2;
@@ -510,12 +525,14 @@ function normalizeAndFixSvg(svgText) {
   const hasVisibleFill = /fill=["'](?!none|transparent)[^"']+["']/i.test(result) || /fill:\s*(?!none|transparent)[^;"]+/i.test(result);
   const hasExplicitColor = /#(?:[0-9a-fA-F]{3,8})|rgb\([^)]+\)|rgba\([^)]+\)/i.test(result);
   const hasFillNone = /fill=["']none["']/i.test(result) || /fill:\s*none/i.test(result);
+  const hasStrokeHints = /stroke-width|stroke-linecap|stroke-linejoin/i.test(result);
 
   if (!hasVisibleStroke && !hasVisibleFill && !hasExplicitColor) {
-    if (hasFillNone) {
+    if (hasFillNone && hasStrokeHints) {
       result = result.replace(/<svg\b([^>]*)>/i, '<svg $1 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">');
     } else {
-      result = result.replace(/<svg\b([^>]*)>/i, '<svg $1 fill="currentColor">');
+      // Clean root fill="none" if it was erroneously set on a filled silhouette
+      result = result.replace(/<svg\b([^>]*)>/i, (m, a) => `<svg ${a.replace(/\bfill=["']none["']/gi, '')} fill="currentColor">`);
     }
   } else if (hasVisibleStroke && !/stroke-width=/i.test(result) && !/stroke-width:/i.test(result)) {
     result = result.replace(/<svg\b([^>]*)>/i, '<svg $1 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">');

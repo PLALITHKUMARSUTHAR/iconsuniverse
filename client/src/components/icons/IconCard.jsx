@@ -106,8 +106,8 @@ const IconCard = ({
         )}
       </div>
 
-      {/* Inner SVG Icon Box Container: scaled to 44x44px (sm: 48x48px) for maximum clarity and presence */}
-      <div className="my-1 w-11 h-11 sm:w-12 sm:h-12 p-0.5 flex items-center justify-center text-slate-800 group-hover:scale-110 group-hover:text-landing-primary transition-all duration-150 relative m-auto shrink-0">
+      {/* Inner 36x36 px SVG Icon Box Container: boundaries and size preserved exactly */}
+      <div className="my-1.5 w-9 h-9 p-0.5 flex items-center justify-center text-slate-800 group-hover:scale-110 group-hover:text-landing-primary transition-all duration-150 relative m-auto shrink-0">
         {svgContent ? (
           <div
             className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:m-auto [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:overflow-visible"
@@ -120,7 +120,7 @@ const IconCard = ({
         ) : (
           <>
             {!isLoaded && (
-              <div className="absolute inset-0 bg-slate-100/80 rounded-xl animate-pulse" />
+              <div className="absolute inset-0 bg-slate-100/70 rounded-lg animate-pulse" />
             )}
             <img
               src={directCdnUrl}
