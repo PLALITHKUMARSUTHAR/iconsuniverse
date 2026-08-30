@@ -1,23 +1,24 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ChevronUp, ChevronDown, Sparkles } from 'lucide-react';
 
-const Footer = ({ collapsible = false }) => {
+const Footer = ({ collapsible = false, exploreCategoriesSlot = null }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <footer className={`w-full bg-[#001e52] text-white transition-all duration-300 border-t border-white/15 relative z-20 ${collapsible ? 'mt-0' : 'mt-12'}`}>
       {collapsible && !isExpanded ? (
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-2.5 flex items-center justify-between text-xs text-white/80">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-2 flex items-center justify-between text-xs text-white/80">
           <p className="text-[11px] text-white/70">© 2026 IconsUniverse. All rights reserved.</p>
 
           <button
             type="button"
             onClick={() => setIsExpanded(true)}
-            className="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors cursor-pointer shadow-2xs"
-            title="Expand Footer Links"
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors cursor-pointer shadow-2xs group"
+            title="Explore categories & view footer links"
           >
-            <span>Footer Links</span>
+            <Sparkles className="w-3.5 h-3.5 text-landing-electric-teal group-hover:rotate-12 transition-transform" />
+            <span>Explore Categories & Footer</span>
             <ChevronUp className="w-3.5 h-3.5 text-landing-electric-teal" />
           </button>
 
@@ -26,18 +27,28 @@ const Footer = ({ collapsible = false }) => {
           </Link>
         </div>
       ) : (
-        <div className="max-w-[1440px] mx-auto px-6 sm:px-8 pt-8 pb-6 animate-fade-in text-white">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 pt-6 pb-6 animate-fade-in text-white max-h-[75vh] overflow-y-auto">
           {collapsible && (
-            <div className="flex justify-end mb-4">
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-white/15">
+              <span className="text-xs font-bold text-landing-electric-teal tracking-wider uppercase">
+                Explore More & Links
+              </span>
               <button
                 type="button"
                 onClick={() => setIsExpanded(false)}
                 className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors cursor-pointer"
-                title="Collapse Footer"
+                title="Collapse Panel"
               >
-                <span>Collapse Footer</span>
+                <span>Collapse</span>
                 <ChevronDown className="w-3.5 h-3.5 text-landing-electric-teal" />
               </button>
+            </div>
+          )}
+
+          {/* Explore Categories Slot inside expanded drawer */}
+          {exploreCategoriesSlot && (
+            <div className="mb-6 pb-6 border-b border-white/15">
+              {exploreCategoriesSlot}
             </div>
           )}
 

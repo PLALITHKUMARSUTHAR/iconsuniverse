@@ -177,6 +177,27 @@ const SearchResultsPage = () => {
   // Selected icon objects for BulkDownloadModal
   const selectedIconObjects = icons.filter((i) => selectedIds.has(i._id || i.slug));
 
+  // Auto-hiding header and filters on downward scroll
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const lastScrollTopRef = useRef(0);
+
+  const handleScroll = useCallback((e) => {
+    const currentScrollTop = e.currentTarget.scrollTop;
+    const delta = currentScrollTop - lastScrollTopRef.current;
+
+    if (currentScrollTop <= 30) {
+      setIsHeaderVisible(true);
+    } else if (delta > 8 && isHeaderVisible) {
+      // Scrolling downwards -> hide top header to maximize icons grid space
+      setIsHeaderVisible(false);
+    } else if (delta < -8 && !isHeaderVisible) {
+      // Scrolling upwards -> reveal top header and filters
+      setIsHeaderVisible(true);
+    }
+
+    lastScrollTopRef.current = currentScrollTop;
+  }, [isHeaderVisible]);
+
   // Explore other categories: 11 featured categories (excluding current)
   const featured11Categories = main17FeaturedCategories
     .filter((cat) => cat.slug !== categoryParam)
@@ -227,10 +248,53 @@ const SearchResultsPage = () => {
   const isCategoryMode = Boolean(categoryParam);
   const isCategoryComplete = Boolean(icons.length > 0 && (!hasMore || (totalCount > 0 && icons.length >= totalCount)));
 
+  // Explore categories content to embed inside expanded footer
+  const exploreCategoriesContent = isCategoryMode ? (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-bold font-heading text-landing-electric-teal uppercase tracking-wider flex items-center gap-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-landing-electric-teal" />
+          <span>Explore More Categories</span>
+        </span>
+        <button
+          type="button"
+          onClick={() => setIsAllOtherCategoriesModalOpen(true)}
+          className="text-xs font-bold text-white hover:text-landing-electric-teal flex items-center gap-1 transition-colors cursor-pointer"
+        >
+          <span>View all categories</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+        {featured11Categories.map((cat) => {
+          const IconComp = CategoryIconMap[cat.iconName] || Layers;
+          return (
+            <button
+              key={cat.slug}
+              type="button"
+              onClick={() => setExploreModalCategory(cat)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold shrink-0 transition-colors border border-white/15 cursor-pointer shadow-xs"
+            >
+              <IconComp className="w-3.5 h-3.5" style={{ color: cat.color }} />
+              <span className="truncate max-w-[120px]">{cat.name}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  ) : null;
+
   return (
-    <div className="h-full flex flex-col min-h-0 gap-2">
-      {/* 1. Fixed Top Header & Filters */}
-      <div className="shrink-0 flex flex-col gap-2.5 pb-1">
+    <div className="h-full flex flex-col min-h-0 gap-1.5 relative">
+      {/* 1. Auto-Hiding Top Header & Filters (Collapses on scroll down, reveals on scroll up) */}
+      <div
+        className={`shrink-0 flex flex-col gap-2.5 transition-all duration-300 ease-in-out z-20 bg-[#f8f9ff] ${
+          isHeaderVisible
+            ? 'translate-y-0 opacity-100 max-h-[500px] mb-1'
+            : '-translate-y-4 opacity-0 max-h-0 overflow-hidden mb-0 pointer-events-none'
+        }`}
+      >
         {/* Header Banner */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-subpage-outline-variant/20">
           <div>
@@ -330,7 +394,10 @@ const SearchResultsPage = () => {
       </div>
 
       {/* 2. Middle Scrollable Icons Grid Area (Scrolls independently of top/bottom) */}
-      <div className="flex-1 overflow-y-auto pr-1 py-1 min-h-0">
+      <div
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto pr-1 py-1 min-h-0 transition-all duration-300"
+      >
         {renderGroupedIcons()}
 
         {/* Infinite Scroll Sentinel */}
@@ -363,46 +430,9 @@ const SearchResultsPage = () => {
         )}
       </div>
 
-      {/* 3. Fixed Bottom Docked Section: Explore More Categories + Collapsible Footer */}
-      <div className="shrink-0 z-20 flex flex-col gap-2 pt-1 border-t border-landing-surface-container/60 bg-[#f8f9ff]">
-        {/* Explore Other Categories Strip */}
-        {isCategoryMode && (
-          <div className="p-2 sm:p-2.5 rounded-2xl bg-white border border-landing-surface-container shadow-2xs flex flex-col gap-1.5">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-landing-primary">
-                Explore More Categories
-              </span>
-              <button
-                type="button"
-                onClick={() => setIsAllOtherCategoriesModalOpen(true)}
-                className="text-xs font-bold text-landing-primary hover:text-landing-vibrant-coral flex items-center gap-1 transition-colors cursor-pointer"
-              >
-                <span>View all categories</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-              {featured11Categories.map((cat) => {
-                const IconComp = CategoryIconMap[cat.iconName] || Layers;
-                return (
-                  <button
-                    key={cat.slug}
-                    type="button"
-                    onClick={() => setExploreModalCategory(cat)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-landing-surface-container-low hover:bg-landing-surface-container text-landing-on-surface text-xs font-bold shrink-0 transition-colors border border-landing-surface-container cursor-pointer"
-                  >
-                    <IconComp className="w-3.5 h-3.5" style={{ color: cat.color }} />
-                    <span className="truncate max-w-[120px]">{cat.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Collapsible Footer Fixed at Bottom */}
-        <Footer collapsible={true} />
+      {/* 3. Fixed Bottom Collapsible Dock containing Explore Categories & Footer Links */}
+      <div className="shrink-0 z-20 border-t border-landing-surface-container/60 bg-[#f8f9ff]">
+        <Footer collapsible={true} exploreCategoriesSlot={exploreCategoriesContent} />
       </div>
 
       {/* Fullscreen Bulk Download & Studio Modal */}
