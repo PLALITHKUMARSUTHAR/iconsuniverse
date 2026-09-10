@@ -50,47 +50,36 @@ const IconCard = ({
     };
   }, [iconId, directCdnUrl, proxyUrl, svgMarkup]);
 
-  // Continuous animation loop: Animates continuously every 2 seconds for all animated icons
+  // On mount: Keep animated icons resting statically in their fully drawn visual state
   useEffect(() => {
     const isAnim = icon.isAnimated || (svgMarkup && (svgMarkup.includes('<animate') || svgMarkup.includes('<animateTransform')));
-    if (!isAnim) return;
+    if (!isAnim || !svgMarkup) return;
 
-    const triggerAnimation = () => {
-      if (containerRef.current) {
-        const svg = containerRef.current.querySelector('svg');
-        if (svg) {
-          if (typeof svg.setCurrentTime === 'function') {
-            try {
-              svg.setCurrentTime(0);
-            } catch (e) {}
-          }
-          const animates = svg.querySelectorAll('animate, animateTransform');
-          animates.forEach((a) => {
-            if (typeof a.beginElement === 'function') {
-              try {
-                a.beginElement();
-              } catch (e) {}
-            }
-          });
-        }
-      }
-    };
-
-    const interval = setInterval(triggerAnimation, 2000);
-    return () => clearInterval(interval);
-  }, [icon.isAnimated, svgMarkup]);
-
-  // Fast prefetch and animation trigger on hover or select so editor/modal opens with zero latency
-  const handlePrefetch = useCallback(() => {
     if (containerRef.current) {
       const svg = containerRef.current.querySelector('svg');
       if (svg && typeof svg.setCurrentTime === 'function') {
-        try { svg.setCurrentTime(0); } catch (e) {}
+        try {
+          svg.setCurrentTime(10);
+        } catch (e) {}
+      }
+    }
+  }, [icon.isAnimated, svgMarkup]);
+
+  // Trigger animation only on hover
+  const handleMouseEnter = useCallback(() => {
+    if (containerRef.current) {
+      const svg = containerRef.current.querySelector('svg');
+      if (svg && typeof svg.setCurrentTime === 'function') {
+        try {
+          svg.setCurrentTime(0);
+        } catch (e) {}
       }
       const animates = containerRef.current.querySelectorAll('animate, animateTransform');
       animates.forEach((a) => {
         if (typeof a.beginElement === 'function') {
-          try { a.beginElement(); } catch (e) {}
+          try {
+            a.beginElement();
+          } catch (e) {}
         }
       });
     }
@@ -104,6 +93,21 @@ const IconCard = ({
       })
       .catch(() => {});
   }, [svgMarkup, directCdnUrl, proxyUrl, iconId]);
+
+  // When hover ends, settle back to the completed static state
+  const handleMouseLeave = useCallback(() => {
+    const isAnim = icon.isAnimated || (svgMarkup && (svgMarkup.includes('<animate') || svgMarkup.includes('<animateTransform')));
+    if (!isAnim) return;
+
+    if (containerRef.current) {
+      const svg = containerRef.current.querySelector('svg');
+      if (svg && typeof svg.setCurrentTime === 'function') {
+        try {
+          svg.setCurrentTime(10);
+        } catch (e) {}
+      }
+    }
+  }, [icon.isAnimated, svgMarkup]);
 
   const handleImgError = () => {
     if (imgSrc !== proxyUrl && proxyUrl) {
@@ -124,9 +128,10 @@ const IconCard = ({
           ? 'ring-2 ring-landing-primary border-transparent bg-landing-primary/5 shadow-sm'
           : 'border border-landing-surface-container/70 hover:border-landing-primary/30 shadow-2xs hover:shadow-xs'
       }`}
-      onMouseEnter={handlePrefetch}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       onClick={() => {
-        handlePrefetch();
+        handleMouseEnter();
         if (onToggleSelect) {
           onToggleSelect(icon);
         }
