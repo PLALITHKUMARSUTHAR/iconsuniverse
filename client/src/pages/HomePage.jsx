@@ -18,16 +18,16 @@ const HomePage = () => {
       {/* 1. Hero Search & Quick Style Badges */}
       <HeroSection />
 
-      {/* 2. Curated Category Showcase & Browse Drawer */}
-      <CategoryGrid />
-
-      {/* 3. In-Browser Live Vector Editor Studio Showcase */}
+      {/* 2. Live In-Browser Editor Demonstration */}
       <LiveEditorTeaser />
 
-      {/* 4. Trending & Featured Cohesive Icon Packs */}
+      {/* 3. Featured Icon Sets */}
       <TrendingPacks />
 
-      {/* 5. Why IconsUniverse Architecture & Feature Grid */}
+      {/* 4. Curated Category Showcase & Browse Drawer */}
+      <CategoryGrid />
+
+      {/* 5. Built for Designers, Developers & Creators Feature Grid */}
       <FeatureGrid />
 
       {/* 6. Transparent Pricing Plans & Pro CTA */}

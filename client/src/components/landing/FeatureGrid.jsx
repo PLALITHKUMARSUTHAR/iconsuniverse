@@ -1,42 +1,42 @@
 import React from 'react';
-import { Palette, Code2, Cloud, Sparkles, FolderHeart, ShieldCheck, Download, Zap } from 'lucide-react';
+import { Layers, Download, Palette, Sparkles, RotateCw, Archive } from 'lucide-react';
 
 const features = [
   {
-    icon: Palette,
-    title: 'In-Browser Vector Editor',
-    description: 'Recolor icons layer-by-layer, rotate, flip, and generate backdrop badges live in the browser without server roundtrips.',
-    color: '#FF5F52',
-  },
-  {
-    icon: Cloud,
-    title: 'Google Drive Auto-Sync',
-    description: 'Ingest and stream entire folders of icons directly from Google Drive with automated tag parsing and thumbnail caching.',
-    color: '#00F5D4',
-  },
-  {
-    icon: Code2,
-    title: 'High-Speed Global CDN',
-    description: 'Instant loading and streaming across 1,000,000 vector assets with global edge caching and zero latency.',
+    icon: Layers,
+    title: 'Extensive Icon Library',
+    description: 'Explore a growing collection of icons across diverse styles, categories, and use cases.',
     color: '#6366f1',
   },
   {
     icon: Download,
-    title: 'Multi-Format Export',
-    description: 'Instant downloads in raw SVG, PNG (16px to 512px resolutions), EPS print vector, and Base64 Data URI strings.',
+    title: 'SVG & PNG Downloads',
+    description: 'Download icons in SVG and PNG formats, ready for websites, apps, presentations, and designs.',
+    color: '#00F5D4',
+  },
+  {
+    icon: Palette,
+    title: 'Built-In Icon Editor',
+    description: 'Customize icons directly in the browser before downloading, without external design software.',
+    color: '#FF5F52',
+  },
+  {
+    icon: Sparkles,
+    title: 'Recolor & Add Backdrops',
+    description: 'Change icon colors and add custom backdrops to match your design, brand, or project.',
     color: '#FFD54F',
   },
   {
-    icon: FolderHeart,
-    title: 'Floating Collection Tray',
-    description: 'Dock your favorite assets into personal boards, bulk recolor them with a click, and download full collections as ZIPs.',
-    color: '#b32822',
+    icon: RotateCw,
+    title: 'Rotate, Flip & Transform',
+    description: 'Rotate, flip, and transform icons directly from the built-in editor.',
+    color: '#ec4899',
   },
   {
-    icon: ShieldCheck,
-    title: 'Clear Freemium Licensing',
-    description: 'Free tier with simple attribution snippets, or Pro subscription for unlimited attribution-free commercial licensing.',
-    color: '#10b981',
+    icon: Archive,
+    title: 'Bulk Download as ZIP',
+    description: 'Select multiple icons and download them together in a convenient ZIP file.',
+    color: '#0ea5e9',
   },
 ];
 

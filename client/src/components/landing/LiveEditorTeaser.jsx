@@ -71,10 +71,10 @@ const LiveEditorTeaser = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-landing-surface-container mb-6">
             <div>
               <h2 className="text-xl sm:text-2xl font-extrabold font-heading text-landing-primary tracking-tight">
-                Live In-Browser Icon Editor
+                Editor Demonstration
               </h2>
               <p className="text-xs text-landing-on-surface-variant mt-0.5">
-                Recolor, rotate, flip, and customize shapes in real-time.
+                Recolor, rotate, flip, and customize shapes in real-time before downloading.
               </p>
             </div>
 

@@ -267,7 +267,7 @@ const SearchResultsPage = () => {
         </button>
       </div>
 
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+      <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar py-2">
         {featured11Categories.map((cat) => {
           const IconComp = CategoryIconMap[cat.iconName] || Layers;
           return (
@@ -275,10 +275,15 @@ const SearchResultsPage = () => {
               key={cat.slug}
               type="button"
               onClick={() => setExploreModalCategory(cat)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold shrink-0 transition-colors border border-white/15 cursor-pointer shadow-xs"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white text-[#001e52] hover:bg-white/95 text-xs font-extrabold shrink-0 transition-all transform hover:scale-105 shadow-md border border-white/80 cursor-pointer"
             >
-              <IconComp className="w-3.5 h-3.5" style={{ color: cat.color }} />
-              <span className="truncate max-w-[120px]">{cat.name}</span>
+              <span
+                className="w-5 h-5 rounded-lg flex items-center justify-center shrink-0 shadow-2xs"
+                style={{ backgroundColor: `${cat.color}25`, color: cat.color }}
+              >
+                <IconComp className="w-3.5 h-3.5" />
+              </span>
+              <span className="truncate max-w-[130px]">{cat.name}</span>
             </button>
           );
         })}
