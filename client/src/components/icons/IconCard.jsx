@@ -1,4 +1,4 @@
-import React, { memo, useState, useCallback } from 'react';
+import React, { memo, useState, useCallback, useEffect } from 'react';
 import { Crown, CheckSquare, Square, ImageOff } from 'lucide-react';
 import {
   getDirectR2Url,
@@ -28,7 +28,28 @@ const IconCard = ({
   const [imgSrc, setImgSrc] = useState(directCdnUrl || proxyUrl);
   const [imgFailed, setImgFailed] = useState(false);
 
-  // Speculative fetch on hover or select so editor/modal opens with zero delay
+  // Active vector loader: Immediately fetch and normalize vector SVG on mount
+  // Completely eliminates "show on hover only" so icons render instantly and visibly
+  useEffect(() => {
+    if (svgMarkup) return;
+    let isMounted = true;
+    const fetchUrl = directCdnUrl || proxyUrl;
+    if (!fetchUrl) return;
+
+    fetchAndCacheSvg(fetchUrl, iconId, proxyUrl)
+      .then((raw) => {
+        if (isMounted && raw) {
+          setSvgMarkup(normalizeSvgForCanvas(raw, iconId));
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, [iconId, directCdnUrl, proxyUrl, svgMarkup]);
+
+  // Fast prefetch on hover or select so editor/modal opens with zero latency
   const handlePrefetch = useCallback(() => {
     if (svgMarkup) return;
     const fetchUrl = directCdnUrl || proxyUrl;
@@ -41,7 +62,6 @@ const IconCard = ({
   }, [svgMarkup, directCdnUrl, proxyUrl, iconId]);
 
   const handleImgError = () => {
-    // If direct CDN fails or gets blocked, failover to backend proxy
     if (imgSrc !== proxyUrl && proxyUrl) {
       setImgSrc(proxyUrl);
     } else {
@@ -54,7 +74,7 @@ const IconCard = ({
 
   return (
     <div
-      style={{ contentVisibility: 'auto', containIntrinsicSize: '80px 100px' }}
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '80px 100px', colorScheme: 'light' }}
       className={`group relative flex flex-col items-center justify-between p-2 rounded-xl bg-white transition-all duration-150 transform hover:-translate-y-0.5 cursor-pointer select-none ${
         isSelected
           ? 'ring-2 ring-landing-primary border-transparent bg-landing-primary/5 shadow-sm'
@@ -99,8 +119,11 @@ const IconCard = ({
       </div>
 
       {/* Inner SVG Icon Container:
-          bg-slate-50/80 + subtle border provides guaranteed contrast so white/light icons never appear empty */}
-      <div className="my-1 w-11 h-11 sm:w-12 sm:h-12 p-1 flex items-center justify-center text-slate-800 bg-slate-50/80 border border-slate-100 rounded-lg group-hover:bg-slate-100/90 group-hover:scale-105 transition-all duration-150 relative m-auto shrink-0 overflow-hidden">
+          Guaranteed contrast container with drop shadow & color inheritance */}
+      <div
+        style={{ colorScheme: 'light' }}
+        className="my-1 w-11 h-11 sm:w-12 sm:h-12 p-1 flex items-center justify-center text-slate-800 bg-slate-50/80 border border-slate-100 rounded-lg group-hover:bg-slate-100/90 group-hover:scale-105 transition-all duration-150 relative m-auto shrink-0 overflow-hidden"
+      >
         {svgMarkup ? (
           <div
             className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:m-auto [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:overflow-hidden filter drop-shadow-[0_1px_1px_rgba(0,0,0,0.12)]"
@@ -114,6 +137,7 @@ const IconCard = ({
           <img
             src={imgSrc}
             alt={displayTitle}
+            style={{ colorScheme: 'light' }}
             className="w-full h-full object-contain m-auto pointer-events-none filter drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)]"
             loading={isAboveFold ? 'eager' : 'lazy'}
             fetchPriority={index < 12 ? 'high' : 'auto'}

@@ -859,7 +859,7 @@ export function normalizeSvgForCanvas(svgText, scopeId = null) {
       .replace(/\bheight=["'][^"']*["']/gi, '')
       .replace(/\bdisplay=["']none["']/gi, '')
       .replace(/\bvisibility=["']hidden["']/gi, '');
-    return `<svg width="100%" height="100%" ${cleanAttrs.trim()}>`;
+    return `<svg width="100%" height="100%" style="color: #0f172a; color-scheme: light;" ${cleanAttrs.trim()}>`;
   });
 
   // 5. Intelligent stroke & fill recovery for unstyled icons without mutating multi-color assets
