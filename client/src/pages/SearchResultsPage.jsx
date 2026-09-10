@@ -191,26 +191,7 @@ const SearchResultsPage = () => {
   // Selected icon objects for BulkDownloadModal
   const selectedIconObjects = icons.filter((i) => selectedIds.has(i._id || i.slug));
 
-  // Auto-hiding header and filters on downward scroll
-  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
-  const lastScrollTopRef = useRef(0);
 
-  const handleScroll = useCallback((e) => {
-    const currentScrollTop = e.currentTarget.scrollTop;
-    const delta = currentScrollTop - lastScrollTopRef.current;
-
-    if (currentScrollTop <= 30) {
-      setIsHeaderVisible(true);
-    } else if (delta > 8 && isHeaderVisible) {
-      // Scrolling downwards -> hide top header to maximize icons grid space
-      setIsHeaderVisible(false);
-    } else if (delta < -8 && !isHeaderVisible) {
-      // Scrolling upwards -> reveal top header and filters
-      setIsHeaderVisible(true);
-    }
-
-    lastScrollTopRef.current = currentScrollTop;
-  }, [isHeaderVisible]);
 
   // Explore other categories: 11 featured categories (excluding current)
   const featured11Categories = main17FeaturedCategories
@@ -401,14 +382,8 @@ const SearchResultsPage = () => {
         keywords={[queryParam, categoryParam, 'vector icons', 'svg icons', 'free download'].filter(Boolean)}
       />
 
-      {/* 1. Auto-Hiding Top Header & Filters (Collapses on scroll down, reveals on scroll up) */}
-      <div
-        className={`shrink-0 flex flex-col gap-2.5 transition-all duration-300 ease-in-out z-20 bg-[#f8f9ff] ${
-          isHeaderVisible
-            ? 'translate-y-0 opacity-100 max-h-[500px] mb-1'
-            : '-translate-y-4 opacity-0 max-h-0 overflow-hidden mb-0 pointer-events-none'
-        }`}
-      >
+      {/* 1. Top Header & Filters (Clean & Stable) */}
+      <div className="shrink-0 flex flex-col gap-2.5 z-20 bg-[#f8f9ff]">
         {/* Header Banner */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-subpage-outline-variant/20">
           <div>
@@ -524,11 +499,8 @@ const SearchResultsPage = () => {
         />
       </div>
 
-      {/* 2. Middle Scrollable Icons Grid Area (Scrolls independently of top/bottom) */}
-      <div
-        onScroll={handleScroll}
-        className="flex-1 overflow-y-auto pr-1 py-1 min-h-0 transition-all duration-300"
-      >
+      {/* 2. Middle Scrollable Icons Grid Area */}
+      <div className="flex-1 overflow-y-auto pr-1 py-1 min-h-0">
         {renderGroupedIcons()}
 
         {/* Infinite Scroll Sentinel */}

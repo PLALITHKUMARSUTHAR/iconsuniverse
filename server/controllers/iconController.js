@@ -686,7 +686,26 @@ function normalizeAndFixSvg(svgText) {
   }
 
   return result;
-}
+const CATEGORY_DEFINITIONS = {
+  ai: /\b(ai|brain|robot|microchip|chip|neural|bot|sparkle|intelligence|algorithm|deep learning|cyborg|bionic|automaton|android)\b/i,
+  shopping: /\b(cart|shopping|store|basket|bag|tag|price|discount|sale|checkout|retail|market|supermarket|cashier|pos|shop|ecommerce|coupon|voucher|barcode)\b/i,
+  transport: /\b(car|truck|bus|plane|airplane|train|vehicle|bicycle|bike|ship|boat|taxi|tram|subway|metro|helicopter|motorcycle|scooter|rocket|van|ambulance|ferry|yacht|tractor|automobile|locomotive)\b/i,
+  food: /\b(food|drink|coffee|tea|burger|pizza|cake|bread|apple|fruit|vegetable|restaurant|meal|dish|soup|noodle|rice|salad|dessert|sandwich|cocktail|beer|wine|juice|cookie|biscuit|donut|ice cream|bacon|egg|meat|cheese|fish|fork|spoon|knife|utensils|bottle|cup|mug|bakery|snack)\b/i,
+  weather: /\b(sun|sunny|cloud|cloudy|rain|rainy|snow|snowy|wind|windy|storm|thunder|lightning|umbrella|thermometer|temperature|frost|blizzard|tornado|cyclone|hurricane|rainbow|fog|mist|hail|weather|moon|meteor|sunrise|sunset)\b/i,
+  music: /\b(music|musical|headphones|headset|sound|volume|speaker|note|guitar|piano|drum|violin|microphone|mic|playlist|audio|song|melody|tuner|radio|record|vinyl|cassette|boombox|synthesizer|trumpet|flute|sax|tempo|chord)\b/i,
+  security: /\b(shield|lock|locked|unlock|unlocked|padlock|key|password|protect|protection|safe|safety|guard|security|firewall|privacy|private|fingerprint|biometric|surveillance|cctv|auth|credential|vault|alarm|detector)\b/i,
+  'health-medical': /\b(health|medical|medicine|hospital|doctor|nurse|clinic|stethoscope|pill|capsule|tablet|cross|heartbeat|pulse|ambulance|syringe|injection|bandage|first aid|dental|tooth|teeth|pharmacy|prescription|patient|virus|bacteria|surgery|healthcare)\b/i,
+  nature: /\b(nature|plant|tree|leaf|leaves|flower|seed|sprout|forest|wood|woods|jungle|mountain|hill|river|lake|sea|ocean|wave|waterfall|bush|grass|branch|flora|ecology|eco|organic|bloom|rose|tulip|botanical|park|soil)\b/i,
+  education: /\b(education|school|college|university|student|teacher|study|learn|learning|book|books|library|graduation|diploma|degree|certificate|pencil|pen|notebook|blackboard|chalkboard|globe|microscope|exam|test|class|classroom|lecture|academic|campus)\b/i,
+  animals: /\b(animal|animals|cat|kitten|dog|puppy|bird|fish|lion|tiger|bear|wolf|fox|rabbit|bunny|deer|horse|pony|cow|bull|pig|sheep|goat|elephant|monkey|ape|gorilla|giraffe|zebra|kangaroo|koala|panda|whale|dolphin|shark|octopus|crab|penguin|duck|owl|eagle|snake|frog|turtle|lizard|dinosaur|insect|bee|butterfly|ant|spider|paw|pet)\b/i,
+  brands: /\b(google|apple|github|twitter|facebook|instagram|youtube|amazon|spotify|microsoft|figma|slack|linkedin|discord|netflix|tiktok|whatsapp|telegram|pinterest|reddit|snapchat|twitch|dropbox|adobe|paypal|stripe|visa|mastercard|uber|airbnb|ebay|zoom|shopify|docker|kubernetes|gitlab|android|linux|windows|chrome|firefox|safari|steam|playstation|xbox|nintendo|tesla)\b/i,
+  charts: /\b(chart|graph|analytics|diagram|statistic|statistics|stats|data|dashboard|trend|trending|bar chart|pie chart|line chart|scatter|histogram|funnel|pyramid|progression|growth|plot|radar)\b/i,
+  business: /\b(business|briefcase|wallet|handshake|bank|banking|money|cash|dollar|coin|coins|currency|investment|invest|office|meeting|deal|contract|finance|financial|growth|profit|revenue|trade|invoice|receipt|tax|wealth|capital|corporation)\b/i,
+  code: /\b(code|coding|terminal|console|developer|programming|program|script|html|css|javascript|python|java|php|ruby|c\+\+|sql|database|db|git|branch|commit|merge|pull request|repo|repository|compiler|syntax|brackets|braces|tag|api|sdk|bug|debug|function|variable|class|object|framework|server)\b/i,
+  files: /\b(file|files|folder|folders|document|documents|pdf|doc|docx|xls|xlsx|csv|txt|zip|rar|archive|paper|sheet|clipboard|copy|paste|save|download|upload|storage|directory|attachment|page|pages)\b/i,
+  emoji: /\b(smile|smiling|laugh|laughing|grin|grinning|happy|sad|cry|crying|angry|rage|love|heart|hearts|wink|winking|cool|glasses|fire|star|stars|thumbs up|thumbs down|applause|clap|hand|faces|emotion|emotions|excited|surprised|kiss|hug|party|celebrate|tears)\b/i,
+  communication: /\b(chat|message|messages|mail|email|envelope|letter|inbox|sms|phone|telephone|call|calling|conversation|speech|bubble|comment|discussion|dialog|contact|feedback|voicemail|broadcast|announcement)\b/i
+};
 
 const categorySlugCache = new Map();
 const categoryStylesCache = new Map();
@@ -786,26 +805,57 @@ exports.getIcons = async (req, res, next) => {
     // Category filter
     let availableStyles = undefined;
     if (category) {
+      const cleanCatSlug = category.toLowerCase().trim();
+      let catId = null;
       if (category.match(/^[0-9a-fA-F]{24}$/)) {
-        filter.categoryId = category;
+        catId = category;
       } else {
         const cat = await getCachedCategory(category);
         if (cat) {
-          filter.categoryId = cat._id;
-        } else {
-          return res.status(200).json({
-            success: true,
-            data: {
-              icons: [],
-              total: 0,
-              page: parseInt(page, 10) || 1,
-              totalPages: 0,
-              availableStyles: [],
-            },
-          });
+          catId = cat._id;
         }
       }
-      availableStyles = await getCategoryStyles(filter.categoryId);
+
+      const catRegex = CATEGORY_DEFINITIONS[cleanCatSlug];
+      if (catRegex) {
+        // Enforce authentic category relevance:
+        // Returns genuine icons that match the category's domain (within categoryId or matching title/slug/tags)
+        // Strictly prevents irrelevant leftover scraper icons from polluting the category view
+        if (catId) {
+          andConditions.push({
+            $or: [
+              { categoryId: catId, title: catRegex },
+              { categoryId: catId, slug: catRegex },
+              { title: catRegex },
+              { slug: catRegex },
+              { tags: { $in: [catRegex] } },
+            ],
+          });
+          availableStyles = await getCategoryStyles(catId);
+        } else {
+          andConditions.push({
+            $or: [
+              { title: catRegex },
+              { slug: catRegex },
+              { tags: { $in: [catRegex] } },
+            ],
+          });
+        }
+      } else if (catId) {
+        filter.categoryId = catId;
+        availableStyles = await getCategoryStyles(catId);
+      } else {
+        return res.status(200).json({
+          success: true,
+          data: {
+            icons: [],
+            total: 0,
+            page: parseInt(page, 10) || 1,
+            totalPages: 0,
+            availableStyles: [],
+          },
+        });
+      }
     }
 
     // Shape / Style filter

@@ -1,29 +1,38 @@
 const KNOWN_PREFIXES = [
   // Repeated / Multi-word variants
+  'kameleon color streamline kameleon color', 'kameleon color', 'kameleon',
+  'plump streamline plump color', 'plump streamline plump', 'plump color streamline plump color',
+  'plump color', 'plump',
+  'flex color streamline flex color', 'flex streamline flex', 'flex color', 'flex',
+  'streamline ultimate color streamline ultimate color', 'streamline ultimate streamline ultimate',
+  'streamline ultimate color', 'streamline ultimate',
+  'sharp color streamline sharp color', 'streamline sharp color', 'streamline sharp',
+  'streamline freehand color', 'streamline freehand',
+  'streamline plump color', 'streamline plump',
+  'streamline color', 'streamline light', 'streamline regular', 'streamline bold', 'streamline',
   'token branded token branded', 'token branded', 'token',
   'memory box light', 'memory box',
   'vs code icons file type light', 'vs code icons file type', 'vs code icons',
   'vscode icons file type light', 'vscode icons file type', 'vscode icons',
-  'streamline plump color streamline plump color', 'streamline plump color',
-  'streamline ultimate color streamline ultimate color', 'streamline ultimate streamline ultimate',
-  'streamline ultimate color', 'streamline ultimate',
-  'sharp color streamline sharp color', 'streamline sharp color', 'streamline sharp',
-  'streamline freehand', 'streamline plump', 'streamline light', 'streamline regular', 'streamline bold', 'streamline',
   'pepicons pencil pepicons pencil', 'pepicons pop pepicons pop', 'pop pepicons pop', 'pepicons pencil', 'pepicons pop', 'pepicons',
   'material symbols light', 'material symbols outlined', 'material symbols rounded', 'material symbols sharp', 'material symbols', 'material icons', 'material icon',
   'fluent emoji high contrast', 'fluent emoji', 'fluent color', 'fluent mdl2', 'fluent ui', 'fluent fluent', 'fluent',
   'flat color icons', 'flat color icon', 'flat color', 'flat ui', 'flat',
   'simple line icons', 'simple icons', 'skill icons',
   'heroicons outline', 'heroicons solid', 'heroicons mini', 'heroicons micro', 'heroicons',
-  'dinkie icons dinkie icons', 'dinkie icons', 'game icons', 'healthicons', 'weather icons',
+  'dinkie icons dinkie icons', 'dinkie icons', 'dinkie', 'game icons', 'healthicons', 'weather icons',
   'at icons', 'lets icons', 'eos icons', 'evil icons', 'akar icons', 'ant design',
-  'font awesome', 'icon park solid', 'icon park', 'gravity ui', 'system uicons', 'line md',
+  'font awesome', 'icon park solid', 'icon park', 'gravity ui', 'system uicons', 'line md', 'line arrow',
   'emojione monotone', 'emojione v1', 'emojione',
   'fa6 solid', 'fa6 regular', 'fa6 brands', 'fa solid', 'fa regular', 'fa brands',
   'sidekickicons', 'sidekick icons', 'nimbus', 'bubbles',
   'griddy icons', 'griddy', 'pixelarticons', 'pixel art icons',
-  'emoji high contrast',
-
+  'emoji flat', 'emoji high contrast', 'emoji',
+  'bitcoin icons', 'bitcoin icon', 'social', 'file icons', 'file icon', 'meteor icons',
+  'design tool', 'original devicon original', 'original devicon', 'devicon original',
+  'calcite', 'cyber color', 'cyber',
+  'weui', 'cib', 'cil', 'cif', 'antd2', 'antd', 'charm', 'el',
+  
   // Single word libraries
   'iconify', 'lsicon', 'svgicon', 'mynaui', 'stash', 'mdl2', 'selfhst selfhst', 'selfhst', 'tdesign',
   'fxemoji', 'pinhead', 'temaki', 'roentgen', 'guidance', 'clarity', 'coreui',
@@ -62,6 +71,9 @@ const leadingStyleRegexes = LEADING_STYLE_WORDS.map(s => {
 });
 
 const TRAILING_STYLE_WORDS = [
+  // Skin tones
+  'medium dark skin tone', 'medium light skin tone', 'medium skin tone', 'dark skin tone', 'light skin tone', 'skin tone',
+  
   // Compound size + style
   '24 filled', '24 regular', '24 outline', '24 solid', '24px filled', '24px regular',
   '20 filled', '20 regular', '20 outline', '20 solid', '20px filled', '20px regular',
@@ -70,6 +82,9 @@ const TRAILING_STYLE_WORDS = [
   '32 filled', '32 regular', '32 outline', '32 solid', '32px filled', '32px regular',
   '12 filled', '12 regular', '12 outline', '12 solid', '12px filled', '12px regular',
   'fill 12', 'fill 16', 'fill 20', 'fill 24', 'fill 32', 'fill 48',
+
+  // Pack / Set / Remix / Duo indicators
+  'icon pack', 'icon set', 'pack', 'set', 'remix', 'duo', 'negative', 'positive',
 
   // Compound styles
   'outline sharp', 'outline rounded', 'rounded sharp', 'outline light', 'outline loop',
@@ -101,11 +116,10 @@ function cleanIconTitle(title) {
 
   // If slug-like with dashes or underscores, convert to spaces
   if (c.includes('-') || c.includes('_')) {
-    // Preserve words by replacing separators with spaces
     c = c.replace(/[_-]+/g, ' ');
   }
 
-  // 1. Remove embedded '-in-...' strings
+  // 1. Remove embedded '-in-...' strings and trim
   c = c.replace(/\b(?:is\d*|in\d*)[\s_-]+/gi, ' ').trim();
 
   // 2. Strip import prefixes at start: Is1, Is2, Is3, Is4, In1, In2, etc.
@@ -145,16 +159,16 @@ function cleanIconTitle(title) {
     }
   }
 
-  // Strip leading generic words: 'Color ', 'Colour ', 'Icons ', 'Icon ', 'A ', 'An ', 'Logo ', 'Brand '
-  c = c.replace(/^(?:color|colour|icons|icon|a|an|logo|logos|brand|brands)[\s_-]+(?=[a-z0-9])/i, '');
+  // Strip leading generic words: 'Color ', 'Colour ', 'Icons ', 'Icon ', 'A ', 'An ', 'Logo ', 'Brand ', 'Plump ', 'Flex '
+  c = c.replace(/^(?:color|colour|icons|icon|a|an|logo|logos|brand|brands|plump|flex|kameleon|streamline|cyber)[\s_-]+(?=[a-z0-9])/i, '');
 
   // 5. Strip trailing pixel indicators like ' 24px', ' 16px', ' 32px'
   c = c.replace(/[\s_-]+\d+px$/i, '');
 
-  // 6. Strip trailing style words
+  // 6. Strip trailing style words & noise
   changed = true;
   loops = 0;
-  while (changed && loops < 6) {
+  while (changed && loops < 8) {
     loops++;
     changed = false;
     for (const tr of trailingStyleRegexes) {
@@ -172,15 +186,30 @@ function cleanIconTitle(title) {
         }
       }
     }
+
+    // Strip trailing skin tones that might remain
+    const skinMatch = c.match(/[\s_-]+(?:medium\s+dark|medium\s+light|medium|light|dark)?\s*skin\s*tone$/i);
+    if (skinMatch && skinMatch.index > 2) {
+      c = c.slice(0, skinMatch.index).trim();
+      changed = true;
+    }
+
+    // Strip trailing stand-alone numbers like ' 1', ' 2', ' 28', ' 3'
+    const numMatch = c.match(/[\s_-]+(\d+|[0-9]+[a-z0-9]*)$/i);
+    if (numMatch && numMatch.index > 2) {
+      // Don't strip standard noun numbers like 3D, 2D, MP3, 4K
+      const tail = numMatch[1].toLowerCase();
+      if (!['3d', '2d', '4k', 'mp3', 'mp4'].includes(tail)) {
+        c = c.slice(0, numMatch.index).trim();
+        changed = true;
+      }
+    }
   }
 
-  // 7. Strip trailing stand-alone resolution numbers like ' 12', ' 16', ' 20', ' 24', ' 32', ' 48', ' 64'
-  c = c.replace(/[\s_-]+(12|16|20|24|32|48|64|128)$/i, '');
-
-  // 8. Strip trailing single letter ' O' (e.g. 'Envelope Open O' -> 'Envelope Open')
+  // 7. Strip trailing single letter ' O' (e.g. 'Envelope Open O' -> 'Envelope Open')
   c = c.replace(/[\s_-]+[oO]$/, '');
 
-  // 9. Deduplicate identical adjacent words (e.g. 'Streamline Streamline' or 'Solar Solar' or 'Pepicons Pepicons')
+  // 8. Deduplicate identical adjacent words (e.g. 'Streamline Streamline' or 'Solar Solar' or 'Pepicons Pepicons')
   const words = c.split(/[\s_-]+/).filter(Boolean);
   const dedupped = [];
   for (let i = 0; i < words.length; i++) {
