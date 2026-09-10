@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Sparkles, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Sparkles, Mail, Lock, ArrowRight, ShieldCheck } from 'lucide-react';
 import Button from '../components/common/Button';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -13,14 +13,16 @@ const LoginPage = () => {
   const { login, googleLogin } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTarget = location.state?.from?.pathname || '/';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     try {
       await login(email, password);
-      addToast('Welcome back to IconsUniverse!', 'success');
-      navigate('/');
+      addToast('Welcome to IconsUniverse!', 'success');
+      navigate(redirectTarget, { replace: true });
     } catch (err) {
       addToast(err.message, 'error');
     } finally {
@@ -40,7 +42,7 @@ const LoginPage = () => {
       };
       await googleLogin(googleUser);
       addToast('Signed in with Google successfully!', 'success');
-      navigate('/');
+      navigate(redirectTarget, { replace: true });
     } catch (err) {
       addToast(err.message || 'Google authentication failed', 'error');
     } finally {
@@ -64,9 +66,16 @@ const LoginPage = () => {
           </div>
           <h1 className="text-2xl font-extrabold font-heading text-subpage-primary">Sign in to IconsUniverse</h1>
           <p className="text-xs text-subpage-on-surface-variant mt-1">
-            Access your saved collections, vector assets, and Pro downloads.
+            Please sign in or create an account to access our complete vector icon library.
           </p>
         </div>
+
+        {location.state?.from && (
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-xs font-medium">
+            <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
+            <span>Please log in or sign up first to access this page.</span>
+          </div>
+        )}
 
         {/* Google OAuth Quick Button */}
         <button

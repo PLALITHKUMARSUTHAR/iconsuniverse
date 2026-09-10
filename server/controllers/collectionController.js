@@ -107,6 +107,32 @@ exports.bulkDownloadCollection = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Collection is empty' });
     }
 
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Please sign up or log in first to download collections.' });
+    }
+
+    const now = new Date();
+    const lastReset = user.lastDownloadResetAt ? new Date(user.lastDownloadResetAt) : null;
+    const isDifferentDay = !lastReset || (now - lastReset > 24 * 60 * 60 * 1000) || (now.toDateString() !== lastReset.toDateString());
+    if (isDifferentDay) {
+      user.downloadCountToday = 0;
+      user.lastDownloadResetAt = now;
+    }
+
+    const isAdmin = user.role === 'admin';
+    if (!isAdmin) {
+      if (user.downloadCountToday + collection.iconIds.length > 100) {
+        return res.status(429).json({
+          success: false,
+          message: `Downloading this collection (${collection.iconIds.length} icons) exceeds your daily quota of 100 icons (currently used: ${user.downloadCountToday}/100).`,
+          isLimitReached: true,
+        });
+      }
+      user.downloadCountToday += collection.iconIds.length;
+      await user.save();
+    }
+
     streamIconsZip(collection.iconIds, collection.name, res);
   } catch (err) {
     next(err);

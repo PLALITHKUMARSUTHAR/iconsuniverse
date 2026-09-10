@@ -44,12 +44,11 @@ const curatedRealPacks = [
     description: 'Shopping carts, barcode tags, credit cards, and express delivery tracking.',
     categoryName: 'Shopping',
     categorySlug: 'shopping',
-    gradient: 'from-rose-500/25 via-orange-500/15 to-amber-500/10',
-    cardBg: 'bg-gradient-to-b from-rose-50/60 via-white to-orange-50/20',
-    borderColor: 'border-rose-200/80 hover:border-rose-400/80',
-    tagBg: 'bg-rose-100/90 text-rose-800 border-rose-200/80',
+    headerBg: 'bg-[#ffe4e6]',
+    cardBg: 'bg-[#fff1f2]',
+    borderColor: 'border-[#fecdd3] hover:border-[#fb7185]',
+    tagBg: 'bg-white text-rose-800 border-rose-200',
     btnHover: 'group-hover:bg-rose-600 group-hover:text-white',
-    accentColor: '#FF5F52',
     icons: [
       { comp: ShoppingCart, label: 'Cart' },
       { comp: ShoppingBag, label: 'Bag' },
@@ -64,12 +63,11 @@ const curatedRealPacks = [
     description: 'Cloud infrastructure, servers, terminals, microprocessors, and databases.',
     categoryName: 'Code & Dev',
     categorySlug: 'code',
-    gradient: 'from-emerald-500/25 via-teal-500/15 to-cyan-500/10',
-    cardBg: 'bg-gradient-to-b from-teal-50/60 via-white to-cyan-50/20',
-    borderColor: 'border-teal-200/80 hover:border-teal-400/80',
-    tagBg: 'bg-teal-100/90 text-teal-800 border-teal-200/80',
+    headerBg: 'bg-[#ccfbf1]',
+    cardBg: 'bg-[#f0fdfa]',
+    borderColor: 'border-[#99f6e4] hover:border-[#2dd4bf]',
+    tagBg: 'bg-white text-teal-800 border-teal-200',
     btnHover: 'group-hover:bg-teal-600 group-hover:text-white',
-    accentColor: '#00F5D4',
     icons: [
       { comp: Cloud, label: 'Cloud' },
       { comp: Server, label: 'Server' },
@@ -84,12 +82,11 @@ const curatedRealPacks = [
     description: 'Digital wallets, coins, market growth charts, vaults, and bank security.',
     categoryName: 'Business',
     categorySlug: 'business',
-    gradient: 'from-amber-500/25 via-yellow-500/15 to-emerald-500/10',
-    cardBg: 'bg-gradient-to-b from-amber-50/60 via-white to-yellow-50/20',
-    borderColor: 'border-amber-200/80 hover:border-amber-400/80',
-    tagBg: 'bg-amber-100/90 text-amber-800 border-amber-200/80',
+    headerBg: 'bg-[#fef08a]',
+    cardBg: 'bg-[#fefce8]',
+    borderColor: 'border-[#fde047] hover:border-[#eab308]',
+    tagBg: 'bg-white text-amber-800 border-amber-200',
     btnHover: 'group-hover:bg-amber-600 group-hover:text-white',
-    accentColor: '#FFD54F',
     icons: [
       { comp: Wallet, label: 'Wallet' },
       { comp: TrendingUp, label: 'Growth' },
@@ -104,12 +101,11 @@ const curatedRealPacks = [
     description: 'Chat bubbles, paper planes, profiles, notifications, and engagement badges.',
     categoryName: 'Social',
     categorySlug: 'social',
-    gradient: 'from-indigo-500/25 via-purple-500/15 to-pink-500/10',
-    cardBg: 'bg-gradient-to-b from-indigo-50/60 via-white to-purple-50/20',
-    borderColor: 'border-indigo-200/80 hover:border-indigo-400/80',
-    tagBg: 'bg-indigo-100/90 text-indigo-800 border-indigo-200/80',
+    headerBg: 'bg-[#e0e7ff]',
+    cardBg: 'bg-[#eef2ff]',
+    borderColor: 'border-[#c7d2fe] hover:border-[#818cf8]',
+    tagBg: 'bg-white text-indigo-800 border-indigo-200',
     btnHover: 'group-hover:bg-indigo-600 group-hover:text-white',
-    accentColor: '#6366f1',
     icons: [
       { comp: MessageCircle, label: 'Chat' },
       { comp: Send, label: 'Send' },
@@ -124,12 +120,11 @@ const curatedRealPacks = [
     description: 'Cameras, film reels, sliders, digital palettes, and vector design pens.',
     categoryName: 'Media',
     categorySlug: 'media',
-    gradient: 'from-purple-500/25 via-fuchsia-500/15 to-rose-500/10',
-    cardBg: 'bg-gradient-to-b from-purple-50/60 via-white to-pink-50/20',
-    borderColor: 'border-purple-200/80 hover:border-purple-400/80',
-    tagBg: 'bg-purple-100/90 text-purple-800 border-purple-200/80',
+    headerBg: 'bg-[#f3e8ff]',
+    cardBg: 'bg-[#faf5ff]',
+    borderColor: 'border-[#e9d5ff] hover:border-[#c084fc]',
+    tagBg: 'bg-white text-purple-800 border-purple-200',
     btnHover: 'group-hover:bg-purple-600 group-hover:text-white',
-    accentColor: '#8b5cf6',
     icons: [
       { comp: Palette, label: 'Color' },
       { comp: Camera, label: 'Photo' },
@@ -144,12 +139,11 @@ const curatedRealPacks = [
     description: 'Map pins, flight vectors, compasses, world globes, and trip routes.',
     categoryName: 'Transport',
     categorySlug: 'transport',
-    gradient: 'from-sky-500/25 via-cyan-500/15 to-indigo-500/10',
-    cardBg: 'bg-gradient-to-b from-sky-50/60 via-white to-blue-50/20',
-    borderColor: 'border-sky-200/80 hover:border-sky-400/80',
-    tagBg: 'bg-sky-100/90 text-sky-800 border-sky-200/80',
+    headerBg: 'bg-[#e0f2fe]',
+    cardBg: 'bg-[#f0f9ff]',
+    borderColor: 'border-[#bae6fd] hover:border-[#38bdf8]',
+    tagBg: 'bg-white text-sky-800 border-sky-200',
     btnHover: 'group-hover:bg-sky-600 group-hover:text-white',
-    accentColor: '#0ea5e9',
     icons: [
       { comp: MapPin, label: 'Pin' },
       { comp: Compass, label: 'Compass' },
@@ -243,11 +237,11 @@ const TrendingPacks = () => {
               >
                 {/* Prominent Icon Showcase Tab */}
                 <div
-                  className={`relative w-full bg-gradient-to-br ${pack.gradient} border-b border-landing-surface-container/60 p-4 sm:p-5 flex flex-col justify-between overflow-hidden`}
+                  className={`relative w-full ${pack.headerBg || 'bg-slate-100'} border-b border-landing-surface-container/60 p-4 sm:p-5 flex flex-col justify-between overflow-hidden`}
                 >
                   {/* Category Tag Only (Vector Icons text removed) */}
                   <div className="flex items-center justify-between z-10 mb-3">
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold shadow-2xs border uppercase tracking-wider ${pack.tagBg || 'bg-white/95 text-landing-primary border-white/80'}`}>
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold shadow-2xs border uppercase tracking-wider ${pack.tagBg || 'bg-white text-landing-primary border-slate-200'}`}>
                       {pack.categoryName || 'Vector Set'}
                     </span>
                   </div>
@@ -259,23 +253,17 @@ const TrendingPacks = () => {
                       return (
                         <div
                           key={ic.label || i}
-                          className="aspect-square rounded-2xl bg-white/95 backdrop-blur-md border border-white/90 shadow-2xs flex flex-col items-center justify-center p-1.5 group-hover:scale-105 transition-all duration-200"
+                          className="aspect-square rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex flex-col items-center justify-center p-1.5 group-hover:scale-105 transition-all duration-200"
                           title={ic.label}
                         >
                           <Comp
-                            className="w-6 h-6 sm:w-7 sm:h-7 group-hover:scale-110 transition-transform"
-                            style={{ color: pack.accentColor || '#001e52', strokeWidth: 1.85 }}
+                            className="w-6 h-6 sm:w-7 sm:h-7 group-hover:scale-110 transition-transform text-black"
+                            style={{ color: '#000000', strokeWidth: 1.85 }}
                           />
                         </div>
                       );
                     })}
                   </div>
-
-                  {/* Subtle Decorative Backdrop Element */}
-                  <div
-                    className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full blur-xl opacity-30 pointer-events-none"
-                    style={{ backgroundColor: pack.accentColor }}
-                  />
                 </div>
 
                 {/* Content Body: Title, and Description with Browse Set button on the right */}

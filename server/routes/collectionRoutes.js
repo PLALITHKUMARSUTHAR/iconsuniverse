@@ -8,6 +8,7 @@ const {
   updateCollectionRecolor,
 } = require('../controllers/collectionController');
 const { protect, optionalAuth } = require('../middleware/auth');
+const { downloadBurstLimiter } = require('../middleware/rateLimiter');
 
 const router = express.Router();
 
@@ -15,7 +16,7 @@ router.get('/', protect, getCollections);
 router.post('/', protect, createCollection);
 router.get('/:id', optionalAuth, getCollectionById);
 router.post('/:id/icons', protect, toggleIconInCollection);
-router.post('/:id/bulk-download', protect, bulkDownloadCollection);
+router.post('/:id/bulk-download', protect, downloadBurstLimiter, bulkDownloadCollection);
 router.put('/:id/recolor', protect, updateCollectionRecolor);
 
 module.exports = router;

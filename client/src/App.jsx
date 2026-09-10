@@ -21,23 +21,61 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 function App() {
   return (
     <Routes>
-      {/* Landing Theme: Vibrant Glass & Energy */}
+      {/* Landing Theme: Vibrant Glass & Energy (Protected - requires sign-up/login) */}
       <Route element={<LandingLayout />}>
-        <Route path="/" element={<HomePage />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <HomePage />
+            </ProtectedRoute>
+          }
+        />
       </Route>
 
       {/* Subpage Theme: Premium Glass & Geometry */}
       <Route element={<SubpageLayout />}>
-        <Route path="/search" element={<SearchResultsPage />} />
-        <Route path="/icons/:slug" element={<IconDetailPage />} />
-        <Route path="/packs/:slug" element={<PackDetailPage />} />
-        <Route path="/editor" element={<IconEditorPage />} />
-        <Route path="/pricing" element={<PricingPage />} />
-        <Route path="/admin" element={<AdminDashboard />} />
+        {/* Public Authentication Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+        <Route path="/terms" element={<InfoPage />} />
+        <Route path="/privacy" element={<InfoPage />} />
+
+        {/* Protected App Content Routes (Requires Sign-up or Login) */}
+        <Route
+          path="/search"
+          element={
+            <ProtectedRoute>
+              <SearchResultsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/icons/:slug"
+          element={
+            <ProtectedRoute>
+              <IconDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/packs/:slug"
+          element={
+            <ProtectedRoute>
+              <PackDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/editor"
+          element={
+            <ProtectedRoute>
+              <IconEditorPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/profile"
           element={
@@ -46,13 +84,46 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/about" element={<InfoPage />} />
-        <Route path="/contact" element={<InfoPage />} />
-        <Route path="/whats-new" element={<InfoPage />} />
-        <Route path="/terms" element={<InfoPage />} />
-        <Route path="/privacy" element={<InfoPage />} />
-        <Route path="/sitemap" element={<InfoPage />} />
-        <Route path="/docs" element={<InfoPage />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/about"
+          element={
+            <ProtectedRoute>
+              <InfoPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/contact"
+          element={
+            <ProtectedRoute>
+              <InfoPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/whats-new"
+          element={
+            <ProtectedRoute>
+              <InfoPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/docs"
+          element={
+            <ProtectedRoute>
+              <InfoPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

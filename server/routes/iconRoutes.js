@@ -9,6 +9,7 @@ const {
   deleteIcon,
 } = require('../controllers/iconController');
 const { protect, optionalAuth, authorize } = require('../middleware/auth');
+const { downloadLimiter, downloadBurstLimiter } = require('../middleware/rateLimiter');
 const upload = require('../middleware/upload');
 
 const router = express.Router();
@@ -16,7 +17,7 @@ const router = express.Router();
 router.get('/', getIcons);
 router.get('/svg/:id', getIconSvg);
 router.get('/:slug', getIconBySlug);
-router.get('/:id/download', optionalAuth, downloadIcon);
+router.get('/:id/download', protect, downloadBurstLimiter, downloadLimiter, downloadIcon);
 router.post('/', protect, authorize('contributor', 'editor', 'admin'), upload.single('svgFile'), createIcon);
 router.put('/:id', protect, authorize('contributor', 'editor', 'admin'), updateIcon);
 router.delete('/:id', protect, authorize('contributor', 'editor', 'admin'), deleteIcon);

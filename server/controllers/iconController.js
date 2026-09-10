@@ -1104,23 +1104,29 @@ exports.downloadIcon = async (req, res, next) => {
     }
 
     const user = req.user;
-    const isPro = user && (user.plan === 'pro_monthly' || user.plan === 'pro_annual');
-
-    // Premium asset check
-    if (icon.isPremium && !isPro) {
-      return res.status(403).json({
+    if (!user) {
+      return res.status(401).json({
         success: false,
-        message: 'This is a Pro asset. Upgrade your subscription to unlock unlimited access.',
-        isPremiumLocked: true,
+        message: 'Please sign up or log in first to download icons.',
+        requireAuth: true,
       });
     }
 
-    // Daily limit check for non-Pro users
-    if (user && !isPro) {
-      if (user.downloadCountToday >= 20) {
-        return res.status(403).json({
+    // Daily limit check: 100 downloads per day with 24-hour rollover reset
+    const now = new Date();
+    const lastReset = user.lastDownloadResetAt ? new Date(user.lastDownloadResetAt) : null;
+    const isDifferentDay = !lastReset || (now - lastReset > 24 * 60 * 60 * 1000) || (now.toDateString() !== lastReset.toDateString());
+    if (isDifferentDay) {
+      user.downloadCountToday = 0;
+      user.lastDownloadResetAt = now;
+    }
+
+    const isAdmin = user.role === 'admin';
+    if (!isAdmin) {
+      if (user.downloadCountToday >= 100) {
+        return res.status(429).json({
           success: false,
-          message: 'Daily download quota of 20 icons reached. Upgrade to Pro for unlimited downloads!',
+          message: 'Daily download quota of 100 icons reached. Please try again tomorrow.',
           isLimitReached: true,
         });
       }

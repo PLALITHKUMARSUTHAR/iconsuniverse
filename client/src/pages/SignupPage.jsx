@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Sparkles, User, Mail, Lock, Crown } from 'lucide-react';
 import Button from '../components/common/Button';
 import { useAuth } from '../context/AuthContext';
@@ -14,6 +14,8 @@ const SignupPage = () => {
   const { signup, googleLogin } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTarget = location.state?.from?.pathname || '/';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,7 +23,7 @@ const SignupPage = () => {
     try {
       await signup(name, email, password);
       addToast('Account created successfully! Welcome to IconsUniverse.', 'success');
-      navigate('/');
+      navigate(redirectTarget, { replace: true });
     } catch (err) {
       addToast(err.message, 'error');
     } finally {
@@ -40,7 +42,7 @@ const SignupPage = () => {
       };
       await googleLogin(googleUser);
       addToast('Signed up with Google successfully! Welcome.', 'success');
-      navigate('/');
+      navigate(redirectTarget, { replace: true });
     } catch (err) {
       addToast(err.message || 'Google sign-up failed', 'error');
     } finally {

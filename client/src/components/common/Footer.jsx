@@ -23,10 +23,6 @@ const Footer = ({ collapsible = false, exploreCategoriesSlot = null }) => {
             <span>Explore Categories & Footer</span>
             <ChevronUp className="w-3.5 h-3.5 text-landing-electric-teal" />
           </button>
-
-          <Link to="/sitemap" className="text-white/80 hover:text-landing-electric-teal text-[11px] font-semibold transition-colors">
-            Sitemap
-          </Link>
         </div>
       ) : (
         <div className="max-w-[1440px] mx-auto px-4 sm:px-8 pt-6 pb-6 animate-fade-in text-white max-h-[75vh] overflow-y-auto">
@@ -142,13 +138,9 @@ const Footer = ({ collapsible = false, exploreCategoriesSlot = null }) => {
             </div>
           </div>
 
-          {/* Bottom Bar: Copyright on left, Sitemap on right */}
+          {/* Bottom Bar: Copyright */}
           <div className="pt-5 flex flex-col sm:flex-row items-center justify-between text-[11px] text-white/80 gap-3">
             <p className="text-white/90">© 2026 IconsUniverse. All rights reserved.</p>
-
-            <Link to="/sitemap" className="text-white hover:text-landing-electric-teal font-semibold transition-colors">
-              Sitemap
-            </Link>
           </div>
         </div>
       )}

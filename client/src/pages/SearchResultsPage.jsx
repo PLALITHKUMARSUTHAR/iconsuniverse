@@ -445,34 +445,36 @@ const SearchResultsPage = () => {
             </p>
           </div>
 
-          {/* Quick Style Switcher Pills */}
-          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-white border border-landing-surface-container shadow-2xs overflow-x-auto">
-            {quickStylePills
-              .filter((pill) => {
-                if (pill.id === 'all') return true;
-                if (!availableCategoryStyles || availableCategoryStyles.length === 0) return true;
-                return availableCategoryStyles.includes(pill.id);
-              })
-              .map((pill) => {
-                const IconComp = pill.icon;
-                const isSelected = selectedShape === pill.id;
-                return (
-                  <button
-                    key={pill.id}
-                    type="button"
-                    onClick={() => handleQuickStyleChange(pill.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                      isSelected
-                        ? 'bg-landing-primary text-white shadow-xs'
-                        : 'text-landing-on-surface-variant hover:text-landing-primary hover:bg-landing-surface-container-low'
-                    }`}
-                  >
-                    <IconComp className="w-3.5 h-3.5" />
-                    <span>{pill.label}</span>
-                  </button>
-                );
-              })}
-          </div>
+          {/* Quick Style Switcher Pills (Hidden when category is opened since style buttons exist inside Filters tab) */}
+          {!isCategoryMode && (
+            <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-white border border-landing-surface-container shadow-2xs overflow-x-auto">
+              {quickStylePills
+                .filter((pill) => {
+                  if (pill.id === 'all') return true;
+                  if (!availableCategoryStyles || availableCategoryStyles.length === 0) return true;
+                  return availableCategoryStyles.includes(pill.id);
+                })
+                .map((pill) => {
+                  const IconComp = pill.icon;
+                  const isSelected = selectedShape === pill.id;
+                  return (
+                    <button
+                      key={pill.id}
+                      type="button"
+                      onClick={() => handleQuickStyleChange(pill.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                        isSelected
+                          ? 'bg-landing-primary text-white shadow-xs'
+                          : 'text-landing-on-surface-variant hover:text-landing-primary hover:bg-landing-surface-container-low'
+                      }`}
+                    >
+                      <IconComp className="w-3.5 h-3.5" />
+                      <span>{pill.label}</span>
+                    </button>
+                  );
+                })}
+            </div>
+          )}
         </div>
 
         {/* Filter Ribbon */}

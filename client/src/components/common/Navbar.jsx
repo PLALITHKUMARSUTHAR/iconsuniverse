@@ -23,16 +23,16 @@ const Navbar = ({ isLanding = false }) => {
             : 'glass-subpage border-b border-subpage-outline-variant/30 bg-white/90'
         } backdrop-blur-xl shadow-sm`}
       >
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 h-16 flex items-center justify-between gap-4">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 h-18 sm:h-20 flex items-center justify-between gap-4">
           {/* Logo from Stitch Logo folder */}
           <div className="flex items-center">
-            <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
+            <Link to="/" className="flex items-center gap-3 shrink-0 group">
               <img
                 src="/logo.png"
                 alt="IconsUniverse"
-                className="h-8 sm:h-9 w-auto object-contain rounded-xl shadow-sm transform group-hover:scale-105 transition-transform"
+                className="h-10 sm:h-12 w-auto object-contain rounded-xl shadow-xs transform group-hover:scale-105 transition-transform"
               />
-              <span className="font-heading font-extrabold text-lg sm:text-xl text-landing-primary tracking-tight">
+              <span className="font-heading font-extrabold text-xl sm:text-2xl text-landing-primary tracking-tight">
                 Icons<span className="text-landing-vibrant-coral">Universe</span>
               </span>
             </Link>
@@ -62,15 +62,6 @@ const Navbar = ({ isLanding = false }) => {
                 <Layers className="w-3.5 h-3.5 text-landing-primary" />
                 <span>Icon Packs</span>
               </Link>
-
-              <Link
-                to="/pricing"
-                className={`text-xs font-bold transition-colors ${
-                  isCurrent('/pricing') ? 'text-landing-vibrant-coral' : 'text-landing-on-surface-variant hover:text-landing-primary'
-                }`}
-              >
-                Pricing
-              </Link>
             </div>
           )}
 
@@ -92,15 +83,6 @@ const Navbar = ({ isLanding = false }) => {
               >
                 <Layers className="w-3.5 h-3.5 text-landing-primary" />
                 <span>Icon Packs</span>
-              </Link>
-
-              <Link
-                to="/pricing"
-                className={`text-xs font-bold transition-colors ${
-                  isCurrent('/pricing') ? 'text-landing-vibrant-coral' : 'text-landing-on-surface-variant hover:text-landing-primary'
-                }`}
-              >
-                Pricing
               </Link>
             </div>
           )}
@@ -232,13 +214,6 @@ const Navbar = ({ isLanding = false }) => {
               className="font-bold text-xs text-landing-on-surface hover:text-landing-vibrant-coral py-1.5"
             >
               Icon Packs
-            </Link>
-            <Link
-              to="/pricing"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="font-bold text-xs text-landing-on-surface hover:text-landing-vibrant-coral py-1.5"
-            >
-              Pricing
             </Link>
           </div>
         )}

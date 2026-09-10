@@ -71,19 +71,38 @@ exports.downloadPack = async (req, res, next) => {
     }
 
     const user = req.user;
-    const isPro = user && (user.plan === 'pro_monthly' || user.plan === 'pro_annual');
-
-    if (pack.isPremium && !isPro) {
-      return res.status(403).json({
+    if (!user) {
+      return res.status(401).json({
         success: false,
-        message: 'This pack is for Pro subscribers only. Upgrade to download full packs!',
-        isPremiumLocked: true,
+        message: 'Please sign up or log in first to download icon packs.',
+        requireAuth: true,
       });
     }
 
     const icons = await Icon.find({ packId: pack._id, status: { $ne: 'rejected' } });
     if (!icons.length) {
       return res.status(400).json({ success: false, message: 'This pack contains no icons yet' });
+    }
+
+    const now = new Date();
+    const lastReset = user.lastDownloadResetAt ? new Date(user.lastDownloadResetAt) : null;
+    const isDifferentDay = !lastReset || (now - lastReset > 24 * 60 * 60 * 1000) || (now.toDateString() !== lastReset.toDateString());
+    if (isDifferentDay) {
+      user.downloadCountToday = 0;
+      user.lastDownloadResetAt = now;
+    }
+
+    const isAdmin = user.role === 'admin';
+    if (!isAdmin) {
+      if (user.downloadCountToday + icons.length > 100) {
+        return res.status(429).json({
+          success: false,
+          message: `Downloading this pack (${icons.length} icons) exceeds your daily quota of 100 icons (currently used: ${user.downloadCountToday}/100).`,
+          isLimitReached: true,
+        });
+      }
+      user.downloadCountToday += icons.length;
+      await user.save();
     }
 
     streamIconsZip(icons, pack.slug, res);

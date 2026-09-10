@@ -24,13 +24,26 @@ exports.authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Download rate limiter for free/anonymous users: 20 downloads per day per IP
-exports.downloadLimiter = rateLimit({
-  windowMs: 24 * 60 * 60 * 1000, // 24 hours
-  max: 50,
+// Anti-bot rapid download burst limiter: blocks parallel downloads and scraping scripts (max 5 requests per 10s)
+exports.downloadBurstLimiter = rateLimit({
+  windowMs: 10 * 1000, // 10 seconds
+  max: 5,
   message: {
     success: false,
-    message: 'Daily free download limit reached. Upgrade to Pro for unlimited downloads!',
+    message: 'Too many rapid download requests. Anti-bot protection enabled. Please slow down.',
+    isBotBlocked: true,
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Download rate limiter per IP: max 100 downloads per 24 hours
+exports.downloadLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  max: 100,
+  message: {
+    success: false,
+    message: 'Daily download quota of 100 icons reached. Please try again tomorrow.',
     isLimitReached: true,
   },
   standardHeaders: true,
