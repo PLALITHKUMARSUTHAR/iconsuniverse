@@ -6,76 +6,97 @@ const features = [
     icon: Layers,
     title: 'Extensive Icon Library',
     description: 'Explore a growing collection of icons across diverse styles, categories, and use cases.',
-    color: '#6366f1',
+    gradient: 'from-indigo-500 to-violet-600',
+    glow: 'shadow-indigo-500/20',
+    borderHover: 'hover:border-indigo-400/50',
+    accent: '#6366f1',
   },
   {
     icon: Download,
     title: 'SVG & PNG Downloads',
     description: 'Download icons in SVG and PNG formats, ready for websites, apps, presentations, and designs.',
-    color: '#00F5D4',
+    gradient: 'from-teal-400 to-emerald-600',
+    glow: 'shadow-emerald-500/20',
+    borderHover: 'hover:border-emerald-400/50',
+    accent: '#10b981',
   },
   {
     icon: Palette,
     title: 'Built-In Icon Editor',
     description: 'Customize icons directly in the browser before downloading, without external design software.',
-    color: '#FF5F52',
+    gradient: 'from-rose-500 to-amber-500',
+    glow: 'shadow-rose-500/20',
+    borderHover: 'hover:border-rose-400/50',
+    accent: '#FF5F52',
   },
   {
     icon: Sparkles,
     title: 'Recolor & Add Backdrops',
     description: 'Change icon colors and add custom backdrops to match your design, brand, or project.',
-    color: '#FFD54F',
+    gradient: 'from-amber-400 to-orange-500',
+    glow: 'shadow-amber-500/20',
+    borderHover: 'hover:border-amber-400/50',
+    accent: '#f59e0b',
   },
   {
     icon: RotateCw,
     title: 'Rotate, Flip & Transform',
     description: 'Rotate, flip, and transform icons directly from the built-in editor.',
-    color: '#ec4899',
+    gradient: 'from-fuchsia-500 to-pink-600',
+    glow: 'shadow-fuchsia-500/20',
+    borderHover: 'hover:border-pink-400/50',
+    accent: '#ec4899',
   },
   {
     icon: Archive,
     title: 'Bulk Download as ZIP',
     description: 'Select multiple icons and download them together in a convenient ZIP file.',
-    color: '#0ea5e9',
+    gradient: 'from-sky-400 to-blue-600',
+    glow: 'shadow-sky-500/20',
+    borderHover: 'hover:border-sky-400/50',
+    accent: '#0ea5e9',
   },
 ];
 
 const FeatureGrid = () => {
   return (
-    <section className="w-full py-16 sm:py-24">
+    <section className="w-full py-8 sm:py-12 bg-white/50 border-t border-landing-surface-container/50">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-xs font-extrabold uppercase tracking-widest text-landing-vibrant-coral block mb-2">
+        {/* Compact Header */}
+        <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-8">
+          <span className="inline-block text-[11px] font-extrabold uppercase tracking-wider text-landing-vibrant-coral bg-rose-50 border border-rose-200/60 px-2.5 py-0.5 rounded-full mb-1.5 shadow-2xs">
             Why IconsUniverse
           </span>
-          <h2 className="text-3xl sm:text-5xl font-extrabold font-heading text-landing-primary tracking-tight mb-4">
+          <h2 className="text-xl sm:text-3xl font-extrabold font-heading text-landing-primary tracking-tight">
             Built for Designers, Developers & Creators
           </h2>
-          <p className="text-sm sm:text-base text-landing-on-surface-variant font-normal">
-            Every feature of Flaticon.com elevated with modern speed, glassmorphism aesthetics, and cloud sync.
+          <p className="text-xs sm:text-sm text-landing-on-surface-variant mt-1">
+            Engineered for high-velocity workflows with zero friction.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        {/* Vibrant Compact Bento Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
           {features.map((feat) => {
             const IconComp = feat.icon;
             return (
               <div
                 key={feat.title}
-                className="p-8 rounded-4xl glass-landing bg-white/80 border border-white/80 shadow-glass hover:shadow-glass-hover transition-all duration-300 transform hover:-translate-y-1.5 flex flex-col justify-between"
+                className={`group p-4 rounded-2xl glass-landing bg-white border border-landing-surface-container shadow-2xs hover:shadow-md transition-all duration-200 flex items-start gap-3.5 ${feat.borderHover}`}
               >
+                {/* Vibrant Gradient Icon Badge */}
                 <div
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-sm"
-                  style={{ backgroundColor: `${feat.color}15`, color: feat.color }}
+                  className={`w-11 h-11 rounded-xl bg-gradient-to-br ${feat.gradient} text-white flex items-center justify-center shrink-0 shadow-sm ${feat.glow} group-hover:scale-105 transition-transform duration-200`}
                 >
-                  <IconComp className="w-7 h-7" />
+                  <IconComp className="w-5 h-5" />
                 </div>
 
-                <div>
-                  <h3 className="text-lg font-bold font-heading text-landing-on-surface mb-2">
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-bold font-heading text-landing-primary group-hover:text-landing-vibrant-coral transition-colors line-clamp-1 mb-1">
                     {feat.title}
                   </h3>
-                  <p className="text-sm text-landing-on-surface-variant leading-relaxed">
+                  <p className="text-xs text-landing-on-surface-variant leading-relaxed line-clamp-2">
                     {feat.description}
                   </p>
                 </div>

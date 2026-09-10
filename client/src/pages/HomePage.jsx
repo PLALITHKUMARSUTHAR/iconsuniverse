@@ -18,17 +18,17 @@ const HomePage = () => {
       {/* 1. Hero Search & Quick Style Badges */}
       <HeroSection />
 
-      {/* 2. Live In-Browser Editor Demonstration */}
-      <LiveEditorTeaser />
-
-      {/* 3. Featured Icon Sets */}
-      <TrendingPacks />
-
-      {/* 4. Curated Category Showcase & Browse Drawer */}
+      {/* 2. Curated Category Showcase & Browse Drawer */}
       <CategoryGrid />
 
-      {/* 5. Built for Designers, Developers & Creators Feature Grid */}
+      {/* 3. Featured Icon Sets (Compact single row carousel) */}
+      <TrendingPacks />
+
+      {/* 4. Built for Designers, Developers & Creators Feature Grid */}
       <FeatureGrid />
+
+      {/* 5. Live In-Browser Editor Demonstration */}
+      <LiveEditorTeaser />
 
       {/* 6. Transparent Pricing Plans & Pro CTA */}
       <PricingTeaser />

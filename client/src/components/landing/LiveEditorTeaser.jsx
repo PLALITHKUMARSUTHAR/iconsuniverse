@@ -10,33 +10,33 @@ import { useToast } from '../../context/ToastContext';
 const sampleIcons = [
   {
     title: 'Rocket',
-    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>`,
+    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>`,
   },
   {
     title: 'Cart',
-    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>`,
+    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>`,
   },
   {
     title: 'Shield',
-    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>`,
+    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>`,
   },
   {
     title: 'CPU',
-    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M9 1v3m6-3v3M9 20v3m6-3v3M20 9h3m-3 6h3M1 9h3m-3 6h3"/></svg>`,
+    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M9 1v3m6-3v3M9 20v3m6-3v3M20 9h3m-3 6h3M1 9h3m-3 6h3"/></svg>`,
   },
 ];
 
 const LiveEditorTeaser = () => {
   const [selectedIconIndex, setSelectedIconIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('colors');
-  const [color, setColor] = useState('#00327d');
+  const [color, setColor] = useState('#000000');
   const [rotation, setRotation] = useState(0);
   const [flipH, setFlipH] = useState(false);
   const [flipV, setFlipV] = useState(false);
   const [scale, setScale] = useState(1);
   const [padding, setPadding] = useState(12);
   const [shape, setShape] = useState('rounded');
-  const [badgeColor, setBadgeColor] = useState('#faf8ff');
+  const [badgeColor, setBadgeColor] = useState('#f8fafc');
   const [badgeOpacity, setBadgeOpacity] = useState(100);
   const [hasCopied, setHasCopied] = useState(false);
 
@@ -44,7 +44,7 @@ const LiveEditorTeaser = () => {
   const current = sampleIcons[selectedIconIndex];
 
   const handleDownload = () => {
-    let finalSvg = current.svg.replace(/currentColor/gi, color);
+    let finalSvg = current.svg.replace(/stroke="[^"]*"/gi, `stroke="${color}"`);
     const blob = new Blob([finalSvg], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -56,7 +56,7 @@ const LiveEditorTeaser = () => {
   };
 
   const handleCopy = () => {
-    let finalSvg = current.svg.replace(/currentColor/gi, color);
+    let finalSvg = current.svg.replace(/stroke="[^"]*"/gi, `stroke="${color}"`);
     navigator.clipboard.writeText(finalSvg);
     setHasCopied(true);
     addToast('SVG markup copied!', 'success');
@@ -64,11 +64,11 @@ const LiveEditorTeaser = () => {
   };
 
   return (
-    <section className="w-full py-12 sm:py-16">
+    <section className="w-full py-10 sm:py-14 bg-white/60 border-t border-landing-surface-container/60">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-8">
-        <div className="p-6 sm:p-8 rounded-4xl glass-landing bg-white/90 border border-white/80 shadow-md max-w-4xl mx-auto">
+        <div className="p-6 sm:p-8 rounded-3xl glass-landing bg-white/95 border border-landing-surface-container shadow-md max-w-4xl mx-auto">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-landing-surface-container mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-landing-surface-container mb-6">
             <div>
               <h2 className="text-xl sm:text-2xl font-extrabold font-heading text-landing-primary tracking-tight">
                 Editor Demonstration
@@ -87,12 +87,12 @@ const LiveEditorTeaser = () => {
                   onClick={() => setSelectedIconIndex(idx)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                     selectedIconIndex === idx
-                      ? 'bg-landing-primary text-white shadow-sm'
+                      ? 'bg-black text-white shadow-xs'
                       : 'bg-landing-surface-container-low text-landing-on-surface hover:bg-landing-surface-container'
                   }`}
                 >
                   <div
-                    className="w-3.5 h-3.5"
+                    className={`w-3.5 h-3.5 ${selectedIconIndex === idx ? 'text-white brightness-200' : 'text-black'}`}
                     dangerouslySetInnerHTML={{ __html: item.svg }}
                   />
                   <span>{item.title}</span>
@@ -127,7 +127,7 @@ const LiveEditorTeaser = () => {
                   type="button"
                   onClick={() => setActiveTab('colors')}
                   className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    activeTab === 'colors' ? 'bg-white shadow-sm text-landing-primary' : 'text-landing-on-surface-variant'
+                    activeTab === 'colors' ? 'bg-white shadow-xs text-landing-primary' : 'text-landing-on-surface-variant'
                   }`}
                 >
                   Palette
@@ -136,7 +136,7 @@ const LiveEditorTeaser = () => {
                   type="button"
                   onClick={() => setActiveTab('transforms')}
                   className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    activeTab === 'transforms' ? 'bg-white shadow-sm text-landing-primary' : 'text-landing-on-surface-variant'
+                    activeTab === 'transforms' ? 'bg-white shadow-xs text-landing-primary' : 'text-landing-on-surface-variant'
                   }`}
                 >
                   Transforms
@@ -145,7 +145,7 @@ const LiveEditorTeaser = () => {
                   type="button"
                   onClick={() => setActiveTab('badge')}
                   className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    activeTab === 'badge' ? 'bg-white shadow-sm text-landing-primary' : 'text-landing-on-surface-variant'
+                    activeTab === 'badge' ? 'bg-white shadow-xs text-landing-primary' : 'text-landing-on-surface-variant'
                   }`}
                 >
                   Backdrop
