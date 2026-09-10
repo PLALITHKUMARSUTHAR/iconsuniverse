@@ -27,6 +27,7 @@ const IconCard = ({
   const [svgMarkup, setSvgMarkup] = useState(cachedSvg);
   const [imgSrc, setImgSrc] = useState(directCdnUrl || proxyUrl);
   const [imgFailed, setImgFailed] = useState(false);
+  const containerRef = React.useRef(null);
 
   // Active vector loader: Immediately fetch and normalize vector SVG on mount
   // Completely eliminates "show on hover only" so icons render instantly and visibly
@@ -49,8 +50,51 @@ const IconCard = ({
     };
   }, [iconId, directCdnUrl, proxyUrl, svgMarkup]);
 
-  // Fast prefetch on hover or select so editor/modal opens with zero latency
+  // Continuous animation loop: Animates continuously every 2 seconds for all animated icons
+  useEffect(() => {
+    const isAnim = icon.isAnimated || (svgMarkup && (svgMarkup.includes('<animate') || svgMarkup.includes('<animateTransform')));
+    if (!isAnim) return;
+
+    const triggerAnimation = () => {
+      if (containerRef.current) {
+        const svg = containerRef.current.querySelector('svg');
+        if (svg) {
+          if (typeof svg.setCurrentTime === 'function') {
+            try {
+              svg.setCurrentTime(0);
+            } catch (e) {}
+          }
+          const animates = svg.querySelectorAll('animate, animateTransform');
+          animates.forEach((a) => {
+            if (typeof a.beginElement === 'function') {
+              try {
+                a.beginElement();
+              } catch (e) {}
+            }
+          });
+        }
+      }
+    };
+
+    const interval = setInterval(triggerAnimation, 2000);
+    return () => clearInterval(interval);
+  }, [icon.isAnimated, svgMarkup]);
+
+  // Fast prefetch and animation trigger on hover or select so editor/modal opens with zero latency
   const handlePrefetch = useCallback(() => {
+    if (containerRef.current) {
+      const svg = containerRef.current.querySelector('svg');
+      if (svg && typeof svg.setCurrentTime === 'function') {
+        try { svg.setCurrentTime(0); } catch (e) {}
+      }
+      const animates = containerRef.current.querySelectorAll('animate, animateTransform');
+      animates.forEach((a) => {
+        if (typeof a.beginElement === 'function') {
+          try { a.beginElement(); } catch (e) {}
+        }
+      });
+    }
+
     if (svgMarkup) return;
     const fetchUrl = directCdnUrl || proxyUrl;
     if (!fetchUrl) return;
@@ -126,6 +170,7 @@ const IconCard = ({
       >
         {svgMarkup ? (
           <div
+            ref={containerRef}
             className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:m-auto [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:overflow-hidden filter drop-shadow-[0_1px_1px_rgba(0,0,0,0.12)]"
             dangerouslySetInnerHTML={{ __html: svgMarkup }}
           />
