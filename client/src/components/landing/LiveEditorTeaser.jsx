@@ -65,9 +65,9 @@ const LiveEditorTeaser = () => {
   };
 
   return (
-    <section className="w-full py-10 sm:py-14 bg-white/60 border-t border-landing-surface-container/60">
+    <section className="w-full py-12 sm:py-16">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-8">
-        <div className="p-6 sm:p-8 rounded-3xl bg-white border-[2.5px] border-slate-800 shadow-xl max-w-4xl mx-auto">
+        <div className="p-6 sm:p-8 rounded-3xl bg-white border-2 border-slate-200/90 shadow-xl shadow-slate-100/60 max-w-4xl mx-auto">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-landing-surface-container mb-6">
             <div>
@@ -109,7 +109,7 @@ const LiveEditorTeaser = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
             {/* Left: Live Canvas Preview */}
-            <div className="md:col-span-6 flex flex-col items-center">
+            <div className="md:col-span-6 flex flex-col items-center justify-center p-6 rounded-2xl bg-slate-50/70 border border-slate-200/60 shadow-inner">
               <IconEditorCanvas
                 rawSvg={current.svg}
                 color={color}

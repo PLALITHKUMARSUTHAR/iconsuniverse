@@ -44,10 +44,10 @@ const curatedRealPacks = [
     description: 'Shopping carts, barcode tags, credit cards, and express delivery tracking.',
     categoryName: 'Shopping',
     categorySlug: 'shopping',
-    headerBg: 'bg-[#ff5f52]',
+    headerBg: 'bg-rose-50/80',
     cardBg: 'bg-white',
-    borderColor: 'border-[#ff5f52]/30 hover:border-[#ff5f52]',
-    tagBg: 'bg-white text-[#ff5f52] border-white/80 shadow-xs font-black',
+    borderColor: 'border-slate-200/80 hover:border-rose-300 hover:shadow-lg',
+    tagBg: 'bg-[#ff5f52] text-white border-transparent shadow-2xs font-extrabold',
     btnHover: 'group-hover:bg-[#ff5f52] group-hover:text-white',
     icons: [
       { comp: ShoppingCart, label: 'Cart' },
@@ -63,11 +63,11 @@ const curatedRealPacks = [
     description: 'Cloud infrastructure, servers, terminals, microprocessors, and databases.',
     categoryName: 'Code & Dev',
     categorySlug: 'code',
-    headerBg: 'bg-[#0284c7]',
+    headerBg: 'bg-sky-50/80',
     cardBg: 'bg-white',
-    borderColor: 'border-[#0284c7]/30 hover:border-[#0284c7]',
-    tagBg: 'bg-white text-[#0284c7] border-white/80 shadow-xs font-black',
-    btnHover: 'group-hover:bg-[#0284c7] group-hover:text-white',
+    borderColor: 'border-slate-200/80 hover:border-sky-300 hover:shadow-lg',
+    tagBg: 'bg-sky-600 text-white border-transparent shadow-2xs font-extrabold',
+    btnHover: 'group-hover:bg-sky-600 group-hover:text-white',
     icons: [
       { comp: Cloud, label: 'Cloud' },
       { comp: Server, label: 'Server' },
@@ -82,11 +82,11 @@ const curatedRealPacks = [
     description: 'Digital wallets, coins, market growth charts, vaults, and bank security.',
     categoryName: 'Business',
     categorySlug: 'business',
-    headerBg: 'bg-[#f59e0b]',
+    headerBg: 'bg-amber-50/80',
     cardBg: 'bg-white',
-    borderColor: 'border-[#f59e0b]/30 hover:border-[#f59e0b]',
-    tagBg: 'bg-white text-[#d97706] border-white/80 shadow-xs font-black',
-    btnHover: 'group-hover:bg-[#f59e0b] group-hover:text-white',
+    borderColor: 'border-slate-200/80 hover:border-amber-300 hover:shadow-lg',
+    tagBg: 'bg-amber-500 text-white border-transparent shadow-2xs font-extrabold',
+    btnHover: 'group-hover:bg-amber-500 group-hover:text-white',
     icons: [
       { comp: Wallet, label: 'Wallet' },
       { comp: TrendingUp, label: 'Growth' },
@@ -101,11 +101,11 @@ const curatedRealPacks = [
     description: 'Chat bubbles, paper planes, profiles, notifications, and engagement badges.',
     categoryName: 'Social',
     categorySlug: 'social',
-    headerBg: 'bg-[#4f46e5]',
+    headerBg: 'bg-indigo-50/80',
     cardBg: 'bg-white',
-    borderColor: 'border-[#4f46e5]/30 hover:border-[#4f46e5]',
-    tagBg: 'bg-white text-[#4f46e5] border-white/80 shadow-xs font-black',
-    btnHover: 'group-hover:bg-[#4f46e5] group-hover:text-white',
+    borderColor: 'border-slate-200/80 hover:border-indigo-300 hover:shadow-lg',
+    tagBg: 'bg-indigo-600 text-white border-transparent shadow-2xs font-extrabold',
+    btnHover: 'group-hover:bg-indigo-600 group-hover:text-white',
     icons: [
       { comp: MessageCircle, label: 'Chat' },
       { comp: Send, label: 'Send' },
@@ -120,11 +120,11 @@ const curatedRealPacks = [
     description: 'Cameras, film reels, sliders, digital palettes, and vector design pens.',
     categoryName: 'Media',
     categorySlug: 'media',
-    headerBg: 'bg-[#7c3aed]',
+    headerBg: 'bg-purple-50/80',
     cardBg: 'bg-white',
-    borderColor: 'border-[#7c3aed]/30 hover:border-[#7c3aed]',
-    tagBg: 'bg-white text-[#7c3aed] border-white/80 shadow-xs font-black',
-    btnHover: 'group-hover:bg-[#7c3aed] group-hover:text-white',
+    borderColor: 'border-slate-200/80 hover:border-purple-300 hover:shadow-lg',
+    tagBg: 'bg-purple-600 text-white border-transparent shadow-2xs font-extrabold',
+    btnHover: 'group-hover:bg-purple-600 group-hover:text-white',
     icons: [
       { comp: Palette, label: 'Color' },
       { comp: Camera, label: 'Photo' },
@@ -139,11 +139,11 @@ const curatedRealPacks = [
     description: 'Map pins, flight vectors, compasses, world globes, and trip routes.',
     categoryName: 'Transport',
     categorySlug: 'transport',
-    headerBg: 'bg-[#10b981]',
+    headerBg: 'bg-emerald-50/80',
     cardBg: 'bg-white',
-    borderColor: 'border-[#10b981]/30 hover:border-[#10b981]',
-    tagBg: 'bg-white text-[#059669] border-white/80 shadow-xs font-black',
-    btnHover: 'group-hover:bg-[#10b981] group-hover:text-white',
+    borderColor: 'border-slate-200/80 hover:border-emerald-300 hover:shadow-lg',
+    tagBg: 'bg-emerald-600 text-white border-transparent shadow-2xs font-extrabold',
+    btnHover: 'group-hover:bg-emerald-600 group-hover:text-white',
     icons: [
       { comp: MapPin, label: 'Pin' },
       { comp: Compass, label: 'Compass' },
@@ -193,7 +193,7 @@ const TrendingPacks = () => {
   };
 
   return (
-    <section className="w-full py-8 sm:py-10 bg-landing-surface-container-low/30">
+    <section className="w-full py-12 sm:py-16">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-8">
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
