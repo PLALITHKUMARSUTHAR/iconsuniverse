@@ -10,6 +10,7 @@ import { cleanIconTitle } from '../../utils/titleCleaner';
 
 const IconCard = ({
   icon,
+  index = 0,
   isSelected = false,
   onToggleSelect = null,
 }) => {
@@ -27,7 +28,7 @@ const IconCard = ({
   const [imgSrc, setImgSrc] = useState(directCdnUrl || proxyUrl);
   const [imgFailed, setImgFailed] = useState(false);
 
-  // Speculative fetch on hover or select so editor/modal opens instantly
+  // Speculative fetch on hover or select so editor/modal opens with zero delay
   const handlePrefetch = useCallback(() => {
     if (svgMarkup) return;
     const fetchUrl = directCdnUrl || proxyUrl;
@@ -40,13 +41,16 @@ const IconCard = ({
   }, [svgMarkup, directCdnUrl, proxyUrl, iconId]);
 
   const handleImgError = () => {
-    // If direct CDN fails, fallback to local proxy endpoint
+    // If direct CDN fails or gets blocked, failover to backend proxy
     if (imgSrc !== proxyUrl && proxyUrl) {
       setImgSrc(proxyUrl);
     } else {
       setImgFailed(true);
     }
   };
+
+  // Immediate eager loading for initial viewport (top 24 cards), lazy for scrolled
+  const isAboveFold = index < 24;
 
   return (
     <div
@@ -94,11 +98,12 @@ const IconCard = ({
         )}
       </div>
 
-      {/* Inner SVG Icon Container: scaled to 44x44px (sm: 48x48px) with native CDN image streaming */}
-      <div className="my-1 w-11 h-11 sm:w-12 sm:h-12 p-0.5 flex items-center justify-center text-slate-800 group-hover:scale-110 transition-all duration-150 relative m-auto shrink-0 overflow-hidden">
+      {/* Inner SVG Icon Container:
+          bg-slate-50/80 + subtle border provides guaranteed contrast so white/light icons never appear empty */}
+      <div className="my-1 w-11 h-11 sm:w-12 sm:h-12 p-1 flex items-center justify-center text-slate-800 bg-slate-50/80 border border-slate-100 rounded-lg group-hover:bg-slate-100/90 group-hover:scale-105 transition-all duration-150 relative m-auto shrink-0 overflow-hidden">
         {svgMarkup ? (
           <div
-            className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:m-auto [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:overflow-hidden"
+            className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:m-auto [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:overflow-hidden filter drop-shadow-[0_1px_1px_rgba(0,0,0,0.12)]"
             dangerouslySetInnerHTML={{ __html: svgMarkup }}
           />
         ) : imgFailed ? (
@@ -109,8 +114,9 @@ const IconCard = ({
           <img
             src={imgSrc}
             alt={displayTitle}
-            className="w-full h-full object-contain m-auto pointer-events-none"
-            loading="lazy"
+            className="w-full h-full object-contain m-auto pointer-events-none filter drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)]"
+            loading={isAboveFold ? 'eager' : 'lazy'}
+            fetchPriority={index < 12 ? 'high' : 'auto'}
             decoding="async"
             onError={handleImgError}
           />
@@ -133,6 +139,7 @@ const IconCard = ({
 export default memo(IconCard, (prevProps, nextProps) => {
   return (
     prevProps.isSelected === nextProps.isSelected &&
+    prevProps.index === nextProps.index &&
     (prevProps.icon._id || prevProps.icon.slug) === (nextProps.icon._id || nextProps.icon.slug) &&
     prevProps.icon.title === nextProps.icon.title
   );

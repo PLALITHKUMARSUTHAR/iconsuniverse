@@ -1,128 +1,147 @@
-const SOURCE_PREFIXES = [
-  // Multi-word library names & styles
+const KNOWN_PREFIXES = [
+  // Multi-word
+  'sharp color streamline sharp color', 'plump color streamline plump color', 'ultimate color streamline ultimate color',
+  'sharp streamline sharp', 'streamline sharp', 'streamline plump', 'streamline ultimate', 'streamline',
+  'pepicons pencil pepicons pencil', 'pepicons pop pepicons pop', 'pop pepicons pop', 'pepicons pencil', 'pepicons pop', 'pepicons',
   'material symbols light', 'material symbols outlined', 'material symbols rounded', 'material symbols sharp', 'material symbols', 'material icons', 'material icon',
+  'fluent emoji high contrast', 'fluent emoji', 'fluent color', 'fluent mdl2', 'fluent ui', 'fluent',
   'flat color icons', 'flat color icon', 'flat color', 'flat ui', 'flat',
-  'fluent color', 'fluent emoji', 'fluent ui', 'fluent',
-  'emojione monotone', 'emojione v1', 'emojione',
-  'cryptocurrency color', 'cryptocurrency', 'crypto icons',
-  'ant design', 'akar icons', 'eos icons', 'evil icons', 'font awesome',
-  'fa solid', 'fa regular', 'fa brands', 'fa6 solid', 'fa6 regular', 'fa6 brands', 'fa7 solid', 'fa7 regular', 'fa7 brands',
+  'simple line icons', 'simple icons', 'skill icons',
   'heroicons outline', 'heroicons solid', 'heroicons mini', 'heroicons micro', 'heroicons',
-  'line md', 'radix icons', 'remix icon', 'simple icons', 'skill icons',
-  'system uicons', 'system-uicons', 'vscode icons', 'weather icons',
-  'sidekickicons', 'sidekick icons', 'simple line icons', 'at icons', 'nimbus', 'bubbles',
+  'dinkie icons', 'game icons', 'healthicons', 'vscode icons', 'weather icons',
+  'at icons', 'lets icons', 'eos icons', 'evil icons', 'akar icons', 'ant design',
+  'font awesome', 'icon park', 'gravity ui', 'system uicons', 'line md',
+  'emojione monotone', 'emojione v1', 'emojione',
+  'fa6 solid', 'fa6 regular', 'fa6 brands', 'fa solid', 'fa regular', 'fa brands',
+  'sidekickicons', 'sidekick icons', 'nimbus', 'bubbles',
 
-  // Single-word library names
-  'famicons', 'flowbite', 'glyphs', 'glyph', 'hugeicons', 'codicons', 'codicon',
-  'healthicons', 'mynaui', 'stash', 'griddy', 'mdl2', 'selfhst', 'tdesign',
-  'fxemoji', 'pinhead', 'temaki', 'roentgen', 'guidance', 'pepicons',
-  'mingcute', 'tabler', 'feather', 'boxicons', 'carbon', 'circum',
-  'clarity', 'coreui', 'dashicons', 'devicons', 'devicon', 'dripicons',
-  'entypo', 'fontisto', 'foundation', 'geist', 'gridicons', 'humbleicons',
-  'iconamoon', 'iconoir', 'icons8', 'ikons', 'ionicons', 'lineicons',
-  'lucide', 'majesticons', 'monotone', 'octicons', 'octicon', 'openmoji',
-  'pajamas', 'pixelarticons', 'simpleline', 'streamline',
-  'teenyicons', 'twemoji', 'typicons', 'zondicons', 'grommet', 'icomoon',
-  'si-glyph', 'picon', 'lets', 'basil', 'bxs', 'bxl', 'bx', 'emojis', 'arcticons',
+  // Single word
+  'iconify', 'lsicon', 'svgicon', 'mynaui', 'stash', 'griddy', 'mdl2', 'selfhst', 'tdesign',
+  'fxemoji', 'pinhead', 'temaki', 'roentgen', 'guidance', 'clarity', 'coreui',
+  'dashicons', 'devicons', 'devicon', 'dripicons', 'entypo', 'fontisto', 'foundation',
+  'geist', 'gridicons', 'humbleicons', 'iconamoon', 'iconoir', 'icons8', 'ikons',
+  'ionicons', 'lineicons', 'lucide', 'majesticons', 'octicons', 'octicon', 'openmoji',
+  'pajamas', 'pixelarticons', 'teenyicons', 'twemoji', 'typicons', 'zondicons', 'grommet',
+  'icomoon', 'si-glyph', 'picon', 'lets', 'basil', 'boxicons', 'carbon', 'circum',
+  'feather', 'tabler', 'arcticons', 'emojis', 'famicons', 'flowbite', 'glyphs', 'glyph',
+  'hugeicons', 'codicons', 'codicon', 'mingcute', 'remix', 'solar', 'noto', 'logos',
 
   // Short codes
   'f7', 'ic', 'ph', 'ix', 'fa7', 'fa6', 'fa', 'uil', 'uis', 'uit', 'uiw',
   'unjs', 'vaadin', 'v1', 'v2', 'whh', 'wi', 'wpf', 'prime', 'akar', 'eos',
-  'eva', 'evil', 'geo', 'ion', 'jam', 'mage', 'maki', 'mdi', 'oui', 'radix',
-  'remix', 'ri', 'solar', 'noto', 'si', 'la', 'lia'
+  'eva', 'evil', 'geo', 'ion', 'jam', 'mage', 'maki', 'mdi2', 'mdi', 'oui',
+  'radix', 'ri', 'si', 'la', 'lia', 'bx', 'bxs', 'bxl'
 ];
 
-SOURCE_PREFIXES.sort((a, b) => b.length - a.length);
+KNOWN_PREFIXES.sort((a, b) => b.length - a.length);
 
-const prefixRegexList = SOURCE_PREFIXES.map(p => {
-  const escaped = p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '[\\s_-]+');
-  return new RegExp(`^${escaped}(?:[\\s_:-]+|$)`, 'i');
+const prefixRegexes = KNOWN_PREFIXES.map(p => {
+  const esc = p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '[\\s_-]+');
+  return new RegExp(`^${esc}(?:[\\s_:-]+|$)`, 'i');
 });
 
-const STYLE_SUFFIXES = [
-  'outline sharp', 'outline rounded', 'rounded sharp', 'outline light',
-  'alt filled', 'alt outline', 'circle solid', 'circle outline',
-  'square solid', 'square outline', 'box outline', 'box solid',
-  'tall outline', 'filled', 'outline', 'outlined', 'solid', 'sharp',
-  'rounded', 'round', 'light', 'regular', 'bold', 'thin',
-  'two tone', 'twotone', 'duotone', 'alt 1', 'alt 2', 'alt 3', 'alt'
+const LEADING_STYLE_WORDS = [
+  'round', 'rounded', 'outline', 'outlined', 'sharp', 'solid', 'filled', 'twotone', 'two tone', 'flat', 'pop'
 ];
+const leadingStyleRegexes = LEADING_STYLE_WORDS.map(s => {
+  return new RegExp(`^${s}[\\s_-]+`, 'i');
+});
 
-STYLE_SUFFIXES.sort((a, b) => b.length - a.length);
-
-const suffixRegexList = STYLE_SUFFIXES.map(s => {
-  const escaped = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '[\\s_-]+');
-  return new RegExp(`[\\s_-]+${escaped}$`, 'i');
+const TRAILING_STYLE_WORDS = [
+  'outline sharp', 'outline rounded', 'rounded sharp', 'outline light', 'outline loop',
+  'alt filled', 'alt outline', 'circle solid', 'circle outline', 'circle filled',
+  'square solid', 'square outline', 'box outline', 'box solid', 'shape fill', 'shape solid',
+  'tall outline', 'filled', 'outline', 'outlined', 'solid', 'sharp',
+  'rounded', 'round', 'light', 'regular', 'bold', 'thin', 'flat',
+  'two tone', 'twotone', 'duotone', 'small', 'medium dark', 'medium', 'dark',
+  'alt 1', 'alt 2', 'alt 3', 'alt'
+];
+TRAILING_STYLE_WORDS.sort((a, b) => b.length - a.length);
+const trailingStyleRegexes = TRAILING_STYLE_WORDS.map(s => {
+  const esc = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '[\\s_-]+');
+  return new RegExp(`[\\s_-]+${esc}$`, 'i');
 });
 
 function cleanIconTitle(title) {
   if (!title || typeof title !== 'string') return title || '';
-  let cleaned = title.trim();
+  let c = title.trim();
 
-  // 1. Remove embedded library strings like "-in-material-symbols-light-"
-  cleaned = cleaned.replace(/-?in-[a-z0-9_-]+/gi, ' ');
+  // 1. Remove embedded '-in-...' strings
+  c = c.replace(/-?in-[a-z0-9_-]+/gi, ' ');
 
-  // 2. Remove import code prefixes like "Is3", "Is2", "Is", "In3", "In"
-  cleaned = cleaned.replace(/^(?:is\d*|in\d*)[\s_-]+/i, '');
+  // 2. Strip import prefixes like Is1, Is2, Is3, Is4, In1, In2
+  c = c.replace(/^(?:is\d*|in\d*)[\s_-]+/i, '');
 
   // 3. Repeatedly strip matching library prefixes
   let changed = true;
-  while (changed) {
+  let loops = 0;
+  while (changed && loops < 10) {
+    loops++;
     changed = false;
-    for (const regex of prefixRegexList) {
-      if (regex.test(cleaned)) {
-        const next = cleaned.replace(regex, '').trim();
+    for (const r of prefixRegexes) {
+      if (r.test(c)) {
+        const next = c.replace(r, '').trim();
         if (next.length > 1) {
-          cleaned = next;
+          c = next;
           changed = true;
         }
       }
     }
   }
 
-  // 4. Strip leading 'Color ' or 'Colour ' if followed by other words (e.g. 'Color Bicycle' -> 'Bicycle')
-  cleaned = cleaned.replace(/^(?:color|colour)[\s_-]+(?=[a-z0-9])/i, '');
+  // 4. Strip leading generic words: 'Color ', 'Colour ', 'Icons ', 'Icon ', 'A ', 'An '
+  c = c.replace(/^(?:color|colour|icons|icon|a|an)[\s_-]+(?=[a-z0-9])/i, '');
 
-  // 5. Strip leading article 'A ' or 'An ' (e.g. 'A High Speed Train' -> 'High Speed Train')
-  cleaned = cleaned.replace(/^(?:a|an)[\s_-]+(?=[a-z0-9])/i, '');
+  // Strip leading style word if followed by substantial name (e.g. 'Outline Keyboard' -> 'Keyboard')
+  for (const lr of leadingStyleRegexes) {
+    if (lr.test(c)) {
+      const next = c.replace(lr, '').trim();
+      if (next.length > 2) {
+        c = next;
+        break;
+      }
+    }
+  }
 
-  // 6. Strip trailing style suffixes (e.g. "Outline Sharp", "Filled", "Solid", "Alt")
+  // 5. Strip trailing pixel indicators like ' 24px', ' 16px', ' 32px'
+  c = c.replace(/[\s_-]+\d+px$/i, '');
+
+  // 6. Strip trailing style words
   changed = true;
-  while (changed) {
+  loops = 0;
+  while (changed && loops < 5) {
+    loops++;
     changed = false;
-    for (const regex of suffixRegexList) {
-      if (regex.test(cleaned)) {
-        const next = cleaned.replace(regex, '').trim();
+    for (const tr of trailingStyleRegexes) {
+      if (tr.test(c)) {
+        const next = c.replace(tr, '').trim();
         if (next.length > 1) {
-          cleaned = next;
+          c = next;
           changed = true;
         }
       }
     }
   }
 
-  // 7. Strip trailing dimension/variant numbers (e.g. ' 16', ' 24', ' 20', ' 28', ' 48', ' 01')
-  cleaned = cleaned.replace(/[\s_-]+[0-9]{1,3}$/, '');
+  // 7. Strip trailing stand-alone resolution numbers like ' 16', ' 20', ' 24', ' 32', ' 48', ' 64'
+  c = c.replace(/[\s_-]+(16|20|24|32|48|64|128)$/i, '');
 
-  // 8. Deduplicate redundant adjacent words (e.g. 'Bicycle Bike' -> 'Bicycle')
-  const words = cleaned.split(/[\s_-]+/).filter(Boolean);
+  // 8. Deduplicate identical adjacent words (e.g. 'Streamline Streamline' or 'Pepicons Pepicons' or 'Bicycle Bike')
+  const words = c.split(/[\s_-]+/).filter(Boolean);
   const dedupped = [];
   for (let i = 0; i < words.length; i++) {
     const curr = words[i].toLowerCase();
     const prev = dedupped.length > 0 ? dedupped[dedupped.length - 1].toLowerCase() : '';
-    if ((curr === 'bike' && prev === 'bicycle') || (curr === 'bicycle' && prev === 'bike')) continue;
-    if ((curr === 'flat' && prev === 'planet')) continue;
     if (curr === prev) continue;
+    if ((curr === 'bike' && prev === 'bicycle') || (curr === 'bicycle' && prev === 'bike')) continue;
     dedupped.push(words[i]);
   }
 
   if (dedupped.length > 0) {
-    cleaned = dedupped
-      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(' ');
+    c = dedupped.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   }
 
-  return cleaned || title;
+  return c || title;
 }
 
-module.exports = { cleanIconTitle, SOURCE_PREFIXES };
+module.exports = { cleanIconTitle, SOURCE_PREFIXES: KNOWN_PREFIXES };

@@ -37,12 +37,13 @@ const IconGrid = ({
 
   return (
     <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-2 sm:gap-2.5">
-      {icons.map((icon) => {
+      {icons.map((icon, index) => {
         const id = icon._id || icon.slug;
         const isSelected = selectedIds.has(id);
         return (
           <IconCard
             key={id}
+            index={index}
             icon={icon}
             isSelected={isSelected}
             onToggleSelect={onToggleSelect}
