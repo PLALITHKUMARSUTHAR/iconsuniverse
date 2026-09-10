@@ -35,6 +35,8 @@ const IconFilters = ({
   onChangeSort,
   groupBy = 'all', // 'all' | 'style' | 'pack'
   onChangeGroupBy,
+  hasMultipleStyles = true,
+  hasMultiplePacks = true,
   isAnimatedOnly = false,
   onToggleAnimated,
   onResetFilters,
@@ -46,6 +48,13 @@ const IconFilters = ({
     (selectedShape !== 'all' ? 1 : 0) +
     (selectedColorType !== 'all' ? 1 : 0) +
     (selectedLicense !== 'all' ? 1 : 0);
+
+  // Dynamic grouping options: hide Style if only 1 style, hide Pack if only 1 pack
+  const groupingOptions = [
+    { id: 'all', label: 'All Icons' },
+    ...(hasMultipleStyles ? [{ id: 'style', label: 'Style' }] : []),
+    ...(hasMultiplePacks ? [{ id: 'pack', label: 'Pack' }] : []),
+  ];
 
   return (
     <div className="flex flex-col rounded-3xl bg-white border border-landing-surface-container shadow-sm mb-6 transition-all">
@@ -72,13 +81,9 @@ const IconFilters = ({
             {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
 
-          {/* Individual Grouping Buttons: All Icons, Style, Pack */}
+          {/* Individual Grouping Buttons: All Icons, Style (if >1), Pack (if >1) */}
           <div className="flex items-center gap-1.5">
-            {[
-              { id: 'all', label: 'All Icons' },
-              { id: 'style', label: 'Style' },
-              { id: 'pack', label: 'Pack' },
-            ].map((opt) => {
+            {groupingOptions.map((opt) => {
               const isSelected = groupBy === opt.id;
               return (
                 <button

@@ -213,6 +213,42 @@ const SearchResultsPage = () => {
     .filter((cat) => cat.slug !== categoryParam)
     .slice(0, 11);
 
+  // Calculate distinct styles and packs from current icons
+  const distinctStyles = React.useMemo(() => {
+    const styles = new Set();
+    icons.forEach((i) => {
+      const st = i.isFilled ? 'filled' : (i.style || 'outline');
+      styles.add(st);
+    });
+    return Array.from(styles);
+  }, [icons]);
+
+  const distinctPacks = React.useMemo(() => {
+    const packsMap = new Map();
+    icons.forEach((i) => {
+      if (i.packId) {
+        const id = i.packId._id || i.packId;
+        const title = i.packId.title || 'Pack';
+        if (id && !packsMap.has(id)) {
+          packsMap.set(id, { id, title });
+        }
+      }
+    });
+    return Array.from(packsMap.values());
+  }, [icons]);
+
+  const hasMultipleStyles = distinctStyles.length > 1;
+  const hasMultiplePacks = distinctPacks.length > 1;
+
+  // Auto-revert groupBy if active selection is no longer valid
+  useEffect(() => {
+    if (groupBy === 'style' && !hasMultipleStyles) {
+      setGroupBy('all');
+    } else if (groupBy === 'pack' && !hasMultiplePacks) {
+      setGroupBy('all');
+    }
+  }, [groupBy, hasMultipleStyles, hasMultiplePacks]);
+
   // Grouped Icons Rendering
   const renderGroupedIcons = () => {
     if (groupBy === 'style') {
@@ -234,6 +270,35 @@ const SearchResultsPage = () => {
                 </div>
                 <IconGrid
                   icons={styleIcons}
+                  loading={false}
+                  selectedIds={selectedIds}
+                  onToggleSelect={handleToggleSelect}
+                />
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    if (groupBy === 'pack') {
+      return (
+        <div className="flex flex-col gap-8">
+          {distinctPacks.map((pack) => {
+            const packIcons = icons.filter((i) => (i.packId?._id || i.packId) === pack.id);
+            if (packIcons.length === 0) return null;
+
+            return (
+              <div key={pack.id} className="flex flex-col gap-3">
+                <div className="flex items-center justify-between pb-2 border-b border-subpage-outline-variant/30">
+                  <h3 className="text-sm font-bold font-heading capitalize text-subpage-primary flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-energy-gradient" />
+                    <span>{pack.title}</span>
+                    <span className="text-xs text-subpage-on-surface-variant font-normal">({packIcons.length})</span>
+                  </h3>
+                </div>
+                <IconGrid
+                  icons={packIcons}
                   loading={false}
                   selectedIds={selectedIds}
                   onToggleSelect={handleToggleSelect}
@@ -403,6 +468,8 @@ const SearchResultsPage = () => {
           onChangeSort={(sort) => setSelectedSort(sort)}
           groupBy={groupBy}
           onChangeGroupBy={(gb) => setGroupBy(gb)}
+          hasMultipleStyles={hasMultipleStyles}
+          hasMultiplePacks={hasMultiplePacks}
           isAnimatedOnly={isAnimatedOnly}
           onToggleAnimated={handleToggleAnimated}
           onResetFilters={handleResetFilters}
