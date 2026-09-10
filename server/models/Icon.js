@@ -39,6 +39,11 @@ const iconSchema = new mongoose.Schema({
     default: false,
     index: true,
   },
+  isAnimated: {
+    type: Boolean,
+    default: false,
+    index: true,
+  },
   isPremium: {
     type: Boolean,
     default: false,

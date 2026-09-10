@@ -35,6 +35,8 @@ const IconFilters = ({
   onChangeSort,
   groupBy = 'all', // 'all' | 'style' | 'pack'
   onChangeGroupBy,
+  isAnimatedOnly = false,
+  onToggleAnimated,
   onResetFilters,
   actionSlot = null,
 }) => {
@@ -112,6 +114,24 @@ const IconFilters = ({
               </div>
             )}
           </div>
+
+          {/* Animated Icons Button (Beside Group By on the right) */}
+          <button
+            type="button"
+            onClick={onToggleAnimated}
+            className={`px-3.5 py-2 rounded-2xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer select-none ${
+              isAnimatedOnly
+                ? 'bg-energy-gradient text-white border-transparent shadow-xs hover:shadow-md'
+                : 'bg-landing-surface-container-low hover:bg-landing-surface-container text-landing-on-surface border-landing-surface-container'
+            }`}
+            title={isAnimatedOnly ? "Switch to Static Icons" : "Show Animated Icons only"}
+          >
+            <Sparkles className={`w-3.5 h-3.5 ${isAnimatedOnly ? 'text-white animate-pulse' : 'text-amber-500'}`} />
+            <span>Animated Icons</span>
+            {isAnimatedOnly && (
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            )}
+          </button>
 
           {/* Action Slot (e.g. Open Download Button) */}
           {actionSlot}

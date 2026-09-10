@@ -693,8 +693,18 @@ function normalizeAndFixSvg(svgText) {
 // @access  Public
 exports.getIcons = async (req, res, next) => {
   try {
-    const { q, category, style, colorType, color, isPremium, sort = 'trending', page = 1, limit = 40 } = req.query;
+    const { q, category, style, colorType, color, isPremium, animated, isAnimated, sort = 'trending', page = 1, limit = 40 } = req.query;
     const filter = { status: { $ne: 'rejected' } };
+
+    // Animated icons separation:
+    // If animated query is true, return ONLY animated icons.
+    // Otherwise, return ONLY static icons (significantly reducing initial payload and CPU load).
+    const wantsAnimated = animated === 'true' || animated === true || isAnimated === 'true' || isAnimated === true || style === 'animated';
+    if (wantsAnimated) {
+      filter.isAnimated = true;
+    } else {
+      filter.isAnimated = { $ne: true };
+    }
 
     // Text search (title, slug, tags)
     if (q && q.trim()) {
@@ -808,10 +818,26 @@ exports.getIcons = async (req, res, next) => {
         .limit(limitNum)
         .populate('categoryId', 'name slug')
         .populate('packId', 'title slug')
-        .select('title slug path isFilled isPremium style tags downloadCount colors categoryId packId')
+        .select('title slug path isFilled isAnimated isPremium style tags downloadCount colors categoryId packId')
         .lean(),
       Icon.countDocuments(filter),
     ]);
+
+    // Fallback: If animated filter in this category yielded 0 icons, relax the category filter so user sees animated icons
+    if (total === 0 && wantsAnimated && filter.categoryId) {
+      delete filter.categoryId;
+      [rawIcons, total] = await Promise.all([
+        Icon.find(filter)
+          .sort(sortQuery)
+          .skip(skip)
+          .limit(limitNum)
+          .populate('categoryId', 'name slug')
+          .populate('packId', 'title slug')
+          .select('title slug path isFilled isAnimated isPremium style tags downloadCount colors categoryId packId')
+          .lean(),
+        Icon.countDocuments(filter),
+      ]);
+    }
 
     // Fallback: If style filter yielded 0 icons in this category, relax the style filter so user always gets icons
     if (total === 0 && style && style !== 'all') {
@@ -824,7 +850,7 @@ exports.getIcons = async (req, res, next) => {
           .limit(limitNum)
           .populate('categoryId', 'name slug')
           .populate('packId', 'title slug')
-          .select('title slug path isFilled isPremium style tags downloadCount colors categoryId packId')
+          .select('title slug path isFilled isAnimated isPremium style tags downloadCount colors categoryId packId')
           .lean(),
         Icon.countDocuments(filter),
       ]);
@@ -838,6 +864,7 @@ exports.getIcons = async (req, res, next) => {
       return {
         ...icon,
         title: cleanIconTitle(icon.title),
+        isAnimated: !!icon.isAnimated,
         svgUrl: proxyUrl,
         r2Url: r2Url,
         pngPreviewUrl: proxyUrl,

@@ -25,6 +25,7 @@ const SearchResultsPage = () => {
   const queryParam = searchParams.get('q') || '';
   const categoryParam = searchParams.get('category') || '';
   const styleParam = searchParams.get('style') || 'all';
+  const animatedParam = searchParams.get('animated') === 'true';
 
   const [icons, setIcons] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -39,6 +40,7 @@ const SearchResultsPage = () => {
   const [selectedLicense, setSelectedLicense] = useState('all');
   const [selectedSort, setSelectedSort] = useState('trending');
   const [groupBy, setGroupBy] = useState('all'); // 'all' | 'style' | 'pack'
+  const [isAnimatedOnly, setIsAnimatedOnly] = useState(animatedParam);
 
   // Multi-Selection State for Bulk Download
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -66,6 +68,7 @@ const SearchResultsPage = () => {
         colorType: selectedColorType !== 'all' ? selectedColorType : undefined,
         isPremium: selectedLicense === 'premium' ? true : selectedLicense === 'free' ? false : undefined,
         color: selectedColor || undefined,
+        animated: isAnimatedOnly ? true : undefined,
         sort: selectedSort,
         page: pageNum,
         limit: customLimit,
@@ -101,13 +104,15 @@ const SearchResultsPage = () => {
   useEffect(() => {
     const currentStyle = searchParams.get('style') || 'all';
     setSelectedShape(currentStyle);
+    const isAnim = searchParams.get('animated') === 'true';
+    setIsAnimatedOnly(isAnim);
   }, [searchParams]);
 
   // Initial load or filter change
   useEffect(() => {
     setPage(1);
     fetchIconsBatch(1, true, 60);
-  }, [queryParam, categoryParam, selectedShape, selectedColorType, selectedColor, selectedLicense, selectedSort]);
+  }, [queryParam, categoryParam, selectedShape, selectedColorType, selectedColor, selectedLicense, selectedSort, isAnimatedOnly]);
 
   // Infinite scroll callback
   const lastElementRef = useCallback(
@@ -143,13 +148,15 @@ const SearchResultsPage = () => {
     });
   };
 
-  const handleSelectAllVisible = () => {
-    if (selectedIds.size === icons.length) {
-      setSelectedIds(new Set());
-    } else {
-      const allIds = new Set(icons.map((i) => i._id || i.slug));
-      setSelectedIds(allIds);
-    }
+  const handleToggleAnimated = () => {
+    const nextAnimated = !isAnimatedOnly;
+    setIsAnimatedOnly(nextAnimated);
+    const newParams = {};
+    if (queryParam) newParams.q = queryParam;
+    if (categoryParam) newParams.category = categoryParam;
+    if (selectedShape !== 'all') newParams.style = selectedShape;
+    if (nextAnimated) newParams.animated = 'true';
+    setSearchParams(newParams);
   };
 
   const handleClearSelection = () => {
@@ -162,6 +169,7 @@ const SearchResultsPage = () => {
     if (queryParam) newParams.q = queryParam;
     if (categoryParam) newParams.category = categoryParam;
     if (styleId !== 'all') newParams.style = styleId;
+    if (isAnimatedOnly) newParams.animated = 'true';
     setSearchParams(newParams);
   };
 
@@ -172,6 +180,7 @@ const SearchResultsPage = () => {
     setSelectedLicense('all');
     setSelectedSort('trending');
     setGroupBy('all');
+    setIsAnimatedOnly(false);
     setSearchParams(categoryParam ? { category: categoryParam } : queryParam ? { q: queryParam } : {});
   };
 
@@ -324,7 +333,17 @@ const SearchResultsPage = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-subpage-outline-variant/20">
           <div>
             <h1 className="text-xl sm:text-2xl font-extrabold font-heading text-subpage-on-surface flex items-center gap-2">
-              {queryParam ? (
+              {isAnimatedOnly ? (
+                <>
+                  <Sparkles className="w-5 h-5 text-landing-vibrant-coral animate-pulse" />
+                  <span className="capitalize">
+                    Animated {categoryParam ? `${categoryParam.replace(/-/g, ' ')} ` : ''}Icons
+                  </span>
+                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-energy-gradient text-white shadow-2xs">
+                    Live Vector Animations
+                  </span>
+                </>
+              ) : queryParam ? (
                 <>
                   <Search className="w-5 h-5 text-landing-vibrant-coral" />
                   <span>Results for &ldquo;{queryParam}&rdquo;</span>
@@ -339,7 +358,9 @@ const SearchResultsPage = () => {
               )}
             </h1>
             <p className="text-xs text-subpage-on-surface-variant mt-0.5">
-              {totalCount > 0 ? `${totalCount.toLocaleString()} vector icons available. ` : ''}
+              {isAnimatedOnly
+                ? `${totalCount.toLocaleString()} animated vector icons available. `
+                : `${totalCount > 0 ? `${totalCount.toLocaleString()} vector icons available. ` : ''}`}
               Click to select icons, then click Open Download to customize and download.
             </p>
           </div>
@@ -382,6 +403,8 @@ const SearchResultsPage = () => {
           onChangeSort={(sort) => setSelectedSort(sort)}
           groupBy={groupBy}
           onChangeGroupBy={(gb) => setGroupBy(gb)}
+          isAnimatedOnly={isAnimatedOnly}
+          onToggleAnimated={handleToggleAnimated}
           onResetFilters={handleResetFilters}
           actionSlot={
             selectedIds.size > 0 ? (
@@ -405,15 +428,7 @@ const SearchResultsPage = () => {
                   <X className="w-4 h-4" />
                 </button>
               </div>
-            ) : (
-              <button
-                type="button"
-                onClick={handleSelectAllVisible}
-                className="px-3 py-1.5 rounded-xl text-xs font-semibold text-landing-on-surface-variant hover:text-landing-primary hover:bg-landing-surface-container-low transition-colors hidden sm:inline-block cursor-pointer"
-              >
-                Select All Visible
-              </button>
-            )
+            ) : null
           }
         />
       </div>
