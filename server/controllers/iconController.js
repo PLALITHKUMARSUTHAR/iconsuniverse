@@ -686,6 +686,8 @@ function normalizeAndFixSvg(svgText) {
   }
 
   return result;
+}
+
 const CATEGORY_DEFINITIONS = {
   ai: /\b(ai|brain|robot|microchip|chip|neural|bot|sparkle|intelligence|algorithm|deep learning|cyborg|bionic|automaton|android)\b/i,
   shopping: /\b(cart|shopping|store|basket|bag|tag|price|discount|sale|checkout|retail|market|supermarket|cashier|pos|shop|ecommerce|coupon|voucher|barcode)\b/i,
