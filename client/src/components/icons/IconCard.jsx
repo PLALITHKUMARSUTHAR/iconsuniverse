@@ -1,7 +1,6 @@
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo, useState, useCallback } from 'react';
 import { Crown, CheckSquare, Square, ImageOff } from 'lucide-react';
 import {
-  getSafeIconUrl,
   getDirectR2Url,
   fetchAndCacheSvg,
   getCachedSvg,
@@ -15,64 +14,51 @@ const IconCard = ({
   onToggleSelect = null,
 }) => {
   const iconId = icon._id || icon.slug;
-  const directCdnUrl = getDirectR2Url(icon);
+  const directCdnUrl = icon.r2Url || getDirectR2Url(icon);
   const proxyUrl = icon.svgUrl && icon.svgUrl.startsWith('/api') ? icon.svgUrl : (icon._id ? `/api/icons/svg/${icon._id}` : '');
   const displayTitle = cleanIconTitle(icon.title);
 
-  const [svgContent, setSvgContent] = useState(() => {
-    if (icon.svgContent) return normalizeSvgForCanvas(icon.svgContent, iconId);
-    const cached = getCachedSvg(iconId) || getCachedSvg(proxyUrl) || getCachedSvg(directCdnUrl);
-    return cached ? normalizeSvgForCanvas(cached, iconId) : null;
-  });
+  // Check if SVG is already in memory
+  const cachedSvg = icon.svgContent
+    ? normalizeSvgForCanvas(icon.svgContent, iconId)
+    : (getCachedSvg(iconId) || getCachedSvg(proxyUrl) || getCachedSvg(directCdnUrl));
 
+  const [svgMarkup, setSvgMarkup] = useState(cachedSvg);
+  const [imgSrc, setImgSrc] = useState(directCdnUrl || proxyUrl);
   const [imgFailed, setImgFailed] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(Boolean(svgContent));
 
-  useEffect(() => {
-    if (icon.svgContent) {
-      setSvgContent(normalizeSvgForCanvas(icon.svgContent, iconId));
-      setIsLoaded(true);
-      return;
+  // Speculative fetch on hover or select so editor/modal opens instantly
+  const handlePrefetch = useCallback(() => {
+    if (svgMarkup) return;
+    const fetchUrl = directCdnUrl || proxyUrl;
+    if (!fetchUrl) return;
+    fetchAndCacheSvg(fetchUrl, iconId, proxyUrl)
+      .then((raw) => {
+        if (raw) setSvgMarkup(normalizeSvgForCanvas(raw, iconId));
+      })
+      .catch(() => {});
+  }, [svgMarkup, directCdnUrl, proxyUrl, iconId]);
+
+  const handleImgError = () => {
+    // If direct CDN fails, fallback to local proxy endpoint
+    if (imgSrc !== proxyUrl && proxyUrl) {
+      setImgSrc(proxyUrl);
+    } else {
+      setImgFailed(true);
     }
-
-    const cached = getCachedSvg(iconId) || getCachedSvg(proxyUrl) || getCachedSvg(directCdnUrl);
-    if (cached) {
-      setSvgContent(normalizeSvgForCanvas(cached, iconId));
-      setIsLoaded(true);
-      return;
-    }
-
-    // Try fetching SVG vector via proxy with CORS enabled (falls back cleanly to direct CDN img)
-    let isMounted = true;
-    const fetchUrl = proxyUrl || directCdnUrl;
-
-    if (fetchUrl) {
-      fetchAndCacheSvg(fetchUrl, iconId, directCdnUrl)
-        .then((raw) => {
-          if (isMounted && raw) {
-            setSvgContent(normalizeSvgForCanvas(raw, iconId));
-            setIsLoaded(true);
-          }
-        })
-        .catch(() => {
-          // Silent fallback: <img src={directCdnUrl}> handles display seamlessly
-        });
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [iconId, proxyUrl, directCdnUrl, icon.svgContent]);
+  };
 
   return (
     <div
-      style={{ contentVisibility: 'auto', containIntrinsicSize: '80px 96px' }}
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '80px 100px' }}
       className={`group relative flex flex-col items-center justify-between p-2 rounded-xl bg-white transition-all duration-150 transform hover:-translate-y-0.5 cursor-pointer select-none ${
         isSelected
           ? 'ring-2 ring-landing-primary border-transparent bg-landing-primary/5 shadow-sm'
           : 'border border-landing-surface-container/70 hover:border-landing-primary/30 shadow-2xs hover:shadow-xs'
       }`}
+      onMouseEnter={handlePrefetch}
       onClick={() => {
+        handlePrefetch();
         if (onToggleSelect) {
           onToggleSelect(icon);
         }
@@ -108,39 +94,30 @@ const IconCard = ({
         )}
       </div>
 
-      {/* Inner SVG Icon Box Container: scaled to 44x44px (sm: 48x48px) preserving original colors */}
+      {/* Inner SVG Icon Container: scaled to 44x44px (sm: 48x48px) with native CDN image streaming */}
       <div className="my-1 w-11 h-11 sm:w-12 sm:h-12 p-0.5 flex items-center justify-center text-slate-800 group-hover:scale-110 transition-all duration-150 relative m-auto shrink-0 overflow-hidden">
-        {svgContent ? (
+        {svgMarkup ? (
           <div
             className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:m-auto [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:overflow-hidden"
-            dangerouslySetInnerHTML={{ __html: svgContent }}
+            dangerouslySetInnerHTML={{ __html: svgMarkup }}
           />
         ) : imgFailed ? (
           <div className="w-full h-full flex items-center justify-center text-slate-300">
             <ImageOff className="w-5 h-5" />
           </div>
         ) : (
-          <>
-            {!isLoaded && (
-              <div className="absolute inset-0 bg-slate-100/80 rounded-xl animate-pulse" />
-            )}
-            <img
-              src={directCdnUrl}
-              alt={displayTitle}
-              className={`w-full h-full object-contain m-auto pointer-events-none transition-opacity duration-150 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-              loading="lazy"
-              decoding="async"
-              onLoad={() => setIsLoaded(true)}
-              onError={() => {
-                setImgFailed(true);
-                setIsLoaded(true);
-              }}
-            />
-          </>
+          <img
+            src={imgSrc}
+            alt={displayTitle}
+            className="w-full h-full object-contain m-auto pointer-events-none"
+            loading="lazy"
+            decoding="async"
+            onError={handleImgError}
+          />
         )}
       </div>
 
-      {/* Title */}
+      {/* Clean Icon Title */}
       <div className="w-full text-center mt-auto pt-0.5">
         <span
           className="block text-[10px] font-semibold text-landing-on-surface hover:text-landing-vibrant-coral truncate transition-colors"
