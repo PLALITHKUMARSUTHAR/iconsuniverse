@@ -758,13 +758,29 @@ exports.getIcons = async (req, res, next) => {
     }
 
     // Text search (title, slug, tags)
+    const andConditions = [];
     if (q && q.trim()) {
-      const searchRegex = new RegExp(q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-      filter.$or = [
-        { title: searchRegex },
-        { slug: searchRegex },
-        { tags: { $in: [searchRegex] } },
-      ];
+      const qTerms = q.trim().split(',').map((s) => s.trim()).filter(Boolean);
+      if (qTerms.length > 1) {
+        const regexPattern = `\\b(${qTerms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\b`;
+        const searchRegex = new RegExp(regexPattern, 'i');
+        andConditions.push({
+          $or: [
+            { title: searchRegex },
+            { slug: searchRegex },
+            { tags: { $in: [searchRegex] } },
+          ],
+        });
+      } else {
+        const searchRegex = new RegExp(q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+        andConditions.push({
+          $or: [
+            { title: searchRegex },
+            { slug: searchRegex },
+            { tags: { $in: [searchRegex] } },
+          ],
+        });
+      }
     }
 
     // Category filter
@@ -795,9 +811,9 @@ exports.getIcons = async (req, res, next) => {
     // Shape / Style filter
     if (style && style !== 'all') {
       if (style === 'filled') {
-        filter.$or = [{ style: 'filled' }, { isFilled: true }];
+        andConditions.push({ $or: [{ style: 'filled' }, { isFilled: true }] });
       } else if (style === 'outline') {
-        filter.$or = [{ style: 'outline' }, { isFilled: false, style: { $nin: ['color', 'gradient', '3d'] } }];
+        andConditions.push({ $or: [{ style: 'outline' }, { isFilled: false, style: { $nin: ['color', 'gradient', '3d'] } }] });
       } else if (style === 'color' || style === 'flat') {
         filter.style = { $in: ['color', 'flat', '3d', 'gradient'] };
       } else if (style === 'gradient') {
@@ -807,6 +823,12 @@ exports.getIcons = async (req, res, next) => {
       } else {
         filter.style = style;
       }
+    }
+
+    if (andConditions.length === 1) {
+      Object.assign(filter, andConditions[0]);
+    } else if (andConditions.length > 1) {
+      filter.$and = andConditions;
     }
 
     // Color Type filter (all | black | gradient | colors)
@@ -856,11 +878,33 @@ exports.getIcons = async (req, res, next) => {
 
     if (shouldSkipCount) {
       if (limitNum <= 10) {
-        // High-speed preview mode: bypass heavy multi-key in-memory sorts and unneeded populates
+        // High-speed preview mode: prioritize popular & matching icons
         rawIcons = await Icon.find(filter)
+          .sort({ downloadCount: -1, _id: 1 })
           .limit(limitNum)
           .select('title slug path isFilled isAnimated isPremium style downloadCount')
           .lean();
+
+        // If specific keyword filter yielded fewer icons, supplement with popular icons in this category
+        if (rawIcons.length < limitNum && filter.categoryId) {
+          const fallbackFilter = {
+            status: { $ne: 'rejected' },
+            isAnimated: { $ne: true },
+            categoryId: filter.categoryId,
+            _id: { $nin: rawIcons.map((i) => i._id) },
+          };
+          if (style && style !== 'all') {
+            if (style === 'filled') fallbackFilter.isFilled = true;
+            else if (style === 'outline') fallbackFilter.isFilled = false;
+            else fallbackFilter.style = style;
+          }
+          const supplemental = await Icon.find(fallbackFilter)
+            .sort({ downloadCount: -1, _id: 1 })
+            .limit(limitNum - rawIcons.length)
+            .select('title slug path isFilled isAnimated isPremium style downloadCount')
+            .lean();
+          rawIcons = [...rawIcons, ...supplemental];
+        }
       } else {
         rawIcons = await Icon.find(filter)
           .sort(sortQuery)

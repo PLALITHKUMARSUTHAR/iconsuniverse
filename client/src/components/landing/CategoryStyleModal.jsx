@@ -19,6 +19,33 @@ const styleOptions = [
   { id: 'all', label: 'All Styles', icon: Grid3X3, desc: 'Complete category collection' },
 ];
 
+export const CATEGORY_PREVIEW_KEYWORDS = {
+  interface: 'home,settings,search,bell,user,menu,check,filter',
+  shopping: 'cart,store,basket,bag,shop,sale,price,checkout',
+  brands: 'google,apple,github,twitter,figma,spotify,slack,instagram,youtube',
+  charts: 'chart,graph,analytics,diagram,dashboard,statistic,pie',
+  ai: 'robot,brain,chip,neural,bot,spark,algorithm',
+  code: 'code,git,terminal,developer,browser,database,html',
+  files: 'file,folder,document,pdf,text,archive,paper',
+  business: 'briefcase,wallet,bank,cash,money,dollar,handshake',
+  food: 'coffee,burger,pizza,cake,drink,bread,food,restaurant',
+  transport: 'plane,car,truck,bus,train,vehicle,bicycle,ship',
+  weather: 'cloud,sun,rain,wind,umbrella,storm,snow,moon',
+  music: 'music,headphones,volume,sound,speaker,note,mic,audio',
+  media: 'camera,video,film,photo,play,movie,image',
+  security: 'shield,lock,padlock,password,protection,safe,guard',
+  'health-medical': 'hospital,medical,pill,stethoscope,doctor,pulse,cross',
+  nature: 'plant,tree,leaf,flower,seed,forest,sprout',
+  education: 'book,graduation,school,pencil,student,diploma',
+  emoji: 'smile,heart,laugh,grin,star,fire,happy',
+  animals: 'cat,dog,bird,fish,bear,rabbit,animal',
+  tools: 'wrench,hammer,screwdriver,tool,repair',
+  travel: 'passport,luggage,ticket,hotel,compass,map',
+  arrows: 'arrow,chevron,direction,pointer',
+  devices: 'phone,laptop,tablet,computer,device,screen',
+  sports: 'ball,trophy,medal,football,basketball,tennis,sport',
+};
+
 export const previewCache = new Map();
 
 /**
@@ -33,6 +60,7 @@ export const prefetchCategoryPreviews = async (categorySlug, style = 'filled') =
     const params = {
       category: categorySlug,
       style: style !== 'all' ? style : undefined,
+      q: CATEGORY_PREVIEW_KEYWORDS[categorySlug] || undefined,
       limit: 5,
       skipCount: 'true',
     };
@@ -147,6 +175,7 @@ const CategoryStyleModal = ({ isOpen, onClose, category }) => {
         const params = {
           category: category.slug,
           style: selectedStyle !== 'all' ? selectedStyle : undefined,
+          q: CATEGORY_PREVIEW_KEYWORDS[category.slug] || undefined,
           limit: 5,
           skipCount: 'true',
         };

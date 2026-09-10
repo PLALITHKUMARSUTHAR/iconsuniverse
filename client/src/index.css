@@ -3,8 +3,10 @@
 @tailwind utilities;
 
 @layer base {
-  html {
+  html,
+  body {
     scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
     font-family: 'Inter', system-ui, sans-serif;
   }
 

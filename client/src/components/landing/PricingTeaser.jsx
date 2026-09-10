@@ -51,7 +51,7 @@ const PricingTeaser = () => {
                 </li>
                 <li className="flex items-center gap-3">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>20 Downloads / day with attribution</span>
+                  <span>100 Downloads / day with attribution</span>
                 </li>
               </ul>
             </div>

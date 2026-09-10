@@ -74,7 +74,7 @@ const Navbar = ({ isLanding = false }) => {
                   isCurrent('/search') ? 'text-landing-vibrant-coral' : 'text-landing-on-surface-variant hover:text-landing-primary'
                 }`}
               >
-                Icons
+                Browse Icons
               </Link>
 
               <Link
@@ -113,11 +113,9 @@ const Navbar = ({ isLanding = false }) => {
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                   className="flex items-center gap-2 p-1 pr-2.5 rounded-full glass-landing hover:bg-white border border-white/80 shadow-sm transition-all"
                 >
-                  <img
-                    src={user.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80'}
-                    alt={user.name}
-                    className="w-7 h-7 rounded-full object-cover ring-1 ring-landing-primary/20"
-                  />
+                  <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-slate-700 shrink-0 shadow-2xs">
+                    <User className="w-4 h-4 text-slate-600" />
+                  </div>
                   <span className="text-xs font-bold text-landing-on-surface hidden sm:inline-block">{user.name.split(' ')[0]}</span>
                   {isPro && (
                     <span className="px-1.5 py-0.5 rounded-full bg-energy-gradient text-white text-[9px] font-extrabold uppercase">

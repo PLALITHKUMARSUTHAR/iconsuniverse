@@ -18,7 +18,7 @@ const UserProfilePage = () => {
     );
   }
 
-  const quotaPercent = Math.min(100, Math.round(((user.downloadCountToday || 0) / 20) * 100));
+  const quotaPercent = Math.min(100, Math.round(((user.downloadCountToday || 0) / 100) * 100));
 
   return (
     <div className="flex flex-col gap-8 max-w-4xl mx-auto">
@@ -29,7 +29,7 @@ const UserProfilePage = () => {
             User Account & Quota
           </h1>
           <p className="text-xs text-subpage-on-surface-variant mt-1">
-            Manage your subscription, download usage, and saved assets.
+            Manage your account settings, daily download usage, and saved collections.
           </p>
         </div>
       </div>
@@ -37,11 +37,9 @@ const UserProfilePage = () => {
       {/* Profile Overview Card */}
       <div className="p-8 rounded-4xl glass-subpage bg-white/95 border border-white/80 shadow-glass grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">
         <div className="sm:col-span-3 flex justify-center">
-          <img
-            src={user.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&h=200&q=80'}
-            alt={user.name}
-            className="w-24 h-24 rounded-full object-cover ring-4 ring-subpage-primary/20 shadow-md"
-          />
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-100 border-2 border-slate-300 flex items-center justify-center text-slate-600 shadow-md">
+            <User className="w-10 h-10 sm:w-12 sm:h-12" />
+          </div>
         </div>
 
         <div className="sm:col-span-9 flex flex-col gap-2">
@@ -73,7 +71,7 @@ const UserProfilePage = () => {
             <h3 className="text-base font-bold font-heading text-subpage-primary">Daily Download Quota</h3>
           </div>
           <span className="text-xs font-mono font-bold text-subpage-on-surface">
-            {isPro ? 'Unlimited' : `${user.downloadCountToday || 0} / 20 used today`}
+            {isPro ? 'Unlimited' : `${user.downloadCountToday || 0} / 100 used today`}
           </span>
         </div>
 
@@ -86,20 +84,13 @@ const UserProfilePage = () => {
               />
             </div>
             <p className="text-xs text-subpage-on-surface-variant">
-              Free accounts receive 20 standard downloads every 24 hours. Reset happens at midnight UTC.
+              Your account receives 100 free vector icon downloads every 24 hours. Quota resets automatically every 24 hours.
             </p>
-            <div className="pt-2">
-              <Link to="/pricing">
-                <Button variant="primary" size="md">
-                  Upgrade to Pro for Unlimited Downloads
-                </Button>
-              </Link>
-            </div>
           </div>
         ) : (
           <div className="flex items-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 p-4 rounded-2xl border border-emerald-200">
             <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-            <span>Your Pro subscription gives you unlimited daily downloads without attribution requirements.</span>
+            <span>Your account gives you unlimited daily downloads without attribution requirements.</span>
           </div>
         )}
       </div>
