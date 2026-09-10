@@ -8,6 +8,7 @@ import IconDetailPage from './pages/IconDetailPage';
 import PackDetailPage from './pages/PackDetailPage';
 import IconEditorPage from './pages/IconEditorPage';
 import PricingPage from './pages/PricingPage';
+import AdminDashboard from './pages/AdminDashboard';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
