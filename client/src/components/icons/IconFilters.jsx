@@ -41,7 +41,6 @@ const IconFilters = ({
   actionSlot = null,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isGroupByOpen, setIsGroupByOpen] = useState(false);
 
   const activeFilterCount =
     (selectedShape !== 'all' ? 1 : 0) +
@@ -73,46 +72,29 @@ const IconFilters = ({
             {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
 
-          {/* Group By Dropdown Button */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsGroupByOpen(!isGroupByOpen)}
-              className="px-3.5 py-2 rounded-2xl text-xs font-bold bg-landing-surface-container-low hover:bg-landing-surface-container text-landing-on-surface border border-landing-surface-container transition-all flex items-center gap-1.5"
-            >
-              <Layers className="w-3.5 h-3.5 text-landing-primary" />
-              <span>
-                Group By: <strong className="capitalize text-landing-primary">{groupBy === 'all' ? 'All Icons' : groupBy}</strong>
-              </span>
-              <ChevronDown className="w-3.5 h-3.5 text-landing-on-surface-variant" />
-            </button>
-
-            {isGroupByOpen && (
-              <div className="absolute left-0 mt-1.5 w-40 rounded-2xl bg-white border border-landing-surface-container shadow-xl p-1.5 z-40 animate-fade-in">
-                {[
-                  { id: 'all', label: 'All Icons' },
-                  { id: 'style', label: 'Style' },
-                  { id: 'pack', label: 'Pack' },
-                ].map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() => {
-                      onChangeGroupBy(opt.id);
-                      setIsGroupByOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-between ${
-                      groupBy === opt.id
-                        ? 'bg-landing-surface-container text-landing-primary'
-                        : 'text-landing-on-surface hover:bg-landing-surface-container-low'
-                    }`}
-                  >
-                    <span>{opt.label}</span>
-                    {groupBy === opt.id && <Check className="w-3 h-3 text-landing-primary" />}
-                  </button>
-                ))}
-              </div>
-            )}
+          {/* Individual Grouping Buttons: All Icons, Style, Pack */}
+          <div className="flex items-center gap-1.5">
+            {[
+              { id: 'all', label: 'All Icons' },
+              { id: 'style', label: 'Style' },
+              { id: 'pack', label: 'Pack' },
+            ].map((opt) => {
+              const isSelected = groupBy === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => onChangeGroupBy(opt.id)}
+                  className={`px-3.5 py-2 rounded-2xl text-xs font-bold border transition-all cursor-pointer select-none ${
+                    isSelected
+                      ? 'bg-landing-primary text-white border-landing-primary shadow-xs'
+                      : 'bg-landing-surface-container-low hover:bg-landing-surface-container text-landing-on-surface border-landing-surface-container'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
           </div>
 
           {/* Animated Icons Button (Beside Group By on the right) */}
