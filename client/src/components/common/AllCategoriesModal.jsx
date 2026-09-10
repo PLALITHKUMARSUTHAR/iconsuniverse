@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { all163CategoriesWithIcons } from '../../data/categories';
 import { CategoryIconMap } from '../../data/categoryIcons';
 import { Grid3X3, Search, X, Folder } from 'lucide-react';
+import { prefetchCategoryPreviews } from '../landing/CategoryStyleModal';
 
 const AllCategoriesModal = ({ isOpen, onClose, onSelectCategory, excludeSlug = '' }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -80,6 +81,8 @@ const AllCategoriesModal = ({ isOpen, onClose, onSelectCategory, excludeSlug = '
                   onClose();
                   onSelectCategory(cat);
                 }}
+                onMouseEnter={() => prefetchCategoryPreviews(cat.slug, 'filled')}
+                onPointerDown={() => prefetchCategoryPreviews(cat.slug, 'filled')}
                 className="group p-3 rounded-2xl bg-white hover:bg-white border border-landing-surface-container/80 hover:border-landing-primary/30 shadow-2xs hover:shadow-xs transition-all duration-150 flex flex-col items-center text-center justify-center gap-2 cursor-pointer"
               >
                 <div

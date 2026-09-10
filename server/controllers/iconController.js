@@ -693,7 +693,7 @@ function normalizeAndFixSvg(svgText) {
 // @access  Public
 exports.getIcons = async (req, res, next) => {
   try {
-    const { q, category, style, colorType, color, isPremium, animated, isAnimated, sort = 'trending', page = 1, limit = 40 } = req.query;
+    const { q, category, style, colorType, color, isPremium, animated, isAnimated, sort = 'trending', page = 1, limit = 40, skipCount } = req.query;
     const filter = { status: { $ne: 'rejected' } };
 
     // Animated icons separation:
@@ -810,22 +810,22 @@ exports.getIcons = async (req, res, next) => {
     const pageNum = parseInt(page, 10) || 1;
     const limitNum = Math.min(parseInt(limit, 10) || 40, 100);
     const skip = (pageNum - 1) * limitNum;
+    const shouldSkipCount = skipCount === 'true' || skipCount === true || skipCount === '1';
 
-    let [rawIcons, total] = await Promise.all([
-      Icon.find(filter)
+    let rawIcons = [];
+    let total = 0;
+
+    if (shouldSkipCount) {
+      rawIcons = await Icon.find(filter)
         .sort(sortQuery)
         .skip(skip)
         .limit(limitNum)
         .populate('categoryId', 'name slug')
         .populate('packId', 'title slug')
         .select('title slug path isFilled isAnimated isPremium style tags downloadCount colors categoryId packId')
-        .lean(),
-      Icon.countDocuments(filter),
-    ]);
-
-    // Fallback: If animated filter in this category yielded 0 icons, relax the category filter so user sees animated icons
-    if (total === 0 && wantsAnimated && filter.categoryId) {
-      delete filter.categoryId;
+        .lean();
+      total = rawIcons.length;
+    } else {
       [rawIcons, total] = await Promise.all([
         Icon.find(filter)
           .sort(sortQuery)
@@ -839,21 +839,61 @@ exports.getIcons = async (req, res, next) => {
       ]);
     }
 
-    // Fallback: If style filter yielded 0 icons in this category, relax the style filter so user always gets icons
-    if (total === 0 && style && style !== 'all') {
-      delete filter.$or;
-      delete filter.style;
-      [rawIcons, total] = await Promise.all([
-        Icon.find(filter)
+    // Fallback: If animated filter in this category yielded 0 icons, relax the category filter so user sees animated icons
+    if (rawIcons.length === 0 && wantsAnimated && filter.categoryId) {
+      delete filter.categoryId;
+      if (shouldSkipCount) {
+        rawIcons = await Icon.find(filter)
           .sort(sortQuery)
           .skip(skip)
           .limit(limitNum)
           .populate('categoryId', 'name slug')
           .populate('packId', 'title slug')
           .select('title slug path isFilled isAnimated isPremium style tags downloadCount colors categoryId packId')
-          .lean(),
-        Icon.countDocuments(filter),
-      ]);
+          .lean();
+        total = rawIcons.length;
+      } else {
+        [rawIcons, total] = await Promise.all([
+          Icon.find(filter)
+            .sort(sortQuery)
+            .skip(skip)
+            .limit(limitNum)
+            .populate('categoryId', 'name slug')
+            .populate('packId', 'title slug')
+            .select('title slug path isFilled isAnimated isPremium style tags downloadCount colors categoryId packId')
+            .lean(),
+          Icon.countDocuments(filter),
+        ]);
+      }
+    }
+
+    // Fallback: If style filter yielded 0 icons in this category, relax the style filter so user always gets icons
+    if (rawIcons.length === 0 && style && style !== 'all') {
+      delete filter.$or;
+      delete filter.style;
+      if (shouldSkipCount) {
+        rawIcons = await Icon.find(filter)
+          .sort(sortQuery)
+          .skip(skip)
+          .limit(limitNum)
+          .populate('categoryId', 'name slug')
+          .populate('packId', 'title slug')
+          .select('title slug path isFilled isAnimated isPremium style tags downloadCount colors categoryId packId')
+          .lean();
+        total = rawIcons.length;
+      } else {
+        [rawIcons, total] = await Promise.all([
+          Icon.find(filter)
+            .sort(sortQuery)
+            .skip(skip)
+            .limit(limitNum)
+            .populate('categoryId', 'name slug')
+            .populate('packId', 'title slug')
+            .select('title slug path isFilled isAnimated isPremium style tags downloadCount colors categoryId packId')
+            .lean(),
+          Icon.countDocuments(filter),
+        ]);
+      }
     }
 
     const cdnBase = process.env.R2_PUBLIC_URL || 'https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev';

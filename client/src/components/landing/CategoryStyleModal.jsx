@@ -12,7 +12,41 @@ const styleOptions = [
   { id: 'all', label: 'All Styles', icon: Grid3X3, desc: 'Complete category collection' },
 ];
 
-const previewCache = new Map();
+export const previewCache = new Map();
+
+/**
+ * Prefetch category preview icons on hover for instantaneous modal render
+ */
+export const prefetchCategoryPreviews = async (categorySlug, style = 'filled') => {
+  if (!categorySlug) return;
+  const cacheKey = `${categorySlug}_${style}`;
+  if (previewCache.has(cacheKey)) return;
+
+  try {
+    const params = {
+      category: categorySlug,
+      style: style !== 'all' ? style : undefined,
+      strict: style !== 'all' ? 'true' : undefined,
+      limit: 5,
+      skipCount: 'true',
+    };
+    const res = await iconService.getIcons(params);
+    if (res.data && res.data.icons) {
+      const list = res.data.icons.slice(0, 5);
+      previewCache.set(cacheKey, list);
+      // Pre-warm browser image cache for all 5 preview icons
+      list.forEach((ic) => {
+        const url = ic.r2Url || getSafeIconUrl(ic.path ? `https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev/icons/${ic.path}` : ic.svgUrl);
+        if (url) {
+          const img = new Image();
+          img.src = url;
+        }
+      });
+    }
+  } catch (err) {
+    // Silently handle prefetch errors
+  }
+};
 
 const CategoryStyleModal = ({ isOpen, onClose, category }) => {
   const navigate = useNavigate();
@@ -39,12 +73,21 @@ const CategoryStyleModal = ({ isOpen, onClose, category }) => {
           style: selectedStyle !== 'all' ? selectedStyle : undefined,
           strict: selectedStyle !== 'all' ? 'true' : undefined,
           limit: 5,
+          skipCount: 'true',
         };
         const res = await iconService.getIcons(params);
         if (isMounted && res.data && res.data.icons) {
           const list = res.data.icons.slice(0, 5);
           previewCache.set(cacheKey, list);
           setPreviewIcons(list);
+          // Pre-warm browser image cache
+          list.forEach((ic) => {
+            const url = ic.r2Url || getSafeIconUrl(ic.path ? `https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev/icons/${ic.path}` : ic.svgUrl);
+            if (url) {
+              const img = new Image();
+              img.src = url;
+            }
+          });
         }
       } catch (err) {
         if (isMounted) setPreviewIcons([]);
@@ -162,13 +205,17 @@ const CategoryStyleModal = ({ isOpen, onClose, category }) => {
                     title={ic.title}
                   >
                     <img
-                      src={getSafeIconUrl(ic.svgUrl || ic.pngPreviewUrl || (ic.path ? `https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev/icons/${ic.path}` : ''))}
+                      src={ic.r2Url || getSafeIconUrl(ic.path ? `https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev/icons/${ic.path}` : ic.svgUrl)}
                       alt={ic.title}
                       className="w-7 h-7 object-contain group-hover:scale-110 transition-transform"
-                      loading="lazy"
+                      loading="eager"
                       decoding="async"
                       onError={(e) => {
-                        e.target.style.display = 'none';
+                        if (ic.svgUrl && e.target.src !== ic.svgUrl) {
+                          e.target.src = ic.svgUrl;
+                        } else {
+                          e.target.style.display = 'none';
+                        }
                       }}
                     />
                     <span className="text-[9px] font-medium text-landing-on-surface-variant truncate w-full text-center mt-1">

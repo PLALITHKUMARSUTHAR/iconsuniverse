@@ -5,7 +5,7 @@ import {
 } from '../../data/categories';
 import { CategoryIconMap } from '../../data/categoryIcons';
 import { ArrowRight, Grid3X3, Layers } from 'lucide-react';
-import CategoryStyleModal from './CategoryStyleModal';
+import CategoryStyleModal, { prefetchCategoryPreviews } from './CategoryStyleModal';
 import AllCategoriesModal from '../common/AllCategoriesModal';
 
 const CategoryGrid = () => {
@@ -53,6 +53,8 @@ const CategoryGrid = () => {
                 key={cat.slug}
                 type="button"
                 onClick={() => handleCategoryClick(cat)}
+                onMouseEnter={() => prefetchCategoryPreviews(cat.slug, 'filled')}
+                onPointerDown={() => prefetchCategoryPreviews(cat.slug, 'filled')}
                 className="group p-3.5 sm:p-4 rounded-2xl bg-white hover:bg-white border border-landing-surface-container hover:border-landing-primary/30 shadow-2xs hover:shadow-xs transition-all duration-150 flex flex-col items-center text-center justify-center gap-2 cursor-pointer"
               >
                 <div

@@ -3,7 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import IconFilters from '../components/icons/IconFilters';
 import IconGrid from '../components/icons/IconGrid';
 import BulkDownloadModal from '../components/collections/BulkDownloadModal';
-import CategoryStyleModal from '../components/landing/CategoryStyleModal';
+import CategoryStyleModal, { prefetchCategoryPreviews } from '../components/landing/CategoryStyleModal';
 import AllCategoriesModal from '../components/common/AllCategoriesModal';
 import { iconService } from '../services/iconService';
 import { Search, Sparkles, Download, X, Layers, Check, ArrowRight, Grid3X3, CircleDot, Palette } from 'lucide-react';
@@ -349,6 +349,8 @@ const SearchResultsPage = () => {
               key={cat.slug}
               type="button"
               onClick={() => setExploreModalCategory(cat)}
+              onMouseEnter={() => prefetchCategoryPreviews(cat.slug, 'filled')}
+              onPointerDown={() => prefetchCategoryPreviews(cat.slug, 'filled')}
               className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white text-[#001e52] hover:bg-white/95 text-xs font-extrabold shrink-0 transition-all transform hover:scale-105 shadow-md border border-white/80 cursor-pointer"
             >
               <span
