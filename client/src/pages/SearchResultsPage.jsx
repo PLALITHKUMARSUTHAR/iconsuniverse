@@ -6,10 +6,10 @@ import BulkDownloadModal from '../components/collections/BulkDownloadModal';
 import CategoryStyleModal, { prefetchCategoryPreviews } from '../components/landing/CategoryStyleModal';
 import AllCategoriesModal from '../components/common/AllCategoriesModal';
 import { iconService } from '../services/iconService';
-import { Search, Sparkles, Download, X, Layers, Check, ArrowRight, Grid3X3, CircleDot, Palette } from 'lucide-react';
+import { Search, Sparkles, Download, X, Layers, Check, ArrowRight, Grid3X3, CircleDot, Palette, Award, Compass, Film } from 'lucide-react';
 import Button from '../components/common/Button';
 import Footer from '../components/common/Footer';
-import { main17FeaturedCategories } from '../data/categories';
+import { main17FeaturedCategories, all163CategoriesWithIcons } from '../data/categories';
 import { CategoryIconMap } from '../data/categoryIcons';
 import SEOHead from '../components/common/SEOHead';
 
@@ -323,12 +323,21 @@ const SearchResultsPage = () => {
   const isCategoryMode = Boolean(categoryParam);
   const isCategoryComplete = Boolean(icons.length > 0 && (!hasMore || (totalCount > 0 && icons.length >= totalCount)));
 
+  // Find category object if in category mode
+  const currentCategoryObj = isCategoryMode
+    ? (main17FeaturedCategories.find((c) => c.slug === categoryParam) ||
+       all163CategoriesWithIcons.find((c) => c.slug === categoryParam))
+    : null;
+  const CategoryHeadingIcon = currentCategoryObj
+    ? (CategoryIconMap[currentCategoryObj.iconName] || Award)
+    : Award;
+
   // Explore categories content to embed inside expanded footer
   const exploreCategoriesContent = isCategoryMode ? (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-bold font-heading text-landing-electric-teal uppercase tracking-wider flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-landing-electric-teal" />
+          <Compass className="w-3.5 h-3.5 text-landing-electric-teal" />
           <span>Explore More Categories</span>
         </span>
         <button
@@ -402,7 +411,7 @@ const SearchResultsPage = () => {
             <h1 className="text-xl sm:text-2xl font-extrabold font-heading text-subpage-on-surface flex items-center gap-2">
               {isAnimatedOnly ? (
                 <>
-                  <Sparkles className="w-5 h-5 text-landing-vibrant-coral animate-pulse" />
+                  <Film className="w-5 h-5 text-landing-vibrant-coral animate-pulse" />
                   <span className="capitalize">
                     Animated {categoryParam ? `${categoryParam.replace(/-/g, ' ')} ` : ''}Icons
                   </span>
@@ -417,7 +426,7 @@ const SearchResultsPage = () => {
                 </>
               ) : categoryParam ? (
                 <>
-                  <Sparkles className="w-5 h-5 text-landing-primary" />
+                  <CategoryHeadingIcon className="w-5 h-5 text-landing-primary" />
                   <span className="capitalize">{categoryParam.replace(/-/g, ' ')} Icons</span>
                 </>
               ) : (

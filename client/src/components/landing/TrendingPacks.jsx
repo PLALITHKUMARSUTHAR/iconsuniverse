@@ -44,7 +44,7 @@ const curatedRealPacks = [
     description: 'Shopping carts, barcode tags, credit cards, and express delivery tracking.',
     categoryName: 'Shopping',
     categorySlug: 'shopping',
-    gradient: 'from-rose-500/15 via-amber-500/10 to-transparent',
+    gradient: 'from-rose-500/20 via-orange-500/10 to-amber-500/5',
     accentColor: '#FF5F52',
     icons: [
       { comp: ShoppingCart, label: 'Cart' },
@@ -60,7 +60,7 @@ const curatedRealPacks = [
     description: 'Cloud infrastructure, servers, terminals, microprocessors, and databases.',
     categoryName: 'Code & Dev',
     categorySlug: 'code',
-    gradient: 'from-teal-500/15 via-indigo-500/10 to-transparent',
+    gradient: 'from-teal-500/20 via-emerald-500/10 to-cyan-500/5',
     accentColor: '#00F5D4',
     icons: [
       { comp: Cloud, label: 'Cloud' },
@@ -76,7 +76,7 @@ const curatedRealPacks = [
     description: 'Digital wallets, coins, market growth charts, vaults, and bank security.',
     categoryName: 'Business',
     categorySlug: 'business',
-    gradient: 'from-amber-500/15 via-emerald-500/10 to-transparent',
+    gradient: 'from-amber-500/20 via-yellow-500/10 to-emerald-500/5',
     accentColor: '#FFD54F',
     icons: [
       { comp: Wallet, label: 'Wallet' },
@@ -92,8 +92,8 @@ const curatedRealPacks = [
     description: 'Chat bubbles, paper planes, profiles, notifications, and engagement badges.',
     categoryName: 'Social',
     categorySlug: 'social',
-    gradient: 'from-pink-500/15 via-rose-500/10 to-transparent',
-    accentColor: '#ec4899',
+    gradient: 'from-indigo-500/20 via-purple-500/10 to-pink-500/5',
+    accentColor: '#6366f1',
     icons: [
       { comp: MessageCircle, label: 'Chat' },
       { comp: Send, label: 'Send' },
@@ -108,7 +108,7 @@ const curatedRealPacks = [
     description: 'Cameras, film reels, sliders, digital palettes, and vector design pens.',
     categoryName: 'Media',
     categorySlug: 'media',
-    gradient: 'from-purple-500/15 via-pink-500/10 to-transparent',
+    gradient: 'from-purple-500/20 via-fuchsia-500/10 to-rose-500/5',
     accentColor: '#8b5cf6',
     icons: [
       { comp: Palette, label: 'Color' },
@@ -124,7 +124,7 @@ const curatedRealPacks = [
     description: 'Map pins, flight vectors, compasses, world globes, and trip routes.',
     categoryName: 'Transport',
     categorySlug: 'transport',
-    gradient: 'from-sky-500/15 via-blue-500/10 to-transparent',
+    gradient: 'from-sky-500/20 via-cyan-500/10 to-indigo-500/5',
     accentColor: '#0ea5e9',
     icons: [
       { comp: MapPin, label: 'Pin' },
@@ -183,17 +183,10 @@ const TrendingPacks = () => {
             <h2 className="text-xl sm:text-2xl font-extrabold font-heading text-landing-primary tracking-tight">
               Featured Icon Sets
             </h2>
-            <p className="text-xs text-landing-on-surface-variant mt-0.5">
-              Unified stroke weights, corner radii, and visual harmony for production apps.
-            </p>
           </div>
 
-          {/* Right Controls: Browse Link & Page Indicator */}
+          {/* Right Controls: Browse Link */}
           <div className="flex items-center gap-3 self-end sm:self-center">
-            <span className="text-[11px] font-bold text-landing-on-surface-variant px-2 py-1 bg-white rounded-lg border border-landing-surface-container shadow-2xs">
-              Page {page + 1} of {totalPages}
-            </span>
-
             <Link
               to="/search?type=packs"
               className="text-xs font-bold text-landing-primary hover:text-landing-vibrant-coral flex items-center gap-1 group shrink-0"

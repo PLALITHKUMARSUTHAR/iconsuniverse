@@ -47,49 +47,12 @@ const Footer = ({ collapsible = false, exploreCategoriesSlot = null }) => {
             </div>
           )}
 
-          {/* Explore Categories in expanded footer */}
-          <div className="mb-6 pb-6 border-b border-white/15">
-            {exploreCategoriesSlot ? (
-              exploreCategoriesSlot
-            ) : (
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold font-heading text-landing-electric-teal uppercase tracking-wider flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-landing-electric-teal" />
-                    <span>Explore Categories</span>
-                  </span>
-                  <Link
-                    to="/search"
-                    className="text-xs font-bold text-white hover:text-landing-electric-teal flex items-center gap-1 transition-colors"
-                  >
-                    <span>View all categories</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-
-                <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar py-2">
-                  {main17FeaturedCategories.map((cat) => {
-                    const IconComp = CategoryIconMap[cat.iconName] || Layers;
-                    return (
-                      <Link
-                        key={cat.slug}
-                        to={`/search?category=${cat.slug}`}
-                        className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white text-[#001e52] hover:bg-white/95 text-xs font-extrabold shrink-0 transition-all transform hover:scale-105 shadow-md border border-white/80"
-                      >
-                        <span
-                          className="w-5 h-5 rounded-lg flex items-center justify-center shrink-0 shadow-2xs"
-                          style={{ backgroundColor: `${cat.color}25`, color: cat.color }}
-                        >
-                          <IconComp className="w-3.5 h-3.5" />
-                        </span>
-                        <span className="truncate max-w-[130px]">{cat.name}</span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Explore Categories in expanded footer (only when explicitly slotted, not on main page) */}
+          {exploreCategoriesSlot && (
+            <div className="mb-6 pb-6 border-b border-white/15">
+              {exploreCategoriesSlot}
+            </div>
+          )}
 
           {/* Main 5-Column Grid: Brand + Content + Tools + Legal + Help */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6 pb-8 border-b border-white/15">

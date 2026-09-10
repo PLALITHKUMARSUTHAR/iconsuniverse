@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SlidersHorizontal, RotateCcw, Crown, ChevronDown, ChevronUp, Check, Layers, Sparkles } from 'lucide-react';
+import { SlidersHorizontal, RotateCcw, Crown, ChevronDown, ChevronUp, Check, Layers, Film } from 'lucide-react';
 
 const shapeOptions = [
   { id: 'all', label: 'All Shapes' },
@@ -113,7 +113,7 @@ const IconFilters = ({
             }`}
             title={isAnimatedOnly ? "Switch to Static Icons" : "Show Animated Icons only"}
           >
-            <Sparkles className={`w-3.5 h-3.5 ${isAnimatedOnly ? 'text-white animate-pulse' : 'text-amber-500'}`} />
+            <Film className={`w-3.5 h-3.5 ${isAnimatedOnly ? 'text-white animate-pulse' : 'text-amber-500'}`} />
             <span>Animated Icons</span>
             {isAnimatedOnly && (
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />

@@ -2,8 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CategoryIconMap } from '../../data/categoryIcons';
 import { iconService } from '../../services/iconService';
-import { X, Search, Sparkles, Check, Layers, CircleDot, Palette, Grid3X3, ArrowRight } from 'lucide-react';
-import { getSafeIconUrl } from '../../services/svgCacheService';
+import { X, Search, Check, Layers, CircleDot, Palette, Grid3X3, ArrowRight, SlidersHorizontal } from 'lucide-react';
+import {
+  getDirectR2Url,
+  fetchAndCacheSvg,
+  getCachedSvg,
+  normalizeSvgForCanvas,
+  getSafeIconUrl,
+} from '../../services/svgCacheService';
+import { cleanIconTitle } from '../../utils/titleCleaner';
 
 const styleOptions = [
   { id: 'filled', label: 'Fill / Bold', icon: CircleDot, desc: 'Solid filled glyphs' },
@@ -26,7 +33,6 @@ export const prefetchCategoryPreviews = async (categorySlug, style = 'filled') =
     const params = {
       category: categorySlug,
       style: style !== 'all' ? style : undefined,
-      strict: style !== 'all' ? 'true' : undefined,
       limit: 5,
       skipCount: 'true',
     };
@@ -34,18 +40,88 @@ export const prefetchCategoryPreviews = async (categorySlug, style = 'filled') =
     if (res.data && res.data.icons) {
       const list = res.data.icons.slice(0, 5);
       previewCache.set(cacheKey, list);
-      // Pre-warm browser image cache for all 5 preview icons
+      // Pre-warm SVG vector cache for all 5 preview icons
       list.forEach((ic) => {
-        const url = ic.r2Url || getSafeIconUrl(ic.path ? `https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev/icons/${ic.path}` : ic.svgUrl);
-        if (url) {
-          const img = new Image();
-          img.src = url;
+        const iconId = ic._id || ic.slug;
+        const directCdnUrl = ic.r2Url || getDirectR2Url(ic);
+        const proxyUrl = ic.svgUrl && ic.svgUrl.startsWith('/api') ? ic.svgUrl : (ic._id ? `/api/icons/svg/${ic._id}` : '');
+        const fetchUrl = directCdnUrl || proxyUrl;
+        if (fetchUrl) {
+          fetchAndCacheSvg(fetchUrl, iconId, proxyUrl);
         }
       });
     }
   } catch (err) {
     // Silently handle prefetch errors
   }
+};
+
+/**
+ * Individual preview item rendering real vector SVGs with direct DOM mounting,
+ * normalization, caching, and fallback protection.
+ */
+const PreviewIconItem = ({ icon }) => {
+  const iconId = icon._id || icon.slug;
+  const directCdnUrl = icon.r2Url || getDirectR2Url(icon);
+  const proxyUrl = icon.svgUrl && icon.svgUrl.startsWith('/api') ? icon.svgUrl : (icon._id ? `/api/icons/svg/${icon._id}` : '');
+  const displayTitle = cleanIconTitle(icon.title);
+
+  const cachedSvg = icon.svgContent
+    ? normalizeSvgForCanvas(icon.svgContent, iconId)
+    : (getCachedSvg(iconId) || getCachedSvg(proxyUrl) || getCachedSvg(directCdnUrl));
+
+  const [svgMarkup, setSvgMarkup] = useState(cachedSvg);
+  const [imgFallback, setImgFallback] = useState(false);
+
+  useEffect(() => {
+    if (svgMarkup) return;
+    let isMounted = true;
+    const fetchUrl = directCdnUrl || proxyUrl;
+    if (!fetchUrl) return;
+
+    fetchAndCacheSvg(fetchUrl, iconId, proxyUrl)
+      .then((raw) => {
+        if (isMounted && raw) {
+          setSvgMarkup(normalizeSvgForCanvas(raw, iconId));
+        }
+      })
+      .catch(() => {
+        if (isMounted) setImgFallback(true);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [iconId, directCdnUrl, proxyUrl, svgMarkup]);
+
+  return (
+    <div
+      className="h-16 rounded-xl bg-white border border-landing-surface-container flex flex-col items-center justify-center p-1.5 shadow-2xs hover:shadow-xs transition-all group overflow-hidden"
+      title={displayTitle}
+    >
+      <div className="w-7 h-7 flex items-center justify-center transition-transform group-hover:scale-110">
+        {svgMarkup ? (
+          <div
+            className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:max-w-full [&>svg]:max-h-full"
+            dangerouslySetInnerHTML={{ __html: svgMarkup }}
+          />
+        ) : !imgFallback ? (
+          <img
+            src={directCdnUrl || proxyUrl}
+            alt={displayTitle}
+            className="w-full h-full object-contain"
+            loading="eager"
+            onError={() => setImgFallback(true)}
+          />
+        ) : (
+          <div className="w-4 h-4 rounded-full bg-landing-surface-container" />
+        )}
+      </div>
+      <span className="text-[9px] font-medium text-landing-on-surface-variant truncate w-full text-center mt-1 px-1">
+        {displayTitle}
+      </span>
+    </div>
+  );
 };
 
 const CategoryStyleModal = ({ isOpen, onClose, category }) => {
@@ -71,7 +147,6 @@ const CategoryStyleModal = ({ isOpen, onClose, category }) => {
         const params = {
           category: category.slug,
           style: selectedStyle !== 'all' ? selectedStyle : undefined,
-          strict: selectedStyle !== 'all' ? 'true' : undefined,
           limit: 5,
           skipCount: 'true',
         };
@@ -80,12 +155,14 @@ const CategoryStyleModal = ({ isOpen, onClose, category }) => {
           const list = res.data.icons.slice(0, 5);
           previewCache.set(cacheKey, list);
           setPreviewIcons(list);
-          // Pre-warm browser image cache
+          // Pre-warm SVG vector cache for all 5 preview icons
           list.forEach((ic) => {
-            const url = ic.r2Url || getSafeIconUrl(ic.path ? `https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev/icons/${ic.path}` : ic.svgUrl);
-            if (url) {
-              const img = new Image();
-              img.src = url;
+            const iconId = ic._id || ic.slug;
+            const directCdnUrl = ic.r2Url || getDirectR2Url(ic);
+            const proxyUrl = ic.svgUrl && ic.svgUrl.startsWith('/api') ? ic.svgUrl : (ic._id ? `/api/icons/svg/${ic._id}` : '');
+            const fetchUrl = directCdnUrl || proxyUrl;
+            if (fetchUrl) {
+              fetchAndCacheSvg(fetchUrl, iconId, proxyUrl);
             }
           });
         }
@@ -100,6 +177,15 @@ const CategoryStyleModal = ({ isOpen, onClose, category }) => {
     return () => {
       isMounted = false;
     };
+  }, [isOpen, category, selectedStyle]);
+
+  // Background warm other styles when modal is opened for instant switching
+  useEffect(() => {
+    if (!isOpen || !category) return;
+    const otherStyles = ['outline', 'color', 'all', 'filled'].filter((s) => s !== selectedStyle);
+    otherStyles.forEach((style) => {
+      prefetchCategoryPreviews(category.slug, style);
+    });
   }, [isOpen, category, selectedStyle]);
 
   if (!isOpen || !category) return null;
@@ -150,7 +236,7 @@ const CategoryStyleModal = ({ isOpen, onClose, category }) => {
           {/* Style Selection Cards / Chips */}
           <div className="flex flex-col gap-2">
             <label className="text-xs font-bold text-landing-primary tracking-wide flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-landing-vibrant-coral" />
+              <SlidersHorizontal className="w-3.5 h-3.5 text-landing-primary" />
               <span>Select Icon Style</span>
             </label>
 
@@ -199,29 +285,7 @@ const CategoryStyleModal = ({ isOpen, onClose, category }) => {
                 ))
               ) : previewIcons.length > 0 ? (
                 previewIcons.map((ic) => (
-                  <div
-                    key={ic._id || ic.slug}
-                    className="h-16 rounded-xl bg-white border border-landing-surface-container flex flex-col items-center justify-center p-1.5 shadow-2xs hover:shadow-xs transition-all group"
-                    title={ic.title}
-                  >
-                    <img
-                      src={ic.r2Url || getSafeIconUrl(ic.path ? `https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev/icons/${ic.path}` : ic.svgUrl)}
-                      alt={ic.title}
-                      className="w-7 h-7 object-contain group-hover:scale-110 transition-transform"
-                      loading="eager"
-                      decoding="async"
-                      onError={(e) => {
-                        if (ic.svgUrl && e.target.src !== ic.svgUrl) {
-                          e.target.src = ic.svgUrl;
-                        } else {
-                          e.target.style.display = 'none';
-                        }
-                      }}
-                    />
-                    <span className="text-[9px] font-medium text-landing-on-surface-variant truncate w-full text-center mt-1">
-                      {ic.title}
-                    </span>
-                  </div>
+                  <PreviewIconItem key={ic._id || ic.slug} icon={ic} />
                 ))
               ) : (
                 <div className="col-span-5 py-4 text-center text-xs text-landing-on-surface-variant">

@@ -2,7 +2,7 @@
 export const main17FeaturedCategories = [
   { name: "Interface", slug: "interface", iconName: "Layers", color: "#6366f1" },
   { name: "Emoji", slug: "emoji", iconName: "Smile", color: "#FFD54F" },
-  { name: "Brands", slug: "brands", iconName: "Bookmark", color: "#FF5F52" },
+  { name: "Brands", slug: "brands", iconName: "Award", color: "#FF5F52" },
   { name: "Charts", slug: "charts", iconName: "BarChart3", color: "#00F5D4" },
   { name: "AI", slug: "ai", iconName: "Sparkles", color: "#8b5cf6" },
   { name: "Code", slug: "code", iconName: "Code2", color: "#10b981" },
@@ -28,7 +28,7 @@ export const all163CategoriesWithIcons = [
   { name: "Animals", slug: "animals", iconName: "Cat", color: "#f97316" },
   { name: "Art", slug: "art", iconName: "Palette", color: "#FF5F52" },
   { name: "Body Parts", slug: "body-parts", iconName: "Hand", color: "#d97706" },
-  { name: "Brands", slug: "brands", iconName: "Bookmark", color: "#e11d48" },
+  { name: "Brands", slug: "brands", iconName: "Award", color: "#e11d48" },
   { name: "Buildings", slug: "buildings", iconName: "Building2", color: "#475569" },
   { name: "Business", slug: "business", iconName: "Briefcase", color: "#00327d" },
   { name: "Calendar", slug: "calendar", iconName: "Calendar", color: "#2563eb" },

@@ -60,9 +60,6 @@ const FeatureGrid = () => {
       <div className="max-w-[1440px] mx-auto px-4 sm:px-8">
         {/* Compact Header */}
         <div className="text-center max-w-2xl mx-auto mb-8">
-          <span className="inline-block text-[11px] font-extrabold uppercase tracking-wider text-landing-vibrant-coral bg-rose-50 border border-rose-200/60 px-2.5 py-0.5 rounded-full mb-2 shadow-2xs">
-            Core Superpowers
-          </span>
           <h2 className="text-2xl sm:text-3xl font-extrabold font-heading text-landing-primary tracking-tight">
             Built for Designers, Developers & Creators
           </h2>
@@ -71,27 +68,23 @@ const FeatureGrid = () => {
           </p>
         </div>
 
-        {/* 4 Unique High-Impact Feature Boxes (2x2 Grid) */}
+        {/* 4 Unique High-Impact Feature Boxes (Modern Horizontal-Flex Layout) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 max-w-5xl mx-auto">
           {coreFeatures.map((feat) => {
             const IconComp = feat.icon;
             return (
               <div
                 key={feat.title}
-                className="group relative rounded-2xl p-5 sm:p-6 bg-white border border-landing-surface-container shadow-2xs hover:shadow-lg hover:border-landing-primary/20 transition-all duration-300 flex flex-col justify-between overflow-hidden"
+                className="group relative rounded-2xl p-5 sm:p-6 bg-white border border-landing-surface-container/90 shadow-2xs hover:shadow-md hover:border-landing-primary/30 transition-all duration-200 flex flex-col justify-between overflow-hidden"
               >
                 <div>
-                  {/* Top Row: Icon Badge & Tag Pill */}
-                  <div className="flex items-center justify-between mb-4">
+                  {/* Top Row: Icon Badge */}
+                  <div className="flex items-center justify-between mb-3.5">
                     <div
-                      className={`w-11 h-11 rounded-xl bg-gradient-to-br ${feat.gradient} text-white flex items-center justify-center shadow-md ${feat.glow} group-hover:scale-105 transition-transform duration-200`}
+                      className={`w-11 h-11 rounded-xl bg-gradient-to-br ${feat.gradient} text-white flex items-center justify-center shadow-xs ${feat.glow} group-hover:scale-105 transition-transform duration-200`}
                     >
                       <IconComp className="w-5 h-5" />
                     </div>
-
-                    <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-slate-100 text-landing-primary border border-slate-200/60 uppercase tracking-wider">
-                      {feat.tag}
-                    </span>
                   </div>
 
                   {/* Title & Description */}
@@ -104,13 +97,13 @@ const FeatureGrid = () => {
                 </div>
 
                 {/* Unique Mini Visual Demonstration Element */}
-                <div className="pt-4 mt-3 border-t border-slate-100 flex items-center justify-between">
+                <div className="pt-3.5 mt-3 border-t border-slate-100/90 flex items-center justify-between">
                   {feat.previewChips ? (
                     <div className="flex flex-wrap gap-1.5">
                       {feat.previewChips.map((chip) => (
                         <span
                           key={chip}
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 bg-slate-50 border border-slate-200/60 px-2 py-0.5 rounded-md"
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 bg-slate-50/80 border border-slate-200/50 px-2 py-0.5 rounded-lg"
                         >
                           <CheckCircle2 className="w-3 h-3 text-landing-primary/70" />
                           <span>{chip}</span>
@@ -118,21 +111,16 @@ const FeatureGrid = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-semibold text-slate-500 mr-1">Brand Presets:</span>
-                        {feat.colorSwatches.map((col) => (
-                          <div
-                            key={col}
-                            className="w-4 h-4 rounded-full border border-white shadow-2xs group-hover:scale-110 transition-transform"
-                            style={{ backgroundColor: col }}
-                            title={col}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-[11px] font-bold text-landing-primary bg-amber-50 text-amber-900 border border-amber-200/60 px-2 py-0.5 rounded-md">
-                        Squircle & Circle Backdrops
-                      </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-semibold text-slate-500 mr-1">Brand Presets:</span>
+                      {feat.colorSwatches.map((col) => (
+                        <div
+                          key={col}
+                          className="w-4 h-4 rounded-full border border-white shadow-2xs group-hover:scale-110 transition-transform"
+                          style={{ backgroundColor: col }}
+                          title={col}
+                        />
+                      ))}
                     </div>
                   )}
                 </div>

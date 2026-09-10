@@ -29,9 +29,6 @@ const CategoryGrid = () => {
             <h2 className="text-xl sm:text-2xl font-extrabold font-heading text-landing-primary tracking-tight">
               Categories
             </h2>
-            <p className="text-xs text-landing-on-surface-variant mt-0.5">
-              Explore curated categories or click Full List to view all categories
-            </p>
           </div>
 
           <button
