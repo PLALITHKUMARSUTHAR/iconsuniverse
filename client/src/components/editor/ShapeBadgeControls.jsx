@@ -23,10 +23,10 @@ const ShapeBadgeControls = ({
           <button
             type="button"
             onClick={() => onUpdateBadge({ shape: 'none' })}
-            className={`p-2.5 rounded-2xl border transition-all flex flex-col items-center justify-center gap-1.5 ${
+            className={`p-2.5 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
               shape === 'none'
-                ? 'bg-landing-primary text-white border-landing-primary shadow-sm'
-                : 'bg-landing-surface-container-low hover:bg-landing-surface-container border-white/60 text-landing-on-surface'
+                ? 'bg-blue-50 border-blue-600 text-blue-700 shadow-xs font-bold'
+                : 'bg-slate-100 hover:bg-slate-200 border-transparent text-slate-700'
             }`}
           >
             <div className="w-5 h-5 flex items-center justify-center font-bold text-xs">✕</div>
@@ -37,10 +37,10 @@ const ShapeBadgeControls = ({
           <button
             type="button"
             onClick={() => onUpdateBadge({ shape: 'circle' })}
-            className={`p-2.5 rounded-2xl border transition-all flex flex-col items-center justify-center gap-1.5 ${
+            className={`p-2.5 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
               shape === 'circle'
-                ? 'bg-landing-primary text-white border-landing-primary shadow-sm'
-                : 'bg-landing-surface-container-low hover:bg-landing-surface-container border-white/60 text-landing-on-surface'
+                ? 'bg-blue-50 border-blue-600 text-blue-700 shadow-xs font-bold'
+                : 'bg-slate-100 hover:bg-slate-200 border-transparent text-slate-700'
             }`}
           >
             <div className="w-5 h-5 rounded-full border-2 border-current" />
@@ -51,10 +51,10 @@ const ShapeBadgeControls = ({
           <button
             type="button"
             onClick={() => onUpdateBadge({ shape: 'rounded' })}
-            className={`p-2.5 rounded-2xl border transition-all flex flex-col items-center justify-center gap-1.5 ${
+            className={`p-2.5 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
               shape === 'rounded'
-                ? 'bg-landing-primary text-white border-landing-primary shadow-sm'
-                : 'bg-landing-surface-container-low hover:bg-landing-surface-container border-white/60 text-landing-on-surface'
+                ? 'bg-blue-50 border-blue-600 text-blue-700 shadow-xs font-bold'
+                : 'bg-slate-100 hover:bg-slate-200 border-transparent text-slate-700'
             }`}
           >
             <div className="w-5 h-5 rounded-md border-2 border-current" />
@@ -65,10 +65,10 @@ const ShapeBadgeControls = ({
           <button
             type="button"
             onClick={() => onUpdateBadge({ shape: 'hexagon' })}
-            className={`p-2.5 rounded-2xl border transition-all flex flex-col items-center justify-center gap-1.5 ${
+            className={`p-2.5 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
               shape === 'hexagon'
-                ? 'bg-landing-primary text-white border-landing-primary shadow-sm'
-                : 'bg-landing-surface-container-low hover:bg-landing-surface-container border-white/60 text-landing-on-surface'
+                ? 'bg-blue-50 border-blue-600 text-blue-700 shadow-xs font-bold'
+                : 'bg-slate-100 hover:bg-slate-200 border-transparent text-slate-700'
             }`}
           >
             <div

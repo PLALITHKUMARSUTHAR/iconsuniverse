@@ -25,7 +25,7 @@ const TransformControls = ({
           <button
             type="button"
             onClick={rotateLeft}
-            className="p-2.5 rounded-2xl bg-landing-surface-container-low hover:bg-landing-primary hover:text-white border border-landing-surface-container transition-all flex flex-col items-center gap-1"
+            className="p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 border-2 border-transparent text-slate-700 transition-all flex flex-col items-center gap-1 cursor-pointer"
             title="Rotate -90°"
           >
             <RotateCcw className="w-4 h-4" />
@@ -35,7 +35,7 @@ const TransformControls = ({
           <button
             type="button"
             onClick={rotateRight}
-            className="p-2.5 rounded-2xl bg-landing-surface-container-low hover:bg-landing-primary hover:text-white border border-landing-surface-container transition-all flex flex-col items-center gap-1"
+            className="p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 border-2 border-transparent text-slate-700 transition-all flex flex-col items-center gap-1 cursor-pointer"
             title="Rotate +90°"
           >
             <RotateCw className="w-4 h-4" />
@@ -45,10 +45,10 @@ const TransformControls = ({
           <button
             type="button"
             onClick={toggleFlipH}
-            className={`p-2.5 rounded-2xl border transition-all flex flex-col items-center gap-1 ${
+            className={`p-2.5 rounded-2xl border-2 transition-all flex flex-col items-center gap-1 cursor-pointer ${
               flipH
-                ? 'bg-landing-primary text-white border-landing-primary shadow-xs'
-                : 'bg-landing-surface-container-low hover:bg-landing-primary hover:text-white border-landing-surface-container'
+                ? 'bg-blue-50 border-blue-600 text-blue-700 shadow-xs font-bold'
+                : 'bg-slate-100 hover:bg-slate-200 border-transparent text-slate-700'
             }`}
             title="Flip Horizontal"
           >
@@ -59,10 +59,10 @@ const TransformControls = ({
           <button
             type="button"
             onClick={toggleFlipV}
-            className={`p-2.5 rounded-2xl border transition-all flex flex-col items-center gap-1 ${
+            className={`p-2.5 rounded-2xl border-2 transition-all flex flex-col items-center gap-1 cursor-pointer ${
               flipV
-                ? 'bg-landing-primary text-white border-landing-primary shadow-xs'
-                : 'bg-landing-surface-container-low hover:bg-landing-primary hover:text-white border-landing-surface-container'
+                ? 'bg-blue-50 border-blue-600 text-blue-700 shadow-xs font-bold'
+                : 'bg-slate-100 hover:bg-slate-200 border-transparent text-slate-700'
             }`}
             title="Flip Vertical"
           >

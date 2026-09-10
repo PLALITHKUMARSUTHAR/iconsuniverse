@@ -6,23 +6,24 @@ import TransformControls from '../editor/TransformControls';
 import ShapeBadgeControls from '../editor/ShapeBadgeControls';
 import Button from '../common/Button';
 import { useToast } from '../../context/ToastContext';
+import { recolorSvg } from '../../services/svgCacheService';
 
 const sampleIcons = [
   {
     title: 'Rocket',
-    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>`,
+    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>`,
   },
   {
     title: 'Cart',
-    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>`,
+    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>`,
   },
   {
     title: 'Shield',
-    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>`,
+    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>`,
   },
   {
     title: 'CPU',
-    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M9 1v3m6-3v3M9 20v3m6-3v3M20 9h3m-3 6h3M1 9h3m-3 6h3"/></svg>`,
+    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M9 1v3m6-3v3M9 20v3m6-3v3M20 9h3m-3 6h3M1 9h3m-3 6h3"/></svg>`,
   },
 ];
 
@@ -44,7 +45,7 @@ const LiveEditorTeaser = () => {
   const current = sampleIcons[selectedIconIndex];
 
   const handleDownload = () => {
-    let finalSvg = current.svg.replace(/stroke="[^"]*"/gi, `stroke="${color}"`);
+    let finalSvg = recolorSvg(current.svg, color);
     const blob = new Blob([finalSvg], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -56,7 +57,7 @@ const LiveEditorTeaser = () => {
   };
 
   const handleCopy = () => {
-    let finalSvg = current.svg.replace(/stroke="[^"]*"/gi, `stroke="${color}"`);
+    let finalSvg = recolorSvg(current.svg, color);
     navigator.clipboard.writeText(finalSvg);
     setHasCopied(true);
     addToast('SVG markup copied!', 'success');
@@ -66,7 +67,7 @@ const LiveEditorTeaser = () => {
   return (
     <section className="w-full py-10 sm:py-14 bg-white/60 border-t border-landing-surface-container/60">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-8">
-        <div className="p-6 sm:p-8 rounded-3xl glass-landing bg-white border-2 border-slate-300 hover:border-landing-primary/40 shadow-lg max-w-4xl mx-auto transition-colors">
+        <div className="p-6 sm:p-8 rounded-3xl bg-white border-[2.5px] border-slate-800 shadow-xl max-w-4xl mx-auto">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-landing-surface-container mb-6">
             <div>
@@ -79,25 +80,30 @@ const LiveEditorTeaser = () => {
             </div>
 
             {/* Icon Picker Chips */}
-            <div className="flex items-center gap-1.5">
-              {sampleIcons.map((item, idx) => (
-                <button
-                  key={item.title}
-                  type="button"
-                  onClick={() => setSelectedIconIndex(idx)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                    selectedIconIndex === idx
-                      ? 'bg-black text-white shadow-xs'
-                      : 'bg-landing-surface-container-low text-landing-on-surface hover:bg-landing-surface-container'
-                  }`}
-                >
-                  <div
-                    className={`w-3.5 h-3.5 ${selectedIconIndex === idx ? 'text-white brightness-200' : 'text-black'}`}
-                    dangerouslySetInnerHTML={{ __html: item.svg }}
-                  />
-                  <span>{item.title}</span>
-                </button>
-              ))}
+            <div className="flex items-center gap-2">
+              {sampleIcons.map((item, idx) => {
+                const isSelected = selectedIconIndex === idx;
+                return (
+                  <button
+                    key={item.title}
+                    type="button"
+                    onClick={() => setSelectedIconIndex(idx)}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                      isSelected
+                        ? 'bg-blue-50 border-2 border-blue-600 text-blue-700 shadow-xs'
+                        : 'bg-slate-100 border-2 border-transparent text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    <div
+                      className="w-4 h-4 flex items-center justify-center shrink-0"
+                      dangerouslySetInnerHTML={{
+                        __html: item.svg.replace(/stroke="[^"]*"/gi, 'stroke="currentColor"'),
+                      }}
+                    />
+                    <span>{item.title}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
