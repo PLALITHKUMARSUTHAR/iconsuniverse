@@ -712,12 +712,21 @@ exports.getIcons = async (req, res, next) => {
         filter.categoryId = category;
       } else {
         const cleanCatSlug = category.toLowerCase().trim();
-        const cat = await Category.findOne({
+        let cat = await Category.findOne({
           $or: [
             { slug: cleanCatSlug },
             { name: new RegExp(`^${cleanCatSlug.replace(/-/g, ' ')}$`, 'i') },
           ]
         });
+        if (!cat) {
+          const firstWord = cleanCatSlug.split(/[-_ ]/)[0];
+          cat = await Category.findOne({
+            $or: [
+              { slug: new RegExp(`^${firstWord}`, 'i') },
+              { name: new RegExp(`^${firstWord}`, 'i') },
+            ]
+          });
+        }
         if (cat) {
           filter.categoryId = cat._id;
         } else {

@@ -27,7 +27,7 @@ const CategoryGrid = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-xl sm:text-2xl font-extrabold font-heading text-landing-primary tracking-tight">
-              Featured Categories
+              Categories
             </h2>
             <p className="text-xs text-landing-on-surface-variant mt-0.5">
               Explore curated categories or click Full List to view all categories

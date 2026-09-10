@@ -34,7 +34,6 @@ import {
   Plane,
   Globe,
   Navigation,
-  Layers,
 } from 'lucide-react';
 import { packService } from '../../services/packService';
 
@@ -44,7 +43,7 @@ const curatedRealPacks = [
     title: 'E-Commerce & Retail Vectors',
     description: 'Shopping carts, barcode tags, credit cards, and express delivery tracking.',
     categoryName: 'Shopping',
-    categorySlug: 'shopping-ecommerce',
+    categorySlug: 'shopping',
     gradient: 'from-rose-500/15 via-amber-500/10 to-transparent',
     accentColor: '#FF5F52',
     icons: [
@@ -59,8 +58,8 @@ const curatedRealPacks = [
     slug: 'cloud-developer-stack',
     title: 'Cloud & Developer Stack',
     description: 'Cloud infrastructure, servers, terminals, microprocessors, and databases.',
-    categoryName: 'Technology',
-    categorySlug: 'technology-devices',
+    categoryName: 'Code & Dev',
+    categorySlug: 'code',
     gradient: 'from-teal-500/15 via-indigo-500/10 to-transparent',
     accentColor: '#00F5D4',
     icons: [
@@ -75,8 +74,8 @@ const curatedRealPacks = [
     slug: 'fintech-banking-crypto',
     title: 'Fintech, Banking & Currency',
     description: 'Digital wallets, coins, market growth charts, vaults, and bank security.',
-    categoryName: 'Finance',
-    categorySlug: 'finance-banking',
+    categoryName: 'Business',
+    categorySlug: 'business',
     gradient: 'from-amber-500/15 via-emerald-500/10 to-transparent',
     accentColor: '#FFD54F',
     icons: [
@@ -92,7 +91,7 @@ const curatedRealPacks = [
     title: 'Social & Communication UI',
     description: 'Chat bubbles, paper planes, profiles, notifications, and engagement badges.',
     categoryName: 'Social',
-    categorySlug: 'social-communication',
+    categorySlug: 'social',
     gradient: 'from-pink-500/15 via-rose-500/10 to-transparent',
     accentColor: '#ec4899',
     icons: [
@@ -123,7 +122,7 @@ const curatedRealPacks = [
     slug: 'navigation-travel-vectors',
     title: 'Global Navigation & Travel',
     description: 'Map pins, flight vectors, compasses, world globes, and trip routes.',
-    categoryName: 'Travel',
+    categoryName: 'Transport',
     categorySlug: 'transport',
     gradient: 'from-sky-500/15 via-blue-500/10 to-transparent',
     accentColor: '#0ea5e9',
@@ -152,6 +151,7 @@ const TrendingPacks = () => {
             gradient: curatedRealPacks[idx % curatedRealPacks.length].gradient,
             accentColor: curatedRealPacks[idx % curatedRealPacks.length].accentColor,
             icons: curatedRealPacks[idx % curatedRealPacks.length].icons,
+            categorySlug: p.categorySlug || curatedRealPacks[idx % curatedRealPacks.length].categorySlug,
           }));
           setPacks(merged);
         }
@@ -177,13 +177,9 @@ const TrendingPacks = () => {
   return (
     <section className="w-full py-8 sm:py-10 bg-landing-surface-container-low/30">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-8">
-        {/* Section Header with Toggle Arrows */}
+        {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-subpage-primary text-white text-[10px] font-bold uppercase tracking-wider mb-1.5">
-              <Layers className="w-3 h-3 text-landing-vibrant-coral" />
-              <span>Cohesive Vector Families</span>
-            </div>
             <h2 className="text-xl sm:text-2xl font-extrabold font-heading text-landing-primary tracking-tight">
               Featured Icon Sets
             </h2>
@@ -192,108 +188,109 @@ const TrendingPacks = () => {
             </p>
           </div>
 
-          {/* Right Controls: Left / Right Arrows & Browse Link */}
+          {/* Right Controls: Browse Link & Page Indicator */}
           <div className="flex items-center gap-3 self-end sm:self-center">
-            {/* Toggle Pagination Arrows */}
-            <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-landing-surface-container shadow-2xs">
-              <button
-                type="button"
-                onClick={handlePrev}
-                aria-label="Previous sets"
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-landing-primary hover:bg-[#001e52] hover:text-white transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span className="text-[11px] font-bold text-landing-on-surface-variant px-1.5 select-none">
-                {page + 1} / {totalPages}
-              </span>
-              <button
-                type="button"
-                onClick={handleNext}
-                aria-label="Next sets"
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-landing-primary hover:bg-[#001e52] hover:text-white transition-colors"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+            <span className="text-[11px] font-bold text-landing-on-surface-variant px-2 py-1 bg-white rounded-lg border border-landing-surface-container shadow-2xs">
+              Page {page + 1} of {totalPages}
+            </span>
 
             <Link
               to="/search?type=packs"
               className="text-xs font-bold text-landing-primary hover:text-landing-vibrant-coral flex items-center gap-1 group shrink-0"
             >
-              <span>Explore all</span>
+              <span>Explore all sets</span>
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </div>
         </div>
 
-        {/* Single Row of 3 Sets */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {currentPacks.map((pack) => (
-            <Link
-              key={pack.slug}
-              to={`/search?category=${pack.categorySlug || 'all'}`}
-              className="group rounded-2xl glass-landing bg-white border border-landing-surface-container shadow-xs hover:shadow-lg hover:border-landing-primary/20 transition-all duration-200 overflow-hidden flex flex-col"
-            >
-              {/* Prominent Icon Showcase Tab - Fills space nicely with large icons */}
-              <div
-                className={`relative w-full bg-gradient-to-br ${pack.gradient} border-b border-landing-surface-container p-3.5 sm:p-4 flex flex-col justify-between overflow-hidden`}
+        {/* Row of 3 Sets with Left & Right Arrows on the sides */}
+        <div className="relative flex items-center gap-2 sm:gap-3">
+          {/* Left Arrow on the left of the row */}
+          <button
+            type="button"
+            onClick={handlePrev}
+            aria-label="Previous sets"
+            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white border border-landing-surface-container shadow-sm hover:bg-[#001e52] hover:text-white flex items-center justify-center transition-all shrink-0 z-10 cursor-pointer group"
+          >
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-landing-primary group-hover:text-white transition-colors" />
+          </button>
+
+          {/* Single Row of 3 Sets */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 flex-1 w-full min-w-0">
+            {currentPacks.map((pack) => (
+              <Link
+                key={pack.slug}
+                to={`/search?category=${pack.categorySlug || 'all'}`}
+                className="group rounded-2xl glass-landing bg-white border border-landing-surface-container shadow-xs hover:shadow-lg hover:border-landing-primary/20 transition-all duration-200 overflow-hidden flex flex-col cursor-pointer"
               >
-                {/* Category Pill */}
-                <div className="flex items-center justify-between z-10 mb-3">
-                  <span className="px-2.5 py-0.5 rounded-full bg-white/95 backdrop-blur-md text-[9px] font-extrabold text-landing-primary shadow-2xs border border-white/80 uppercase tracking-wider">
-                    {pack.categoryName || 'Vector Set'}
-                  </span>
-                  <span className="text-[10px] font-bold text-slate-500/80 bg-white/60 px-2 py-0.5 rounded-full">
-                    Vector Icons
-                  </span>
-                </div>
-
-                {/* 5 Prominent Icons evenly filling the width */}
-                <div className="grid grid-cols-5 gap-2 sm:gap-2.5 z-10 w-full">
-                  {(pack.icons || curatedRealPacks[0].icons).map((ic, i) => {
-                    const Comp = ic.comp;
-                    return (
-                      <div
-                        key={ic.label || i}
-                        className="aspect-square rounded-xl bg-white/95 backdrop-blur-md border border-white/90 shadow-2xs flex flex-col items-center justify-center p-1.5 group-hover:border-landing-primary/20 group-hover:scale-105 transition-all duration-200"
-                        title={ic.label}
-                      >
-                        <Comp
-                          className="w-6 h-6 sm:w-7 sm:h-7 text-[#001e52] group-hover:scale-110 transition-transform"
-                          style={{ strokeWidth: 1.85 }}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Subtle Decorative Backdrop Element */}
+                {/* Prominent Icon Showcase Tab */}
                 <div
-                  className="absolute -right-4 -bottom-4 w-20 h-20 rounded-full blur-xl opacity-25 pointer-events-none"
-                  style={{ backgroundColor: pack.accentColor }}
-                />
-              </div>
+                  className={`relative w-full bg-gradient-to-br ${pack.gradient} border-b border-landing-surface-container p-3.5 sm:p-4 flex flex-col justify-between overflow-hidden`}
+                >
+                  {/* Category Tag Only (Vector Icons text removed) */}
+                  <div className="flex items-center justify-between z-10 mb-3">
+                    <span className="px-2.5 py-0.5 rounded-full bg-white/95 backdrop-blur-md text-[9px] font-extrabold text-landing-primary shadow-2xs border border-white/80 uppercase tracking-wider">
+                      {pack.categoryName || 'Vector Set'}
+                    </span>
+                  </div>
 
-              {/* Content Body: Title, and Description with Browse Set button on the right */}
-              <div className="p-4 flex flex-col gap-2 flex-1 justify-between">
-                <h3 className="text-sm sm:text-base font-bold font-heading text-landing-primary group-hover:text-landing-vibrant-coral transition-colors line-clamp-1">
-                  {pack.title}
-                </h3>
+                  {/* 5 Prominent Icons evenly filling the width */}
+                  <div className="grid grid-cols-5 gap-2 sm:gap-2.5 z-10 w-full">
+                    {(pack.icons || curatedRealPacks[0].icons).map((ic, i) => {
+                      const Comp = ic.comp;
+                      return (
+                        <div
+                          key={ic.label || i}
+                          className="aspect-square rounded-xl bg-white/95 backdrop-blur-md border border-white/90 shadow-2xs flex flex-col items-center justify-center p-1.5 group-hover:border-landing-primary/20 group-hover:scale-105 transition-all duration-200"
+                          title={ic.label}
+                        >
+                          <Comp
+                            className="w-6 h-6 sm:w-7 sm:h-7 text-[#001e52] group-hover:scale-110 transition-transform"
+                            style={{ strokeWidth: 1.85 }}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
 
-                <div className="flex items-center justify-between gap-3 pt-0.5">
-                  <p className="text-xs text-landing-on-surface-variant line-clamp-2 leading-relaxed flex-1">
-                    {pack.description}
-                  </p>
-
-                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-landing-primary bg-slate-100 group-hover:bg-[#001e52] group-hover:text-white px-3 py-1.5 rounded-lg shrink-0 transition-colors shadow-2xs">
-                    <span>Browse Set</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                  </span>
+                  {/* Subtle Decorative Backdrop Element */}
+                  <div
+                    className="absolute -right-4 -bottom-4 w-20 h-20 rounded-full blur-xl opacity-25 pointer-events-none"
+                    style={{ backgroundColor: pack.accentColor }}
+                  />
                 </div>
-              </div>
-            </Link>
-          ))}
+
+                {/* Content Body: Title, and Description with Browse Set button on the right */}
+                <div className="p-4 flex flex-col gap-2 flex-1 justify-between">
+                  <h3 className="text-sm sm:text-base font-bold font-heading text-landing-primary group-hover:text-landing-vibrant-coral transition-colors line-clamp-1">
+                    {pack.title}
+                  </h3>
+
+                  <div className="flex items-center justify-between gap-3 pt-0.5">
+                    <p className="text-xs text-landing-on-surface-variant line-clamp-2 leading-relaxed flex-1">
+                      {pack.description}
+                    </p>
+
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-landing-primary bg-slate-100 group-hover:bg-[#001e52] group-hover:text-white px-3 py-1.5 rounded-lg shrink-0 transition-colors shadow-2xs">
+                      <span>Browse Set</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Right Arrow on the right of the row */}
+          <button
+            type="button"
+            onClick={handleNext}
+            aria-label="Next sets"
+            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white border border-landing-surface-container shadow-sm hover:bg-[#001e52] hover:text-white flex items-center justify-center transition-all shrink-0 z-10 cursor-pointer group"
+          >
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-landing-primary group-hover:text-white transition-colors" />
+          </button>
         </div>
       </div>
     </section>
