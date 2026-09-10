@@ -11,6 +11,7 @@ import Button from '../components/common/Button';
 import Footer from '../components/common/Footer';
 import { main17FeaturedCategories } from '../data/categories';
 import { CategoryIconMap } from '../data/categoryIcons';
+import SEOHead from '../components/common/SEOHead';
 
 const quickStylePills = [
   { id: 'all', label: 'All Styles', icon: Grid3X3 },
@@ -287,6 +288,25 @@ const SearchResultsPage = () => {
 
   return (
     <div className="h-full flex flex-col min-h-0 gap-1.5 relative">
+      {/* Dynamic SEO & OpenGraph */}
+      <SEOHead
+        title={
+          queryParam
+            ? `Search: "${queryParam}" Icons`
+            : categoryParam
+            ? `${categoryParam.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} Icons`
+            : 'Vector Icons Library'
+        }
+        description={
+          queryParam
+            ? `Explore and download high-quality vector icons for "${queryParam}" in SVG, PNG, and EPS.`
+            : categoryParam
+            ? `Explore curated ${categoryParam.replace(/-/g, ' ')} vector icons. Free downloads with in-browser editor.`
+            : 'Browse over 1,000,000 free vector icons across all categories with live recoloring.'
+        }
+        keywords={[queryParam, categoryParam, 'vector icons', 'svg icons', 'free download'].filter(Boolean)}
+      />
+
       {/* 1. Auto-Hiding Top Header & Filters (Collapses on scroll down, reveals on scroll up) */}
       <div
         className={`shrink-0 flex flex-col gap-2.5 transition-all duration-300 ease-in-out z-20 bg-[#f8f9ff] ${

@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/common/Button';
 import IconCard from '../components/icons/IconCard';
+import SEOHead from '../components/common/SEOHead';
 import { seedPacks, seedIcons } from '../data/seedData';
 
 const PackDetailPage = () => {
@@ -55,6 +56,14 @@ const PackDetailPage = () => {
 
   return (
     <div className="flex flex-col gap-8">
+      {/* Dynamic SEO & OpenGraph Meta */}
+      <SEOHead
+        title={`${pack.title} Icon Pack`}
+        description={pack.description || `Browse and download the complete ${pack.title} vector icon family.`}
+        image={pack.coverImageUrl || undefined}
+        keywords={[pack.title, 'icon pack', 'vector pack', 'icons set']}
+      />
+
       {/* Back Navigation */}
       <Link
         to="/search?type=packs"

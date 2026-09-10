@@ -18,7 +18,7 @@ const downloadSchema = new mongoose.Schema({
   },
   format: {
     type: String,
-    enum: ['svg', 'png', 'eps', 'zip', 'webfont', 'base64'],
+    enum: ['svg', 'png', 'eps', 'zip', 'base64'],
     required: true,
   },
   resolution: {

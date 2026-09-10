@@ -16,6 +16,7 @@ const collectionRoutes = require('./routes/collectionRoutes');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const googleDriveRoutes = require('./routes/googleDriveRoutes');
+const sitemapRoutes = require('./routes/sitemapRoutes');
 
 const app = express();
 
@@ -77,6 +78,7 @@ app.use('/api/collections', collectionRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/drive', googleDriveRoutes);
+app.use('/', sitemapRoutes);
 
 // Health check endpoint for Northflank monitoring
 app.get('/health', (req, res) => {

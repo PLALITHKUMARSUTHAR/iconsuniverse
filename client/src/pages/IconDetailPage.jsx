@@ -17,6 +17,7 @@ import {
   normalizeSvgForCanvas,
 } from '../services/svgCacheService';
 import { cleanIconTitle } from '../utils/titleCleaner';
+import SEOHead from '../components/common/SEOHead';
 
 const IconDetailPage = () => {
   const { slug } = useParams();
@@ -103,6 +104,14 @@ const IconDetailPage = () => {
 
   return (
     <div className="flex flex-col gap-8">
+      {/* Dynamic SEO & OpenGraph Meta */}
+      <SEOHead
+        title={`${cleanIconTitle(icon.title)} Vector Icon`}
+        description={`Download ${cleanIconTitle(icon.title)} icon in SVG, PNG (up to 512px), EPS, and Base64 format. Live recolor and transform in browser.`}
+        image={icon.pngPreviewUrl || undefined}
+        keywords={[cleanIconTitle(icon.title), ...(icon.tags || []), icon.style || 'outline', 'vector icon', 'svg']}
+      />
+
       {/* Back Navigation */}
       <Link
         to="/search"

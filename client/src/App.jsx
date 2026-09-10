@@ -8,13 +8,14 @@ import IconDetailPage from './pages/IconDetailPage';
 import PackDetailPage from './pages/PackDetailPage';
 import IconEditorPage from './pages/IconEditorPage';
 import PricingPage from './pages/PricingPage';
-import ContributorDashboard from './pages/ContributorDashboard';
-import AdminDashboard from './pages/AdminDashboard';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import UserProfilePage from './pages/UserProfilePage';
 import InfoPage from './pages/InfoPage';
 import NotFoundPage from './pages/NotFoundPage';
+import ProtectedRoute from './components/common/ProtectedRoute';
 
 function App() {
   return (
@@ -31,11 +32,19 @@ function App() {
         <Route path="/packs/:slug" element={<PackDetailPage />} />
         <Route path="/editor" element={<IconEditorPage />} />
         <Route path="/pricing" element={<PricingPage />} />
-        <Route path="/contributor" element={<ContributorDashboard />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-        <Route path="/profile" element={<UserProfilePage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <UserProfilePage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/about" element={<InfoPage />} />
         <Route path="/contact" element={<InfoPage />} />
         <Route path="/whats-new" element={<InfoPage />} />

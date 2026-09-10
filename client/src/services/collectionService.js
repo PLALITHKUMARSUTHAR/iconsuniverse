@@ -23,12 +23,6 @@ export const collectionService = {
     window.open(`${baseUrl}/collections/${collectionId}/bulk-download?token=${token}`, '_blank');
   },
 
-  generateWebFont: async (collectionId) => {
-    const token = localStorage.getItem('iu_token');
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
-    window.open(`${baseUrl}/collections/${collectionId}/webfont?token=${token}`, '_blank');
-  },
-
   updateRecolor: async (collectionId, customPalette) => {
     return await api.put(`/collections/${collectionId}/recolor`, { customPalette });
   },

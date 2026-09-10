@@ -39,6 +39,12 @@ export const AuthProvider = ({ children }) => {
     return res;
   };
 
+  const googleLogin = async (payload) => {
+    const res = await authService.googleAuth(payload);
+    setUser(res.data.user);
+    return res;
+  };
+
   const logout = async () => {
     try {
       await authService.logout();
@@ -51,7 +57,6 @@ export const AuthProvider = ({ children }) => {
 
   const isPro = user && (user.plan === 'pro_monthly' || user.plan === 'pro_annual');
   const isAdmin = user && (user.role === 'admin' || user.role === 'editor');
-  const isContributor = user && (user.role === 'contributor' || user.role === 'admin');
 
   return (
     <AuthContext.Provider
@@ -60,10 +65,10 @@ export const AuthProvider = ({ children }) => {
         loading,
         login,
         signup,
+        googleLogin,
         logout,
         isPro,
         isAdmin,
-        isContributor,
       }}
     >
       {children}

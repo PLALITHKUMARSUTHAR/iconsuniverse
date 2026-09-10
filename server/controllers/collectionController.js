@@ -2,7 +2,6 @@ const Collection = require('../models/Collection');
 const Icon = require('../models/Icon');
 const User = require('../models/User');
 const { streamIconsZip } = require('../utils/zipBuilder');
-const { generateWebFontBundle } = require('../utils/webfontGenerator');
 
 // @desc    Get current user's collections
 // @route   GET /api/collections
@@ -109,26 +108,6 @@ exports.bulkDownloadCollection = async (req, res, next) => {
     }
 
     streamIconsZip(collection.iconIds, collection.name, res);
-  } catch (err) {
-    next(err);
-  }
-};
-
-// @desc    Generate Custom WebFont & SVG Sprite for collection
-// @route   POST /api/collections/:id/webfont
-// @access  Private
-exports.generateWebFont = async (req, res, next) => {
-  try {
-    const collection = await Collection.findById(req.params.id).populate('iconIds');
-    if (!collection) {
-      return res.status(404).json({ success: false, message: 'Collection not found' });
-    }
-
-    if (!collection.iconIds.length) {
-      return res.status(400).json({ success: false, message: 'Collection is empty' });
-    }
-
-    generateWebFontBundle(collection.name, collection.iconIds, res);
   } catch (err) {
     next(err);
   }
