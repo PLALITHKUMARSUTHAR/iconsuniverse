@@ -45,7 +45,7 @@ const curatedRealPacks = [
     description: 'Shopping carts, barcode tags, credit cards, and express delivery tracking.',
     categoryName: 'Shopping',
     categorySlug: 'shopping-ecommerce',
-    gradient: 'from-rose-500/10 via-amber-500/5 to-transparent',
+    gradient: 'from-rose-500/15 via-amber-500/10 to-transparent',
     accentColor: '#FF5F52',
     icons: [
       { comp: ShoppingCart, label: 'Cart' },
@@ -61,7 +61,7 @@ const curatedRealPacks = [
     description: 'Cloud infrastructure, servers, terminals, microprocessors, and databases.',
     categoryName: 'Technology',
     categorySlug: 'technology-devices',
-    gradient: 'from-teal-500/10 via-indigo-500/5 to-transparent',
+    gradient: 'from-teal-500/15 via-indigo-500/10 to-transparent',
     accentColor: '#00F5D4',
     icons: [
       { comp: Cloud, label: 'Cloud' },
@@ -77,7 +77,7 @@ const curatedRealPacks = [
     description: 'Digital wallets, coins, market growth charts, vaults, and bank security.',
     categoryName: 'Finance',
     categorySlug: 'finance-banking',
-    gradient: 'from-amber-500/10 via-emerald-500/5 to-transparent',
+    gradient: 'from-amber-500/15 via-emerald-500/10 to-transparent',
     accentColor: '#FFD54F',
     icons: [
       { comp: Wallet, label: 'Wallet' },
@@ -93,7 +93,7 @@ const curatedRealPacks = [
     description: 'Chat bubbles, paper planes, profiles, notifications, and engagement badges.',
     categoryName: 'Social',
     categorySlug: 'social-communication',
-    gradient: 'from-pink-500/10 via-rose-500/5 to-transparent',
+    gradient: 'from-pink-500/15 via-rose-500/10 to-transparent',
     accentColor: '#ec4899',
     icons: [
       { comp: MessageCircle, label: 'Chat' },
@@ -109,7 +109,7 @@ const curatedRealPacks = [
     description: 'Cameras, film reels, sliders, digital palettes, and vector design pens.',
     categoryName: 'Media',
     categorySlug: 'media',
-    gradient: 'from-purple-500/10 via-pink-500/5 to-transparent',
+    gradient: 'from-purple-500/15 via-pink-500/10 to-transparent',
     accentColor: '#8b5cf6',
     icons: [
       { comp: Palette, label: 'Color' },
@@ -125,7 +125,7 @@ const curatedRealPacks = [
     description: 'Map pins, flight vectors, compasses, world globes, and trip routes.',
     categoryName: 'Travel',
     categorySlug: 'transport',
-    gradient: 'from-sky-500/10 via-blue-500/5 to-transparent',
+    gradient: 'from-sky-500/15 via-blue-500/10 to-transparent',
     accentColor: '#0ea5e9',
     icons: [
       { comp: MapPin, label: 'Pin' },
@@ -177,7 +177,7 @@ const TrendingPacks = () => {
   return (
     <section className="w-full py-8 sm:py-10 bg-landing-surface-container-low/30">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-8">
-        {/* Compact Section Header with Toggle Arrows */}
+        {/* Section Header with Toggle Arrows */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
           <div>
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-subpage-primary text-white text-[10px] font-bold uppercase tracking-wider mb-1.5">
@@ -235,57 +235,60 @@ const TrendingPacks = () => {
               to={`/search?category=${pack.categorySlug || 'all'}`}
               className="group rounded-2xl glass-landing bg-white border border-landing-surface-container shadow-xs hover:shadow-lg hover:border-landing-primary/20 transition-all duration-200 overflow-hidden flex flex-col"
             >
-              {/* Compact Showcase Tab */}
+              {/* Prominent Icon Showcase Tab - Fills space nicely with large icons */}
               <div
-                className={`relative h-28 w-full bg-gradient-to-br ${pack.gradient} border-b border-landing-surface-container px-3.5 py-2.5 flex flex-col justify-between overflow-hidden`}
+                className={`relative w-full bg-gradient-to-br ${pack.gradient} border-b border-landing-surface-container p-3.5 sm:p-4 flex flex-col justify-between overflow-hidden`}
               >
-                {/* Category Pill Only (Icon Count removed per request) */}
-                <div className="flex items-center justify-between z-10">
+                {/* Category Pill */}
+                <div className="flex items-center justify-between z-10 mb-3">
                   <span className="px-2.5 py-0.5 rounded-full bg-white/95 backdrop-blur-md text-[9px] font-extrabold text-landing-primary shadow-2xs border border-white/80 uppercase tracking-wider">
                     {pack.categoryName || 'Vector Set'}
                   </span>
+                  <span className="text-[10px] font-bold text-slate-500/80 bg-white/60 px-2 py-0.5 rounded-full">
+                    Vector Icons
+                  </span>
                 </div>
 
-                {/* 5 Icons Row */}
-                <div className="flex items-center justify-center gap-2 py-1 z-10">
+                {/* 5 Prominent Icons evenly filling the width */}
+                <div className="grid grid-cols-5 gap-2 sm:gap-2.5 z-10 w-full">
                   {(pack.icons || curatedRealPacks[0].icons).map((ic, i) => {
                     const Comp = ic.comp;
                     return (
                       <div
                         key={ic.label || i}
-                        className="w-9 h-9 rounded-xl bg-white/95 backdrop-blur-md border border-white/90 shadow-2xs flex items-center justify-center transform group-hover:-translate-y-0.5 transition-transform duration-200"
+                        className="aspect-square rounded-xl bg-white/95 backdrop-blur-md border border-white/90 shadow-2xs flex flex-col items-center justify-center p-1.5 group-hover:border-landing-primary/20 group-hover:scale-105 transition-all duration-200"
                         title={ic.label}
                       >
                         <Comp
-                          className="w-4 h-4 text-[#001e52] group-hover:scale-110 transition-transform"
-                          style={{ strokeWidth: 2 }}
+                          className="w-6 h-6 sm:w-7 sm:h-7 text-[#001e52] group-hover:scale-110 transition-transform"
+                          style={{ strokeWidth: 1.85 }}
                         />
                       </div>
                     );
                   })}
                 </div>
 
-                {/* Subtle Decorative Backdrop Elements */}
+                {/* Subtle Decorative Backdrop Element */}
                 <div
-                  className="absolute -right-4 -bottom-4 w-16 h-16 rounded-full blur-xl opacity-25 pointer-events-none"
+                  className="absolute -right-4 -bottom-4 w-20 h-20 rounded-full blur-xl opacity-25 pointer-events-none"
                   style={{ backgroundColor: pack.accentColor }}
                 />
               </div>
 
-              {/* Compact Content Body: Title, and Description with Browse Set button on the right */}
-              <div className="p-3.5 flex flex-col gap-1.5 flex-1 justify-between">
-                <h3 className="text-sm font-bold font-heading text-landing-primary group-hover:text-landing-vibrant-coral transition-colors line-clamp-1">
+              {/* Content Body: Title, and Description with Browse Set button on the right */}
+              <div className="p-4 flex flex-col gap-2 flex-1 justify-between">
+                <h3 className="text-sm sm:text-base font-bold font-heading text-landing-primary group-hover:text-landing-vibrant-coral transition-colors line-clamp-1">
                   {pack.title}
                 </h3>
 
                 <div className="flex items-center justify-between gap-3 pt-0.5">
-                  <p className="text-xs text-landing-on-surface-variant line-clamp-2 leading-snug flex-1">
+                  <p className="text-xs text-landing-on-surface-variant line-clamp-2 leading-relaxed flex-1">
                     {pack.description}
                   </p>
 
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-landing-primary bg-slate-100 group-hover:bg-[#001e52] group-hover:text-white px-2.5 py-1.5 rounded-lg shrink-0 transition-colors shadow-2xs">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-landing-primary bg-slate-100 group-hover:bg-[#001e52] group-hover:text-white px-3 py-1.5 rounded-lg shrink-0 transition-colors shadow-2xs">
                     <span>Browse Set</span>
-                    <ArrowRight className="w-3 h-3" />
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                   </span>
                 </div>
               </div>
