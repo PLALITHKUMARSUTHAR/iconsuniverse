@@ -68,9 +68,6 @@ const Footer = ({ collapsible = false, exploreCategoriesSlot = null }) => {
                   Icons<span className="text-landing-vibrant-coral">Universe</span>
                 </span>
               </Link>
-              <p className="text-xs text-white/80 leading-relaxed">
-                Clean vector icons with in-browser recoloring and Google Drive synchronization.
-              </p>
             </div>
 
             {/* Content */}

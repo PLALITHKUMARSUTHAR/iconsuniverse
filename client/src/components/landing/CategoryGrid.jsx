@@ -13,6 +13,18 @@ const CategoryGrid = () => {
   const [categorySearchQuery, setCategorySearchQuery] = useState('');
   const [activeCategoryModal, setActiveCategoryModal] = useState(null);
 
+  // Background warm featured categories during idle time for 0ms instant preview modal
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      main17FeaturedCategories.forEach((cat, index) => {
+        setTimeout(() => {
+          prefetchCategoryPreviews(cat.slug, 'filled');
+        }, index * 80);
+      });
+    }, 600);
+    return () => clearTimeout(timer);
+  }, []);
+
   const filtered163 = all163CategoriesWithIcons.filter((cat) =>
     cat.name.toLowerCase().includes(categorySearchQuery.toLowerCase())
   );

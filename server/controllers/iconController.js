@@ -688,6 +688,57 @@ function normalizeAndFixSvg(svgText) {
   return result;
 }
 
+const categorySlugCache = new Map();
+const categoryStylesCache = new Map();
+
+async function getCachedCategory(categorySlug) {
+  const cleanCatSlug = categorySlug.toLowerCase().trim();
+  if (categorySlugCache.has(cleanCatSlug)) {
+    return categorySlugCache.get(cleanCatSlug);
+  }
+
+  let cat = await Category.findOne({
+    $or: [
+      { slug: cleanCatSlug },
+      { name: new RegExp(`^${cleanCatSlug.replace(/-/g, ' ')}$`, 'i') },
+    ],
+  });
+  if (!cat) {
+    const firstWord = cleanCatSlug.split(/[-_ ]/)[0];
+    cat = await Category.findOne({
+      $or: [
+        { slug: new RegExp(`^${firstWord}`, 'i') },
+        { name: new RegExp(`^${firstWord}`, 'i') },
+      ],
+    });
+  }
+
+  if (cat) {
+    categorySlugCache.set(cleanCatSlug, cat);
+  }
+  return cat;
+}
+
+async function getCategoryStyles(categoryId) {
+  const catKey = categoryId.toString();
+  if (categoryStylesCache.has(catKey)) {
+    return categoryStylesCache.get(catKey);
+  }
+  try {
+    const [styles, hasFilled] = await Promise.all([
+      Icon.distinct('style', { categoryId, status: { $ne: 'rejected' }, isAnimated: { $ne: true } }),
+      Icon.exists({ categoryId, isFilled: true, status: { $ne: 'rejected' }, isAnimated: { $ne: true } }),
+    ]);
+    const styleSet = new Set(styles.filter(Boolean));
+    if (hasFilled) styleSet.add('filled');
+    const result = Array.from(styleSet);
+    categoryStylesCache.set(catKey, result);
+    return result;
+  } catch (e) {
+    return ['outline', 'filled'];
+  }
+}
+
 // @desc    List/search icons with multi-facet filters
 // @route   GET /api/icons
 // @access  Public
@@ -717,26 +768,12 @@ exports.getIcons = async (req, res, next) => {
     }
 
     // Category filter
+    let availableStyles = undefined;
     if (category) {
       if (category.match(/^[0-9a-fA-F]{24}$/)) {
         filter.categoryId = category;
       } else {
-        const cleanCatSlug = category.toLowerCase().trim();
-        let cat = await Category.findOne({
-          $or: [
-            { slug: cleanCatSlug },
-            { name: new RegExp(`^${cleanCatSlug.replace(/-/g, ' ')}$`, 'i') },
-          ]
-        });
-        if (!cat) {
-          const firstWord = cleanCatSlug.split(/[-_ ]/)[0];
-          cat = await Category.findOne({
-            $or: [
-              { slug: new RegExp(`^${firstWord}`, 'i') },
-              { name: new RegExp(`^${firstWord}`, 'i') },
-            ]
-          });
-        }
+        const cat = await getCachedCategory(category);
         if (cat) {
           filter.categoryId = cat._id;
         } else {
@@ -747,10 +784,12 @@ exports.getIcons = async (req, res, next) => {
               total: 0,
               page: parseInt(page, 10) || 1,
               totalPages: 0,
+              availableStyles: [],
             },
           });
         }
       }
+      availableStyles = await getCategoryStyles(filter.categoryId);
     }
 
     // Shape / Style filter
@@ -816,14 +855,22 @@ exports.getIcons = async (req, res, next) => {
     let total = 0;
 
     if (shouldSkipCount) {
-      rawIcons = await Icon.find(filter)
-        .sort(sortQuery)
-        .skip(skip)
-        .limit(limitNum)
-        .populate('categoryId', 'name slug')
-        .populate('packId', 'title slug')
-        .select('title slug path isFilled isAnimated isPremium style tags downloadCount colors categoryId packId')
-        .lean();
+      if (limitNum <= 10) {
+        // High-speed preview mode: bypass heavy multi-key in-memory sorts and unneeded populates
+        rawIcons = await Icon.find(filter)
+          .limit(limitNum)
+          .select('title slug path isFilled isAnimated isPremium style downloadCount')
+          .lean();
+      } else {
+        rawIcons = await Icon.find(filter)
+          .sort(sortQuery)
+          .skip(skip)
+          .limit(limitNum)
+          .populate('categoryId', 'name slug')
+          .populate('packId', 'title slug')
+          .select('title slug path isFilled isAnimated isPremium style tags downloadCount colors categoryId packId')
+          .lean();
+      }
       total = rawIcons.length;
     } else {
       [rawIcons, total] = await Promise.all([
@@ -919,6 +966,7 @@ exports.getIcons = async (req, res, next) => {
         total,
         page: pageNum,
         totalPages: Math.ceil(total / limitNum),
+        availableStyles,
       },
     });
   } catch (err) {

@@ -44,7 +44,11 @@ const curatedRealPacks = [
     description: 'Shopping carts, barcode tags, credit cards, and express delivery tracking.',
     categoryName: 'Shopping',
     categorySlug: 'shopping',
-    gradient: 'from-rose-500/20 via-orange-500/10 to-amber-500/5',
+    gradient: 'from-rose-500/25 via-orange-500/15 to-amber-500/10',
+    cardBg: 'bg-gradient-to-b from-rose-50/60 via-white to-orange-50/20',
+    borderColor: 'border-rose-200/80 hover:border-rose-400/80',
+    tagBg: 'bg-rose-100/90 text-rose-800 border-rose-200/80',
+    btnHover: 'group-hover:bg-rose-600 group-hover:text-white',
     accentColor: '#FF5F52',
     icons: [
       { comp: ShoppingCart, label: 'Cart' },
@@ -60,7 +64,11 @@ const curatedRealPacks = [
     description: 'Cloud infrastructure, servers, terminals, microprocessors, and databases.',
     categoryName: 'Code & Dev',
     categorySlug: 'code',
-    gradient: 'from-teal-500/20 via-emerald-500/10 to-cyan-500/5',
+    gradient: 'from-emerald-500/25 via-teal-500/15 to-cyan-500/10',
+    cardBg: 'bg-gradient-to-b from-teal-50/60 via-white to-cyan-50/20',
+    borderColor: 'border-teal-200/80 hover:border-teal-400/80',
+    tagBg: 'bg-teal-100/90 text-teal-800 border-teal-200/80',
+    btnHover: 'group-hover:bg-teal-600 group-hover:text-white',
     accentColor: '#00F5D4',
     icons: [
       { comp: Cloud, label: 'Cloud' },
@@ -76,7 +84,11 @@ const curatedRealPacks = [
     description: 'Digital wallets, coins, market growth charts, vaults, and bank security.',
     categoryName: 'Business',
     categorySlug: 'business',
-    gradient: 'from-amber-500/20 via-yellow-500/10 to-emerald-500/5',
+    gradient: 'from-amber-500/25 via-yellow-500/15 to-emerald-500/10',
+    cardBg: 'bg-gradient-to-b from-amber-50/60 via-white to-yellow-50/20',
+    borderColor: 'border-amber-200/80 hover:border-amber-400/80',
+    tagBg: 'bg-amber-100/90 text-amber-800 border-amber-200/80',
+    btnHover: 'group-hover:bg-amber-600 group-hover:text-white',
     accentColor: '#FFD54F',
     icons: [
       { comp: Wallet, label: 'Wallet' },
@@ -92,7 +104,11 @@ const curatedRealPacks = [
     description: 'Chat bubbles, paper planes, profiles, notifications, and engagement badges.',
     categoryName: 'Social',
     categorySlug: 'social',
-    gradient: 'from-indigo-500/20 via-purple-500/10 to-pink-500/5',
+    gradient: 'from-indigo-500/25 via-purple-500/15 to-pink-500/10',
+    cardBg: 'bg-gradient-to-b from-indigo-50/60 via-white to-purple-50/20',
+    borderColor: 'border-indigo-200/80 hover:border-indigo-400/80',
+    tagBg: 'bg-indigo-100/90 text-indigo-800 border-indigo-200/80',
+    btnHover: 'group-hover:bg-indigo-600 group-hover:text-white',
     accentColor: '#6366f1',
     icons: [
       { comp: MessageCircle, label: 'Chat' },
@@ -108,7 +124,11 @@ const curatedRealPacks = [
     description: 'Cameras, film reels, sliders, digital palettes, and vector design pens.',
     categoryName: 'Media',
     categorySlug: 'media',
-    gradient: 'from-purple-500/20 via-fuchsia-500/10 to-rose-500/5',
+    gradient: 'from-purple-500/25 via-fuchsia-500/15 to-rose-500/10',
+    cardBg: 'bg-gradient-to-b from-purple-50/60 via-white to-pink-50/20',
+    borderColor: 'border-purple-200/80 hover:border-purple-400/80',
+    tagBg: 'bg-purple-100/90 text-purple-800 border-purple-200/80',
+    btnHover: 'group-hover:bg-purple-600 group-hover:text-white',
     accentColor: '#8b5cf6',
     icons: [
       { comp: Palette, label: 'Color' },
@@ -124,7 +144,11 @@ const curatedRealPacks = [
     description: 'Map pins, flight vectors, compasses, world globes, and trip routes.',
     categoryName: 'Transport',
     categorySlug: 'transport',
-    gradient: 'from-sky-500/20 via-cyan-500/10 to-indigo-500/5',
+    gradient: 'from-sky-500/25 via-cyan-500/15 to-indigo-500/10',
+    cardBg: 'bg-gradient-to-b from-sky-50/60 via-white to-blue-50/20',
+    borderColor: 'border-sky-200/80 hover:border-sky-400/80',
+    tagBg: 'bg-sky-100/90 text-sky-800 border-sky-200/80',
+    btnHover: 'group-hover:bg-sky-600 group-hover:text-white',
     accentColor: '#0ea5e9',
     icons: [
       { comp: MapPin, label: 'Pin' },
@@ -215,15 +239,15 @@ const TrendingPacks = () => {
               <Link
                 key={pack.slug}
                 to={`/search?category=${pack.categorySlug || 'all'}`}
-                className="group rounded-2xl glass-landing bg-white border border-landing-surface-container shadow-xs hover:shadow-lg hover:border-landing-primary/20 transition-all duration-200 overflow-hidden flex flex-col cursor-pointer"
+                className={`group rounded-3xl ${pack.cardBg || 'bg-white'} border ${pack.borderColor || 'border-landing-surface-container'} shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col cursor-pointer transform hover:-translate-y-1`}
               >
                 {/* Prominent Icon Showcase Tab */}
                 <div
-                  className={`relative w-full bg-gradient-to-br ${pack.gradient} border-b border-landing-surface-container p-3.5 sm:p-4 flex flex-col justify-between overflow-hidden`}
+                  className={`relative w-full bg-gradient-to-br ${pack.gradient} border-b border-landing-surface-container/60 p-4 sm:p-5 flex flex-col justify-between overflow-hidden`}
                 >
                   {/* Category Tag Only (Vector Icons text removed) */}
                   <div className="flex items-center justify-between z-10 mb-3">
-                    <span className="px-2.5 py-0.5 rounded-full bg-white/95 backdrop-blur-md text-[9px] font-extrabold text-landing-primary shadow-2xs border border-white/80 uppercase tracking-wider">
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold shadow-2xs border uppercase tracking-wider ${pack.tagBg || 'bg-white/95 text-landing-primary border-white/80'}`}>
                       {pack.categoryName || 'Vector Set'}
                     </span>
                   </div>
@@ -235,12 +259,12 @@ const TrendingPacks = () => {
                       return (
                         <div
                           key={ic.label || i}
-                          className="aspect-square rounded-xl bg-white/95 backdrop-blur-md border border-white/90 shadow-2xs flex flex-col items-center justify-center p-1.5 group-hover:border-landing-primary/20 group-hover:scale-105 transition-all duration-200"
+                          className="aspect-square rounded-2xl bg-white/95 backdrop-blur-md border border-white/90 shadow-2xs flex flex-col items-center justify-center p-1.5 group-hover:scale-105 transition-all duration-200"
                           title={ic.label}
                         >
                           <Comp
-                            className="w-6 h-6 sm:w-7 sm:h-7 text-[#001e52] group-hover:scale-110 transition-transform"
-                            style={{ strokeWidth: 1.85 }}
+                            className="w-6 h-6 sm:w-7 sm:h-7 group-hover:scale-110 transition-transform"
+                            style={{ color: pack.accentColor || '#001e52', strokeWidth: 1.85 }}
                           />
                         </div>
                       );
@@ -249,23 +273,23 @@ const TrendingPacks = () => {
 
                   {/* Subtle Decorative Backdrop Element */}
                   <div
-                    className="absolute -right-4 -bottom-4 w-20 h-20 rounded-full blur-xl opacity-25 pointer-events-none"
+                    className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full blur-xl opacity-30 pointer-events-none"
                     style={{ backgroundColor: pack.accentColor }}
                   />
                 </div>
 
                 {/* Content Body: Title, and Description with Browse Set button on the right */}
-                <div className="p-4 flex flex-col gap-2 flex-1 justify-between">
-                  <h3 className="text-sm sm:text-base font-bold font-heading text-landing-primary group-hover:text-landing-vibrant-coral transition-colors line-clamp-1">
+                <div className="p-5 flex flex-col gap-2.5 flex-1 justify-between">
+                  <h3 className="text-base sm:text-lg font-bold font-heading text-landing-primary group-hover:text-landing-vibrant-coral transition-colors line-clamp-1">
                     {pack.title}
                   </h3>
 
                   <div className="flex items-center justify-between gap-3 pt-0.5">
-                    <p className="text-xs text-landing-on-surface-variant line-clamp-2 leading-relaxed flex-1">
+                    <p className="text-xs text-landing-on-surface-variant line-clamp-2 leading-relaxed flex-1 font-medium">
                       {pack.description}
                     </p>
 
-                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-landing-primary bg-slate-100 group-hover:bg-[#001e52] group-hover:text-white px-3 py-1.5 rounded-lg shrink-0 transition-colors shadow-2xs">
+                    <span className={`inline-flex items-center gap-1.5 text-xs font-bold text-landing-primary bg-white/90 border border-landing-surface-container ${pack.btnHover || 'group-hover:bg-[#001e52] group-hover:text-white'} px-3.5 py-2 rounded-xl shrink-0 transition-all duration-200 shadow-2xs`}>
                       <span>Browse Set</span>
                       <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                     </span>

@@ -68,51 +68,56 @@ const FeatureGrid = () => {
           </p>
         </div>
 
-        {/* 4 Unique High-Impact Feature Boxes (Modern Horizontal-Flex Layout) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 max-w-5xl mx-auto">
+        {/* 4 Unique High-Impact Feature Boxes (Modern 4-Column Responsive Layout) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {coreFeatures.map((feat) => {
             const IconComp = feat.icon;
             return (
               <div
                 key={feat.title}
-                className="group relative rounded-2xl p-5 sm:p-6 bg-white border border-landing-surface-container/90 shadow-2xs hover:shadow-md hover:border-landing-primary/30 transition-all duration-200 flex flex-col justify-between overflow-hidden"
+                className="group relative rounded-3xl p-5 sm:p-6 bg-white border border-landing-surface-container shadow-xs hover:shadow-xl hover:border-landing-primary/30 transition-all duration-300 flex flex-col justify-between overflow-hidden transform hover:-translate-y-1"
               >
+                {/* Top Accent Gradient Bar */}
+                <div
+                  className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${feat.gradient}`}
+                />
+
                 <div>
-                  {/* Top Row: Icon Badge */}
-                  <div className="flex items-center justify-between mb-3.5">
+                  {/* Icon Badge with Glow */}
+                  <div className="flex items-center justify-between mb-4 pt-1">
                     <div
-                      className={`w-11 h-11 rounded-xl bg-gradient-to-br ${feat.gradient} text-white flex items-center justify-center shadow-xs ${feat.glow} group-hover:scale-105 transition-transform duration-200`}
+                      className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${feat.gradient} text-white flex items-center justify-center shadow-md ${feat.glow} group-hover:scale-110 transition-transform duration-300`}
                     >
-                      <IconComp className="w-5 h-5" />
+                      <IconComp className="w-6 h-6" />
                     </div>
                   </div>
 
                   {/* Title & Description */}
-                  <h3 className="text-base sm:text-lg font-bold font-heading text-landing-primary group-hover:text-landing-vibrant-coral transition-colors mb-1.5">
+                  <h3 className="text-base font-bold font-heading text-landing-primary group-hover:text-landing-vibrant-coral transition-colors mb-2">
                     {feat.title}
                   </h3>
-                  <p className="text-xs sm:text-sm text-landing-on-surface-variant leading-relaxed">
+                  <p className="text-xs text-landing-on-surface-variant leading-relaxed font-medium">
                     {feat.description}
                   </p>
                 </div>
 
-                {/* Unique Mini Visual Demonstration Element */}
-                <div className="pt-3.5 mt-3 border-t border-slate-100/90 flex items-center justify-between">
+                {/* Bottom Demonstration Element */}
+                <div className="pt-4 mt-4 border-t border-slate-100 flex flex-col gap-2">
                   {feat.previewChips ? (
                     <div className="flex flex-wrap gap-1.5">
                       {feat.previewChips.map((chip) => (
                         <span
                           key={chip}
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 bg-slate-50/80 border border-slate-200/50 px-2 py-0.5 rounded-lg"
+                          className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-600 bg-slate-50 border border-slate-200/60 px-2 py-0.5 rounded-lg"
                         >
-                          <CheckCircle2 className="w-3 h-3 text-landing-primary/70" />
+                          <CheckCircle2 className="w-3 h-3 text-landing-primary/70 shrink-0" />
                           <span>{chip}</span>
                         </span>
                       ))}
                     </div>
                   ) : (
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-semibold text-slate-500 mr-1">Brand Presets:</span>
+                      <span className="text-[10px] font-bold text-slate-500 mr-1">Brand Presets:</span>
                       {feat.colorSwatches.map((col) => (
                         <div
                           key={col}
@@ -127,7 +132,7 @@ const FeatureGrid = () => {
 
                 {/* Subtle Hover Gradient Accent Glow */}
                 <div
-                  className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full blur-2xl opacity-15 pointer-events-none group-hover:opacity-30 transition-opacity"
+                  className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full blur-2xl opacity-15 pointer-events-none group-hover:opacity-35 transition-opacity"
                   style={{ backgroundColor: feat.accentColor }}
                 />
               </div>

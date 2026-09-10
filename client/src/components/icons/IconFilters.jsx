@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SlidersHorizontal, RotateCcw, Crown, ChevronDown, ChevronUp, Check, Layers, Film } from 'lucide-react';
+import { SlidersHorizontal, RotateCcw, ChevronDown, ChevronUp, Check, Layers, Film } from 'lucide-react';
 
 const shapeOptions = [
   { id: 'all', label: 'All Shapes' },
@@ -25,12 +25,11 @@ const presetColorSwatches = [
 const IconFilters = ({
   selectedShape = 'all',
   onChangeShape,
+  availableStyles = null,
   selectedColorType = 'all', // 'all' | 'black' | 'gradient' | 'colors'
   onChangeColorType,
   selectedColor = '',
   onChangeColor,
-  selectedLicense = 'all',
-  onChangeLicense,
   selectedSort = 'trending', // 'trending' | 'recent'
   onChangeSort,
   groupBy = 'all', // 'all' | 'style' | 'pack'
@@ -46,8 +45,7 @@ const IconFilters = ({
 
   const activeFilterCount =
     (selectedShape !== 'all' ? 1 : 0) +
-    (selectedColorType !== 'all' ? 1 : 0) +
-    (selectedLicense !== 'all' ? 1 : 0);
+    (selectedColorType !== 'all' ? 1 : 0);
 
   // Dynamic grouping options: hide Style if only 1 style, hide Pack if only 1 pack
   const groupingOptions = [
@@ -165,29 +163,38 @@ const IconFilters = ({
       {/* Expanded Filter Panel */}
       {isExpanded && (
         <div className="p-4 sm:p-5 pt-0 border-t border-landing-surface-container mt-2 flex flex-col gap-4 animate-fade-in">
-          {/* 1. Shape Section */}
+          {/* 1. Shape Section: Only show buttons that actually exist in the category */}
           <div className="flex flex-col gap-1.5 pt-3">
             <label className="text-[11px] font-bold uppercase tracking-wider text-landing-on-surface-variant">
               Shape
             </label>
             <div className="flex flex-wrap gap-1.5">
-              {shapeOptions.map((shape) => {
-                const isSelected = selectedShape === shape.id;
-                return (
-                  <button
-                    key={shape.id}
-                    type="button"
-                    onClick={() => onChangeShape(shape.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                      isSelected
-                        ? 'bg-landing-primary text-white shadow-xs scale-105'
-                        : 'bg-landing-surface-container-low hover:bg-landing-surface-container text-landing-on-surface'
-                    }`}
-                  >
-                    {shape.label}
-                  </button>
-                );
-              })}
+              {shapeOptions
+                .filter((shape) => {
+                  if (shape.id === 'all') return true;
+                  if (!availableStyles || availableStyles.length === 0) return true;
+                  if (shape.id === '3d') {
+                    return availableStyles.includes('3d') || availableStyles.includes('isometric');
+                  }
+                  return availableStyles.includes(shape.id);
+                })
+                .map((shape) => {
+                  const isSelected = selectedShape === shape.id;
+                  return (
+                    <button
+                      key={shape.id}
+                      type="button"
+                      onClick={() => onChangeShape(shape.id)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-landing-primary text-white shadow-xs scale-105'
+                          : 'bg-landing-surface-container-low hover:bg-landing-surface-container text-landing-on-surface'
+                      }`}
+                    >
+                      {shape.label}
+                    </button>
+                  );
+                })}
             </div>
           </div>
 
@@ -241,37 +248,6 @@ const IconFilters = ({
                   ))}
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* 3. License Section */}
-          <div className="pt-1">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-landing-on-surface-variant block mb-1.5">
-              License
-            </label>
-            <div className="flex gap-2 max-w-sm">
-              {[
-                { id: 'all', label: 'All' },
-                { id: 'free', label: 'Free' },
-                { id: 'premium', label: 'Pro Only', icon: Crown },
-              ].map((lic) => {
-                const IconC = lic.icon;
-                return (
-                  <button
-                    key={lic.id}
-                    type="button"
-                    onClick={() => onChangeLicense(lic.id)}
-                    className={`flex-1 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1 ${
-                      selectedLicense === lic.id
-                        ? 'bg-landing-primary text-white border-landing-primary'
-                        : 'bg-landing-surface-container-low text-landing-on-surface border-landing-surface-container hover:bg-landing-surface-container'
-                    }`}
-                  >
-                    {IconC && <IconC className="w-3 h-3" />}
-                    <span>{lic.label}</span>
-                  </button>
-                );
-              })}
             </div>
           </div>
         </div>
