@@ -8,6 +8,7 @@ const { cleanIconTitle } = require('../utils/titleCleaner');
 
 // In-memory vector cache for high-speed serving
 const svgCache = new Map();
+const countCache = new Map();
 
 function parseSvgPathData(d) {
   if (!d || typeof d !== 'string') return [];
@@ -375,7 +376,8 @@ function getCorrectViewBox(svgText) {
   if (vbMatch) {
     const parts = vbMatch[1].trim().split(/[\s,]+/).map(Number);
     if (parts.length === 4 && parts[2] > 0 && parts[3] > 0) {
-      curVb = { x: parts[0], y: parts[1], w: parts[2], h: parts[3] };
+      // Fast path: valid viewBox exists, skip expensive regex path and bezier parsing
+      return `${parts[0]} ${parts[1]} ${parts[2]} ${parts[3]}`;
     }
   }
 
@@ -590,6 +592,10 @@ function normalizeAndFixSvg(svgText) {
     return svgText;
   }
 
+  if (svgText.includes('data-iu-normalized="1"')) {
+    return svgText;
+  }
+
   let result = svgText.trim()
     .replace(/<\?xml[^>]*\?>/gi, '')
     .replace(/<!DOCTYPE[^>]*>/gi, '')
@@ -769,13 +775,9 @@ exports.getIcons = async (req, res, next) => {
     const filter = { status: { $ne: 'rejected' } };
 
     // Animated icons separation:
-    // If animated query is true, return ONLY animated icons.
-    // Otherwise, return ONLY static icons (significantly reducing initial payload and CPU load).
     const wantsAnimated = animated === 'true' || animated === true || isAnimated === 'true' || isAnimated === true || style === 'animated';
     if (wantsAnimated) {
       filter.isAnimated = true;
-    } else {
-      filter.isAnimated = { $ne: true };
     }
 
     // Text search (title, slug, tags)
@@ -904,15 +906,9 @@ exports.getIcons = async (req, res, next) => {
       filter.colors = { $in: [color.toLowerCase()] };
     }
 
-    // Sorting: consistent predictable style clustering
-    let sortQuery = { isFilled: 1, style: 1, downloadCount: -1, _id: 1 };
-    if (style === 'outline') {
-      sortQuery = { isFilled: 1, style: 1, downloadCount: -1, _id: 1 };
-    } else if (style === 'color' || style === 'flat') {
-      sortQuery = { style: 1, downloadCount: -1, _id: 1 };
-    } else if (style === 'filled') {
-      sortQuery = { isFilled: -1, downloadCount: -1, _id: 1 };
-    } else if (sort === 'recent') {
+    // Sorting: indexed fast query order
+    let sortQuery = { downloadCount: -1, _id: 1 };
+    if (sort === 'recent') {
       sortQuery = { _id: -1 };
     } else if (sort === 'downloads') {
       sortQuery = { downloadCount: -1, _id: 1 };
@@ -969,6 +965,18 @@ exports.getIcons = async (req, res, next) => {
       }
       total = rawIcons.length;
     } else {
+      const countKey = JSON.stringify(filter);
+      let countPromise;
+      if (countCache.has(countKey)) {
+        countPromise = Promise.resolve(countCache.get(countKey));
+      } else {
+        countPromise = Icon.countDocuments(filter).then((cnt) => {
+          if (countCache.size > 5000) countCache.clear();
+          countCache.set(countKey, cnt);
+          return cnt;
+        });
+      }
+
       [rawIcons, total] = await Promise.all([
         Icon.find(filter)
           .sort(sortQuery)
@@ -978,7 +986,7 @@ exports.getIcons = async (req, res, next) => {
           .populate('packId', 'title slug')
           .select('title slug path isFilled isAnimated isPremium style tags downloadCount colors categoryId packId')
           .lean(),
-        Icon.countDocuments(filter),
+        countPromise,
       ]);
     }
 

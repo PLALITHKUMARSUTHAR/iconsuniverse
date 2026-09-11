@@ -50,56 +50,88 @@ const SearchResultsPage = () => {
   const [exploreModalCategory, setExploreModalCategory] = useState(null);
   const [isAllOtherCategoriesModalOpen, setIsAllOtherCategoriesModalOpen] = useState(false);
 
+  // In-memory Query Cache for instant (0ms) style/tab switches
+  const queryCacheRef = useRef(new Map());
+  const activeRequestIdRef = useRef(0);
+
   // Infinite Scroll Observer
   const observerRef = useRef(null);
-  const loadingRef = useRef(false);
 
-  // Fetch icons batch from API
+  // Fetch icons batch from API with instant cache read
   const fetchIconsBatch = async (pageNum, isReset = false, customLimit = 60) => {
-    if (loadingRef.current) return;
-    loadingRef.current = true;
+    const requestId = ++activeRequestIdRef.current;
+    
+    const params = {
+      q: queryParam || undefined,
+      category: categoryParam || undefined,
+      style: selectedShape !== 'all' ? selectedShape : undefined,
+      colorType: selectedColorType !== 'all' ? selectedColorType : undefined,
+      isPremium: selectedLicense === 'premium' ? true : selectedLicense === 'free' ? false : undefined,
+      color: selectedColor || undefined,
+      animated: isAnimatedOnly ? true : undefined,
+      sort: selectedSort,
+      page: pageNum,
+      limit: customLimit,
+    };
+
+    const cacheKey = JSON.stringify(params);
+
+    // Instant cache-hit: if reset query is already cached, show it instantly with 0 latency
+    if (isReset && queryCacheRef.current.has(cacheKey)) {
+      const cached = queryCacheRef.current.get(cacheKey);
+      setIcons(cached.icons);
+      setTotalCount(cached.total);
+      if (cached.availableStyles) setAvailableCategoryStyles(cached.availableStyles);
+      setHasMore(cached.hasMore);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const params = {
-        q: queryParam || undefined,
-        category: categoryParam || undefined,
-        style: selectedShape !== 'all' ? selectedShape : undefined,
-        colorType: selectedColorType !== 'all' ? selectedColorType : undefined,
-        isPremium: selectedLicense === 'premium' ? true : selectedLicense === 'free' ? false : undefined,
-        color: selectedColor || undefined,
-        animated: isAnimatedOnly ? true : undefined,
-        sort: selectedSort,
-        page: pageNum,
-        limit: customLimit,
-      };
-
       const res = await iconService.getIcons(params);
+      
+      // If user clicked another tab or filter while this request was in flight, discard old response
+      if (requestId !== activeRequestIdRef.current) return;
+
       if (res.data && res.data.icons) {
         if (res.data.availableStyles) {
           setAvailableCategoryStyles(res.data.availableStyles);
         }
         const newBatch = res.data.icons;
         const total = res.data.total || 0;
+        const more = pageNum < (res.data.totalPages || 1);
         setTotalCount(total);
+        setHasMore(more);
 
         setIcons((prev) => {
-          if (isReset) return newBatch;
+          if (isReset) {
+            // Save initial page to cache for instant re-switching
+            queryCacheRef.current.set(cacheKey, {
+              icons: newBatch,
+              total,
+              availableStyles: res.data.availableStyles,
+              hasMore: more,
+            });
+            return newBatch;
+          }
           const seen = new Set(prev.map((i) => i._id || i.slug));
           const uniqueNew = newBatch.filter((i) => !seen.has(i._id || i.slug));
-          return [...prev, ...uniqueNew];
+          const combined = [...prev, ...uniqueNew];
+          return combined;
         });
-
-        setHasMore(pageNum < (res.data.totalPages || 1));
       }
     } catch (err) {
+      if (requestId !== activeRequestIdRef.current) return;
       if (isReset) {
         setIcons([]);
         setHasMore(false);
       }
     } finally {
-      setLoading(false);
-      loadingRef.current = false;
+      if (requestId === activeRequestIdRef.current) {
+        setLoading(false);
+      }
     }
   };
 
@@ -125,7 +157,7 @@ const SearchResultsPage = () => {
       if (observerRef.current) observerRef.current.disconnect();
 
       observerRef.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMore && !loadingRef.current) {
+        if (entries[0].isIntersecting && hasMore && !loading) {
           setPage((prevPage) => {
             const nextPage = prevPage + 1;
             fetchIconsBatch(nextPage, false, 60);
@@ -382,47 +414,51 @@ const SearchResultsPage = () => {
         keywords={[queryParam, categoryParam, 'vector icons', 'svg icons', 'free download'].filter(Boolean)}
       />
 
-      {/* 1. Top Header & Filters (Clean & Stable) */}
-      <div className="shrink-0 flex flex-col gap-2.5 z-20 bg-[#f8f9ff]">
+      {/* 1. Top Header & Filters (Clean, Sleek & Space-Efficient) */}
+      <div className="shrink-0 flex flex-col gap-1.5 z-20 bg-[#f8f9ff]">
         {/* Header Banner */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-subpage-outline-variant/20">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-1.5 border-b border-subpage-outline-variant/20">
           <div>
-            <h1 className="text-xl sm:text-2xl font-extrabold font-heading text-subpage-on-surface flex items-center gap-2">
-              {isAnimatedOnly ? (
-                <>
-                  <Film className="w-5 h-5 text-landing-vibrant-coral animate-pulse" />
-                  <span className="capitalize">
-                    Animated {categoryParam ? `${categoryParam.replace(/-/g, ' ')} ` : ''}Icons
-                  </span>
-                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-energy-gradient text-white shadow-2xs">
-                    Live Vector Animations
-                  </span>
-                </>
-              ) : queryParam ? (
-                <>
-                  <Search className="w-5 h-5 text-landing-vibrant-coral" />
-                  <span>Results for &ldquo;{queryParam}&rdquo;</span>
-                </>
-              ) : categoryParam ? (
-                <>
-                  <CategoryHeadingIcon className="w-5 h-5 text-landing-primary" />
-                  <span className="capitalize">{categoryParam.replace(/-/g, ' ')} Icons</span>
-                </>
-              ) : (
-                <span>Vector Icons Library</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-base sm:text-lg font-extrabold font-heading text-subpage-on-surface flex items-center gap-1.5">
+                {isAnimatedOnly ? (
+                  <>
+                    <Film className="w-4 h-4 text-landing-vibrant-coral animate-pulse" />
+                    <span className="capitalize">
+                      Animated {categoryParam ? `${categoryParam.replace(/-/g, ' ')} ` : ''}Icons
+                    </span>
+                  </>
+                ) : queryParam ? (
+                  <>
+                    <Search className="w-4 h-4 text-landing-vibrant-coral" />
+                    <span>Results for &ldquo;{queryParam}&rdquo;</span>
+                  </>
+                ) : categoryParam ? (
+                  <>
+                    <CategoryHeadingIcon className="w-4 h-4 text-landing-primary" />
+                    <span className="capitalize">{categoryParam.replace(/-/g, ' ')} Icons</span>
+                  </>
+                ) : (
+                  <span>Vector Icons Library</span>
+                )}
+              </h1>
+              {isAnimatedOnly && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-energy-gradient text-white shadow-2xs">
+                  Live Animations
+                </span>
               )}
-            </h1>
-            <p className="text-xs text-subpage-on-surface-variant mt-0.5">
-              {isAnimatedOnly
-                ? `${totalCount.toLocaleString()} animated vector icons available. `
-                : `${totalCount > 0 ? `${totalCount.toLocaleString()} vector icons available. ` : ''}`}
-              Click to select icons, then click Open Download to customize and download.
+              <span className="text-xs text-subpage-on-surface-variant font-medium">
+                ({totalCount > 0 ? `${totalCount.toLocaleString()} icons` : '...'})
+              </span>
+            </div>
+            <p className="text-[11px] text-subpage-on-surface-variant mt-0.5 line-clamp-1">
+              Select icons to customize and download in SVG, PNG, or EPS.
             </p>
           </div>
 
           {/* Quick Style Switcher Pills (Hidden when category is opened since style buttons exist inside Filters tab) */}
           {!isCategoryMode && (
-            <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-white border border-landing-surface-container shadow-2xs overflow-x-auto">
+            <div className="flex items-center gap-1 p-0.5 rounded-xl bg-white border border-landing-surface-container shadow-2xs overflow-x-auto">
               {quickStylePills
                 .filter((pill) => {
                   if (pill.id === 'all') return true;
@@ -437,13 +473,13 @@ const SearchResultsPage = () => {
                       key={pill.id}
                       type="button"
                       onClick={() => handleQuickStyleChange(pill.id)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                         isSelected
                           ? 'bg-landing-primary text-white shadow-xs'
                           : 'text-landing-on-surface-variant hover:text-landing-primary hover:bg-landing-surface-container-low'
                       }`}
                     >
-                      <IconComp className="w-3.5 h-3.5" />
+                      <IconComp className="w-3 h-3" />
                       <span>{pill.label}</span>
                     </button>
                   );

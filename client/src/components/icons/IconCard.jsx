@@ -29,10 +29,11 @@ const IconCard = ({
   const [imgFailed, setImgFailed] = useState(false);
   const containerRef = React.useRef(null);
 
-  // Active vector loader: Immediately fetch and normalize vector SVG on mount
-  // Completely eliminates "show on hover only" so icons render instantly and visibly
+  const isAnimIcon = Boolean(icon.isAnimated);
+
+  // Active vector loader for animated icons: fetch on mount so we can freeze at currentTime=10 and animate on hover
   useEffect(() => {
-    if (svgMarkup) return;
+    if (!isAnimIcon || svgMarkup) return;
     let isMounted = true;
     const fetchUrl = directCdnUrl || proxyUrl;
     if (!fetchUrl) return;
@@ -40,7 +41,7 @@ const IconCard = ({
     fetchAndCacheSvg(fetchUrl, iconId, proxyUrl)
       .then((raw) => {
         if (isMounted && raw) {
-          setSvgMarkup(normalizeSvgForCanvas(raw, iconId));
+          setSvgMarkup(raw);
         }
       })
       .catch(() => {});
@@ -48,11 +49,11 @@ const IconCard = ({
     return () => {
       isMounted = false;
     };
-  }, [iconId, directCdnUrl, proxyUrl, svgMarkup]);
+  }, [isAnimIcon, iconId, directCdnUrl, proxyUrl, svgMarkup]);
 
   // On mount: Keep animated icons resting statically in their fully drawn visual state
   useEffect(() => {
-    const isAnim = icon.isAnimated || (svgMarkup && (svgMarkup.includes('<animate') || svgMarkup.includes('<animateTransform')));
+    const isAnim = isAnimIcon || (svgMarkup && (svgMarkup.includes('<animate') || svgMarkup.includes('<animateTransform')));
     if (!isAnim || !svgMarkup) return;
 
     if (containerRef.current) {
@@ -63,9 +64,9 @@ const IconCard = ({
         } catch (e) {}
       }
     }
-  }, [icon.isAnimated, svgMarkup]);
+  }, [isAnimIcon, svgMarkup]);
 
-  // Trigger animation only on hover
+  // Trigger animation only on hover and prefetch vector SVG for instant modal/editor opening
   const handleMouseEnter = useCallback(() => {
     if (containerRef.current) {
       const svg = containerRef.current.querySelector('svg');
@@ -89,14 +90,14 @@ const IconCard = ({
     if (!fetchUrl) return;
     fetchAndCacheSvg(fetchUrl, iconId, proxyUrl)
       .then((raw) => {
-        if (raw) setSvgMarkup(normalizeSvgForCanvas(raw, iconId));
+        if (raw && isAnimIcon) setSvgMarkup(raw);
       })
       .catch(() => {});
-  }, [svgMarkup, directCdnUrl, proxyUrl, iconId]);
+  }, [svgMarkup, directCdnUrl, proxyUrl, iconId, isAnimIcon]);
 
   // When hover ends, settle back to the completed static state
   const handleMouseLeave = useCallback(() => {
-    const isAnim = icon.isAnimated || (svgMarkup && (svgMarkup.includes('<animate') || svgMarkup.includes('<animateTransform')));
+    const isAnim = isAnimIcon || (svgMarkup && (svgMarkup.includes('<animate') || svgMarkup.includes('<animateTransform')));
     if (!isAnim) return;
 
     if (containerRef.current) {
@@ -107,7 +108,7 @@ const IconCard = ({
         } catch (e) {}
       }
     }
-  }, [icon.isAnimated, svgMarkup]);
+  }, [isAnimIcon, svgMarkup]);
 
   const handleImgError = () => {
     if (imgSrc !== proxyUrl && proxyUrl) {

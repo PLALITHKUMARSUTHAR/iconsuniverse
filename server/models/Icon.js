@@ -63,6 +63,13 @@ const iconSchema = new mongoose.Schema({
   toObject: { virtuals: true },
 });
 
+// High performance compound indexes for instantaneous style filtering, sorting & animated tabs
+iconSchema.index({ style: 1, downloadCount: -1, _id: 1 });
+iconSchema.index({ isAnimated: 1, downloadCount: -1, _id: 1 });
+iconSchema.index({ categoryId: 1, isAnimated: 1, style: 1, downloadCount: -1, _id: 1 });
+iconSchema.index({ categoryId: 1, downloadCount: -1, _id: 1 });
+iconSchema.index({ downloadCount: -1, _id: 1 });
+
 // Dynamic Virtual Getters: Produces svgUrl and pngPreviewUrl in all API responses with 0 database storage!
 iconSchema.virtual('svgUrl').get(function() {
   const safePath = this.path ? this.path.split('/').map(encodeURIComponent).join('/') : '';

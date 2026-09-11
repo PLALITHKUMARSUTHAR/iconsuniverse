@@ -608,7 +608,8 @@ export function getCorrectViewBox(svgText) {
   if (vbMatch) {
     const parts = vbMatch[1].trim().split(/[\s,]+/).map(Number);
     if (parts.length === 4 && parts[2] > 0 && parts[3] > 0) {
-      curVb = { x: parts[0], y: parts[1], w: parts[2], h: parts[3] };
+      // High-speed fast path: Valid viewBox exists, skip expensive regex path/arc bounding-box parsing
+      return `${parts[0]} ${parts[1]} ${parts[2]} ${parts[3]}`;
     }
   }
 
@@ -826,6 +827,11 @@ export function normalizeSvgForCanvas(svgText, scopeId = null) {
     return svgText;
   }
 
+  // Instant fast-path: Skip normalization if already normalized
+  if (svgText.includes('data-iu-normalized="1"')) {
+    return svgText;
+  }
+
   let result = svgText.trim()
     .replace(/<\?xml[^>]*\?>/gi, '')
     .replace(/<!DOCTYPE[^>]*>/gi, '')
@@ -859,7 +865,7 @@ export function normalizeSvgForCanvas(svgText, scopeId = null) {
       .replace(/\bheight=["'][^"']*["']/gi, '')
       .replace(/\bdisplay=["']none["']/gi, '')
       .replace(/\bvisibility=["']hidden["']/gi, '');
-    return `<svg width="100%" height="100%" style="color: #0f172a; color-scheme: light;" ${cleanAttrs.trim()}>`;
+    return `<svg data-iu-normalized="1" width="100%" height="100%" style="color: #0f172a; color-scheme: light;" ${cleanAttrs.trim()}>`;
   });
 
   // 5. Intelligent stroke & fill recovery for unstyled icons without mutating multi-color assets
