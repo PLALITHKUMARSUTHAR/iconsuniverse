@@ -105,6 +105,9 @@ export default {
         coral: '0 12px 24px rgba(255, 95, 82, 0.3)',
         teal: '0 12px 24px rgba(0, 245, 212, 0.25)',
       },
+      gridTemplateColumns: {
+        '15': 'repeat(15, minmax(0, 1fr))',
+      },
     },
   },
   plugins: [],

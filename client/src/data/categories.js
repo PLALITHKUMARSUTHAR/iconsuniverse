@@ -1,5 +1,6 @@
-// 29 Main Featured Categories for Homepage (Clean 10x3 layout with "Full List" as the 30th box)
-export const main29FeaturedCategories = [
+// 44 Main Featured Categories for Homepage (Clean 15x3 layout with "Full List" as the 45th box)
+export const main44FeaturedCategories = [
+  // Row 1 (15 items)
   { name: "Interface", slug: "interface", iconName: "Layers", color: "#6366f1" },
   { name: "Emoji", slug: "emoji", iconName: "Smile", color: "#FFD54F" },
   { name: "Brands", slug: "brands", iconName: "Award", color: "#FF5F52" },
@@ -10,18 +11,17 @@ export const main29FeaturedCategories = [
   { name: "Business", slug: "business", iconName: "Briefcase", color: "#00327d" },
   { name: "Food", slug: "food", iconName: "Utensils", color: "#ef4444" },
   { name: "Transport", slug: "transport", iconName: "Truck", color: "#14b8a6" },
-  // Row 2
   { name: "Weather", slug: "weather", iconName: "CloudSun", color: "#0284c7" },
   { name: "Music", slug: "music", iconName: "Music", color: "#ec4899" },
   { name: "Media", slug: "media", iconName: "Film", color: "#9333ea" },
   { name: "Security", slug: "security", iconName: "ShieldCheck", color: "#059669" },
   { name: "Health", slug: "health-medical", iconName: "HeartPulse", color: "#b91c1c" },
+  // Row 2 (15 items)
   { name: "Nature", slug: "nature", iconName: "Trees", color: "#15803d" },
   { name: "Education", slug: "education", iconName: "GraduationCap", color: "#4338ca" },
   { name: "Shopping", slug: "shopping", iconName: "ShoppingCart", color: "#f43f5e" },
   { name: "Chat", slug: "communication", iconName: "MessageSquare", color: "#3b82f6" },
   { name: "Devices", slug: "devices", iconName: "Laptop", color: "#0284c7" },
-  // Row 3
   { name: "Design", slug: "design", iconName: "PenTool", color: "#ec4899" },
   { name: "Social", slug: "social", iconName: "Share2", color: "#06b6d4" },
   { name: "Settings", slug: "settings", iconName: "Settings", color: "#64748b" },
@@ -31,9 +31,26 @@ export const main29FeaturedCategories = [
   { name: "Home", slug: "home", iconName: "Home", color: "#00327d" },
   { name: "Camera", slug: "photography", iconName: "Camera", color: "#475569" },
   { name: "Science", slug: "science", iconName: "FlaskConical", color: "#8b5cf6" },
+  { name: "Calendar", slug: "calendar", iconName: "Calendar", color: "#2563eb" },
+  // Row 3 (14 items + "Full List" = 15 items)
+  { name: "Animals", slug: "animals", iconName: "Cat", color: "#f97316" },
+  { name: "Art", slug: "art", iconName: "Palette", color: "#FF5F52" },
+  { name: "Buildings", slug: "buildings", iconName: "Building2", color: "#475569" },
+  { name: "Mail", slug: "mail", iconName: "Mail", color: "#dc2626" },
+  { name: "Maps", slug: "maps", iconName: "MapPin", color: "#059669" },
+  { name: "Alerts", slug: "alerts", iconName: "AlertCircle", color: "#ef4444" },
+  { name: "Energy", slug: "energy", iconName: "Zap", color: "#eab308" },
+  { name: "Game", slug: "game", iconName: "Gamepad2", color: "#9333ea" },
+  { name: "Gifts", slug: "gifts", iconName: "Gift", color: "#e11d48" },
+  { name: "People", slug: "people", iconName: "Users", color: "#4f46e5" },
+  { name: "Notice", slug: "notifications", iconName: "Bell", color: "#f59e0b" },
+  { name: "Network", slug: "network", iconName: "Network", color: "#0284c7" },
+  { name: "Sports", slug: "sports", iconName: "Trophy", color: "#f97316" },
+  { name: "Shapes", slug: "shapes", iconName: "Shapes", color: "#ec4899" },
 ];
 
-export const main17FeaturedCategories = main29FeaturedCategories.slice(0, 17);
+export const main29FeaturedCategories = main44FeaturedCategories.slice(0, 29);
+export const main17FeaturedCategories = main44FeaturedCategories.slice(0, 17);
 
 // All 61 Canonical Categories with Dedicated Icons & Vibrant Colors (Others placed at the end)
 export const all163CategoriesWithIcons = [

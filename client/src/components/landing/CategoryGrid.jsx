@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  main29FeaturedCategories,
+  main44FeaturedCategories,
   all163CategoriesWithIcons,
 } from '../../data/categories';
 import { CategoryIconMap } from '../../data/categoryIcons';
@@ -16,10 +16,10 @@ const CategoryGrid = () => {
   // Background warm featured categories during idle time for 0ms instant preview modal
   React.useEffect(() => {
     const timer = setTimeout(() => {
-      main29FeaturedCategories.forEach((cat, index) => {
+      main44FeaturedCategories.slice(0, 20).forEach((cat, index) => {
         setTimeout(() => {
           prefetchCategoryPreviews(cat.slug, 'filled');
-        }, index * 60);
+        }, index * 50);
       });
     }, 500);
     return () => clearTimeout(timer);
@@ -34,11 +34,11 @@ const CategoryGrid = () => {
   };
 
   return (
-    <section className="w-full py-4 sm:py-6">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between mb-3 sm:mb-3.5">
+    <section className="w-full py-6 sm:py-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-8">
+        <div className="flex items-center justify-between mb-4 sm:mb-5">
           <div>
-            <h2 className="text-sm sm:text-base font-extrabold font-heading text-landing-primary tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-extrabold font-heading text-landing-primary tracking-tight">
               Categories
             </h2>
           </div>
@@ -46,16 +46,16 @@ const CategoryGrid = () => {
           <button
             type="button"
             onClick={() => setIsAllCategoriesOpen(true)}
-            className="text-xs font-bold text-landing-primary hover:text-landing-vibrant-coral flex items-center gap-1 group transition-colors cursor-pointer"
+            className="text-xs sm:text-sm font-bold text-landing-primary hover:text-landing-vibrant-coral flex items-center gap-1 group transition-colors cursor-pointer"
           >
             <span>View full list</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
 
-        {/* Exactly 3 Rows of 10 Categories (29 Featured + 1 "Full List" = 30 Compact Square Boxes) */}
-        <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5 sm:gap-2">
-          {main29FeaturedCategories.map((cat) => {
+        {/* Exactly 3 Rows of 15 Categories (44 Featured + 1 "Full List" = 45 Compact Square Boxes) */}
+        <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-15 gap-1.5 sm:gap-2">
+          {main44FeaturedCategories.map((cat) => {
             const IconComp = CategoryIconMap[cat.iconName] || Layers;
             return (
               <button
@@ -80,7 +80,7 @@ const CategoryGrid = () => {
             );
           })}
 
-          {/* 30th Box: Titled "Full List" */}
+          {/* 45th Box: Titled "Full List" */}
           <button
             type="button"
             onClick={() => setIsAllCategoriesOpen(true)}
