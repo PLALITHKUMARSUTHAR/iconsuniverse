@@ -23,16 +23,16 @@ const Navbar = ({ isLanding = false }) => {
             : 'glass-subpage border-b border-subpage-outline-variant/30 bg-white/90'
         } backdrop-blur-xl shadow-sm`}
       >
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 h-14 sm:h-16 flex items-center justify-between gap-4">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 h-12 sm:h-13 flex items-center justify-between gap-3">
           {/* Logo from Stitch Logo folder */}
           <div className="flex items-center">
-            <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
+            <Link to="/" className="flex items-center gap-2 shrink-0 group">
               <img
                 src="/logo.png"
                 alt="IconsUniverse"
-                className="h-8 sm:h-9 w-auto object-contain rounded-lg shadow-xs transform group-hover:scale-105 transition-transform"
+                className="h-7 sm:h-8 w-auto object-contain rounded-md shadow-2xs transform group-hover:scale-105 transition-transform"
               />
-              <span className="font-heading font-extrabold text-lg sm:text-xl text-landing-primary tracking-tight">
+              <span className="font-heading font-extrabold text-base sm:text-lg text-landing-primary tracking-tight">
                 Icons<span className="text-landing-vibrant-coral">Universe</span>
               </span>
             </Link>
@@ -40,7 +40,7 @@ const Navbar = ({ isLanding = false }) => {
 
           {/* Search bar in Navbar (hidden on landing hero) */}
           {!isLanding ? (
-            <div className="hidden md:flex flex-1 max-w-md mx-4">
+            <div className="hidden md:flex flex-1 max-w-sm mx-3">
               <SearchBar placeholder="Search vector icons..." />
             </div>
           ) : (

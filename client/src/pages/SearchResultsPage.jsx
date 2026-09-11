@@ -451,9 +451,6 @@ const SearchResultsPage = () => {
                 ({totalCount > 0 ? `${totalCount.toLocaleString()} icons` : '...'})
               </span>
             </div>
-            <p className="text-[11px] text-subpage-on-surface-variant mt-0.5 line-clamp-1">
-              Select icons to customize and download in SVG, PNG, or EPS.
-            </p>
           </div>
 
           {/* Quick Style Switcher Pills (Hidden when category is opened since style buttons exist inside Filters tab) */}

@@ -10,7 +10,7 @@ const IconGrid = ({
 }) => {
   if (loading && icons.length === 0) {
     return (
-      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-2 sm:gap-2.5">
+      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-1.5 sm:gap-2">
         {Array.from({ length: 24 }).map((_, i) => (
           <div
             key={i}
@@ -36,7 +36,7 @@ const IconGrid = ({
   }
 
   return (
-    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-2 sm:gap-2.5">
+    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-1.5 sm:gap-2">
       {icons.map((icon, index) => {
         const id = icon._id || icon.slug;
         const isSelected = selectedIds.has(id);

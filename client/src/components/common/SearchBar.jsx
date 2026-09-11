@@ -40,17 +40,17 @@ const SearchBar = ({ initialQuery = '', placeholder = 'Search 10,00,000 icons...
   };
 
   return (
-    <div ref={searchRef} className={`relative w-full ${isHero ? 'max-w-3xl mx-auto' : 'max-w-xl'}`}>
+    <div ref={searchRef} className={`relative w-full ${isHero ? 'max-w-xl mx-auto' : 'max-w-md'}`}>
       <form
         onSubmit={handleSearch}
         className={`flex items-center w-full transition-all duration-300 rounded-full border ${
           isHero
-            ? 'glass-landing bg-white/90 p-2 sm:p-2.5 shadow-2xl hover:shadow-coral focus-within:ring-4 focus-within:ring-[#00F5D4]/40 border-white/80'
-            : 'bg-landing-surface-container-low focus-within:bg-white p-1.5 focus-within:ring-2 focus-within:ring-landing-primary-container border-landing-outline-variant/40 shadow-sm'
+            ? 'glass-landing bg-white/90 p-1.5 sm:p-2 shadow-xl hover:shadow-coral focus-within:ring-3 focus-within:ring-[#00F5D4]/40 border-white/80'
+            : 'bg-landing-surface-container-low focus-within:bg-white p-1 focus-within:ring-2 focus-within:ring-landing-primary-container border-landing-outline-variant/30 shadow-2xs'
         }`}
       >
-        <div className="pl-3 sm:pl-4 text-landing-on-surface-variant">
-          <Search className={`${isHero ? 'w-6 h-6 text-landing-primary' : 'w-4 h-4'}`} />
+        <div className="pl-2.5 sm:pl-3 text-landing-on-surface-variant shrink-0">
+          <Search className={`${isHero ? 'w-4 h-4 sm:w-4.5 sm:h-4.5 text-landing-primary' : 'w-3.5 h-3.5'}`} />
         </div>
 
         <input
@@ -62,8 +62,8 @@ const SearchBar = ({ initialQuery = '', placeholder = 'Search 10,00,000 icons...
           }}
           onFocus={() => setIsOpen(true)}
           placeholder={placeholder}
-          className={`w-full bg-transparent px-3 text-landing-on-surface placeholder:text-landing-on-surface-variant/60 focus:outline-none ${
-            isHero ? 'text-base sm:text-lg font-medium' : 'text-sm'
+          className={`w-full bg-transparent px-2.5 text-landing-on-surface placeholder:text-landing-on-surface-variant/60 focus:outline-none ${
+            isHero ? 'text-xs sm:text-sm font-medium' : 'text-xs'
           }`}
         />
 
@@ -71,22 +71,22 @@ const SearchBar = ({ initialQuery = '', placeholder = 'Search 10,00,000 icons...
           <button
             type="button"
             onClick={() => setQuery('')}
-            className="p-1.5 rounded-full hover:bg-black/5 text-landing-on-surface-variant mr-1"
+            className="p-1 rounded-full hover:bg-black/5 text-landing-on-surface-variant mr-1 cursor-pointer"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         )}
 
         <button
           type="submit"
-          className={`flex items-center justify-center font-bold text-white rounded-full transition-all shrink-0 ${
+          className={`flex items-center justify-center font-bold text-white rounded-full transition-all shrink-0 cursor-pointer ${
             isHero
-              ? 'bg-energy-gradient px-6 sm:px-8 py-3 sm:py-3.5 shadow-coral hover:scale-105 active:scale-95 text-sm sm:text-base gap-2'
-              : 'bg-landing-primary px-4 py-2 hover:bg-landing-primary-container text-xs'
+              ? 'bg-energy-gradient px-4 sm:px-5 py-1.5 sm:py-2 shadow-coral hover:scale-102 active:scale-98 text-xs sm:text-sm gap-1.5'
+              : 'bg-landing-primary px-3 py-1 hover:bg-landing-primary-container text-xs'
           }`}
         >
           <span>Search</span>
-          {isHero && <ArrowRight className="w-4 h-4 hidden sm:inline-block" />}
+          {isHero && <ArrowRight className="w-3.5 h-3.5 hidden sm:inline-block" />}
         </button>
       </form>
 

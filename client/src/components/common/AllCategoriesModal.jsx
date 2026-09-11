@@ -83,16 +83,16 @@ const AllCategoriesModal = ({ isOpen, onClose, onSelectCategory, excludeSlug = '
                 }}
                 onMouseEnter={() => prefetchCategoryPreviews(cat.slug, 'filled')}
                 onPointerDown={() => prefetchCategoryPreviews(cat.slug, 'filled')}
-                className="group p-3 rounded-2xl bg-white hover:bg-white border border-landing-surface-container/80 hover:border-landing-primary/30 shadow-2xs hover:shadow-xs transition-all duration-150 flex flex-col items-center text-center justify-center gap-2 cursor-pointer"
+                className="group aspect-square p-2 rounded-xl bg-white hover:bg-white border border-landing-surface-container/80 hover:border-landing-primary/40 shadow-2xs hover:shadow-xs transition-all duration-150 flex flex-col items-center text-center justify-center gap-1 cursor-pointer"
               >
                 <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110 shrink-0"
                   style={{ backgroundColor: `${cat.color || '#00327d'}15`, color: cat.color || '#00327d' }}
                 >
-                  <IconComp className="w-4 h-4" />
+                  <IconComp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
 
-                <h3 className="text-[11px] font-bold font-heading text-landing-on-surface group-hover:text-landing-primary transition-colors truncate w-full">
+                <h3 className="text-[10px] sm:text-[11px] font-bold font-heading text-landing-on-surface group-hover:text-landing-primary transition-colors truncate w-full px-0.5">
                   {cat.name}
                 </h3>
               </button>

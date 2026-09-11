@@ -34,11 +34,11 @@ const CategoryGrid = () => {
   };
 
   return (
-    <section className="w-full py-12 sm:py-16">
+    <section className="w-full py-6 sm:py-8">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-4 sm:mb-5">
           <div>
-            <h2 className="text-xl sm:text-2xl font-extrabold font-heading text-landing-primary tracking-tight">
+            <h2 className="text-lg sm:text-xl font-extrabold font-heading text-landing-primary tracking-tight">
               Categories
             </h2>
           </div>
@@ -46,15 +46,15 @@ const CategoryGrid = () => {
           <button
             type="button"
             onClick={() => setIsAllCategoriesOpen(true)}
-            className="text-xs font-bold text-landing-primary hover:text-landing-vibrant-coral flex items-center gap-1 group transition-colors"
+            className="text-xs font-bold text-landing-primary hover:text-landing-vibrant-coral flex items-center gap-1 group transition-colors cursor-pointer"
           >
             <span>View full list</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
 
-        {/* 17 Main Categories + 1 "Full List" Box = 18 Clean Symmetric Boxes (6 cols x 3 rows) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-3.5">
+        {/* 17 Main Categories + 1 "Full List" Box = 18 Compact Square Boxes (9 cols x 2 rows on lg) */}
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9 gap-2 sm:gap-2.5">
           {main17FeaturedCategories.map((cat) => {
             const IconComp = CategoryIconMap[cat.iconName] || Layers;
             return (
@@ -64,16 +64,16 @@ const CategoryGrid = () => {
                 onClick={() => handleCategoryClick(cat)}
                 onMouseEnter={() => prefetchCategoryPreviews(cat.slug, 'filled')}
                 onPointerDown={() => prefetchCategoryPreviews(cat.slug, 'filled')}
-                className="group p-3.5 sm:p-4 rounded-2xl bg-white hover:bg-white border border-landing-surface-container hover:border-landing-primary/30 shadow-2xs hover:shadow-xs transition-all duration-150 flex flex-col items-center text-center justify-center gap-2 cursor-pointer"
+                className="group aspect-square p-2 sm:p-2.5 rounded-xl bg-white hover:bg-white border border-landing-surface-container hover:border-landing-primary/40 shadow-2xs hover:shadow-xs transition-all duration-150 flex flex-col items-center text-center justify-center gap-1 cursor-pointer"
               >
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110 shrink-0"
                   style={{ backgroundColor: `${cat.color}15`, color: cat.color }}
                 >
-                  <IconComp className="w-5 h-5" />
+                  <IconComp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
 
-                <h3 className="text-xs font-bold font-heading text-landing-on-surface group-hover:text-landing-primary transition-colors truncate w-full">
+                <h3 className="text-[10px] sm:text-[11px] font-bold font-heading text-landing-on-surface group-hover:text-landing-primary transition-colors truncate w-full px-0.5">
                   {cat.name}
                 </h3>
               </button>
@@ -84,13 +84,13 @@ const CategoryGrid = () => {
           <button
             type="button"
             onClick={() => setIsAllCategoriesOpen(true)}
-            className="group p-3.5 sm:p-4 rounded-2xl bg-energy-gradient text-white border border-transparent shadow-xs hover:shadow-md transition-all duration-150 flex flex-col items-center text-center justify-center gap-2 transform hover:-translate-y-0.5 cursor-pointer"
+            className="group aspect-square p-2 sm:p-2.5 rounded-xl bg-energy-gradient text-white border border-transparent shadow-2xs hover:shadow-xs transition-all duration-150 flex flex-col items-center text-center justify-center gap-1 transform hover:-translate-y-0.5 cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center transition-transform group-hover:scale-110">
-              <Grid3X3 className="w-5 h-5 text-white" />
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/20 flex items-center justify-center transition-transform group-hover:scale-110 shrink-0">
+              <Grid3X3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
             </div>
 
-            <h3 className="text-xs font-extrabold font-heading text-white tracking-wide">
+            <h3 className="text-[10px] sm:text-[11px] font-extrabold font-heading text-white tracking-tight truncate w-full px-0.5">
               Full List
             </h3>
           </button>

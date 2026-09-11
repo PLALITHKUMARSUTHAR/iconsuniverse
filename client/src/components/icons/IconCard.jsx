@@ -123,8 +123,8 @@ const IconCard = ({
 
   return (
     <div
-      style={{ contentVisibility: 'auto', containIntrinsicSize: '80px 100px', colorScheme: 'light' }}
-      className={`group relative flex flex-col items-center justify-between p-2 rounded-xl bg-white transition-all duration-150 transform hover:-translate-y-0.5 cursor-pointer select-none ${
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '64px 76px', colorScheme: 'light' }}
+      className={`group relative flex flex-col items-center justify-center p-1.5 rounded-xl bg-white transition-all duration-150 transform hover:-translate-y-0.5 cursor-pointer select-none ${
         isSelected
           ? 'ring-2 ring-landing-primary border-transparent bg-landing-primary/5 shadow-sm'
           : 'border border-landing-surface-container/70 hover:border-landing-primary/30 shadow-2xs hover:shadow-xs'
@@ -138,41 +138,41 @@ const IconCard = ({
         }
       }}
     >
-      {/* Top Bar: Pro indicator (left) and Select Checkbox (right) */}
-      <div className="w-full flex items-center justify-between z-10 -mb-1">
-        <div>
-          {icon.isPremium && <Crown className="w-2.5 h-2.5 text-amber-500 shrink-0" />}
+      {/* Crown indicator (top-left) */}
+      {icon.isPremium && (
+        <div className="absolute top-1 left-1 z-10">
+          <Crown className="w-2.5 h-2.5 text-amber-500 shrink-0" />
         </div>
+      )}
 
-        {/* Select Box on Right Side Only */}
-        {onToggleSelect && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleSelect(icon);
-            }}
-            className={`p-0.5 rounded transition-all ml-auto ${
-              isSelected
-                ? 'text-landing-primary opacity-100'
-                : 'text-landing-on-surface-variant opacity-0 group-hover:opacity-100 hover:text-landing-primary'
-            }`}
-            title={isSelected ? 'Deselect Icon' : 'Select for Download'}
-          >
-            {isSelected ? (
-              <CheckSquare className="w-4 h-4 fill-landing-primary text-white" />
-            ) : (
-              <Square className="w-4 h-4 text-landing-on-surface-variant/80 hover:text-landing-primary" />
-            )}
-          </button>
-        )}
-      </div>
+      {/* Select Box on Right Side Only */}
+      {onToggleSelect && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSelect(icon);
+          }}
+          className={`absolute top-1 right-1 z-10 p-0.5 rounded transition-all cursor-pointer ${
+            isSelected
+              ? 'text-landing-primary opacity-100'
+              : 'text-landing-on-surface-variant opacity-0 group-hover:opacity-100 hover:text-landing-primary'
+          }`}
+          title={isSelected ? 'Deselect Icon' : 'Select for Download'}
+        >
+          {isSelected ? (
+            <CheckSquare className="w-3.5 h-3.5 fill-landing-primary text-white" />
+          ) : (
+            <Square className="w-3.5 h-3.5 text-landing-on-surface-variant/80 hover:text-landing-primary" />
+          )}
+        </button>
+      )}
 
       {/* Inner SVG Icon Container:
-          Guaranteed contrast container with drop shadow & color inheritance */}
+          The logo and its boundary with contrast container */}
       <div
         style={{ colorScheme: 'light' }}
-        className="my-1 w-11 h-11 sm:w-12 sm:h-12 p-1 flex items-center justify-center text-slate-800 bg-slate-50/80 border border-slate-100 rounded-lg group-hover:bg-slate-100/90 group-hover:scale-105 transition-all duration-150 relative m-auto shrink-0 overflow-hidden"
+        className="w-10 h-10 sm:w-11 sm:h-11 p-1 flex items-center justify-center text-slate-800 bg-slate-50/80 border border-slate-100 rounded-lg group-hover:bg-slate-100/90 group-hover:scale-105 transition-all duration-150 relative shrink-0 overflow-hidden"
       >
         {svgMarkup ? (
           <div
@@ -182,7 +182,7 @@ const IconCard = ({
           />
         ) : imgFailed ? (
           <div className="w-full h-full flex items-center justify-center text-slate-300">
-            <ImageOff className="w-5 h-5" />
+            <ImageOff className="w-4 h-4" />
           </div>
         ) : (
           <img
@@ -199,9 +199,9 @@ const IconCard = ({
       </div>
 
       {/* Clean Icon Title */}
-      <div className="w-full text-center mt-auto pt-0.5">
+      <div className="w-full text-center mt-1 px-0.5">
         <span
-          className="block text-[10px] font-semibold text-landing-on-surface hover:text-landing-vibrant-coral truncate transition-colors"
+          className="block text-[9px] sm:text-[10px] font-semibold text-landing-on-surface hover:text-landing-vibrant-coral truncate transition-colors leading-tight"
           title={displayTitle}
         >
           {displayTitle}
