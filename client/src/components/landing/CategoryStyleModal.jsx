@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { CategoryIconMap } from '../../data/categoryIcons';
 import { iconService } from '../../services/iconService';
 import { X, Search, Check, Layers, CircleDot, Palette, Grid3X3, ArrowRight, SlidersHorizontal } from 'lucide-react';
+import { getAptPreloadedIcons } from '../../data/categoryPreloadData';
 import {
   getDirectR2Url,
   fetchAndCacheSvg,
@@ -358,30 +359,52 @@ const CategoryStyleModal = ({ isOpen, onClose, category }) => {
             </div>
           </div>
 
-          {/* 5-Icon Preview Strip */}
+          {/* 5-Icon Preloaded Preview Strip */}
           <div className="flex flex-col gap-2 p-3.5 rounded-2xl bg-landing-surface-container-low border border-landing-surface-container">
             <div className="flex items-center justify-between text-[11px] font-bold text-landing-on-surface-variant">
               <span>Live Preview ({selectedStyle.toUpperCase()})</span>
-              <span>5 sample icons</span>
+              <span className="text-landing-primary font-bold">5 apt icons</span>
             </div>
 
             <div className="grid grid-cols-5 gap-2 pt-1">
-              {loadingPreview ? (
-                Array.from({ length: 5 }).map((_, i) => (
+              {getAptPreloadedIcons(category.slug).map((item, idx) => {
+                const Comp = item.comp;
+                const catColor = category.color || '#00327d';
+                const isFilledStyle = selectedStyle === 'filled';
+                const isColorStyle = selectedStyle === 'color';
+                const isOutlineStyle = selectedStyle === 'outline';
+
+                const iconColor = isColorStyle ? catColor : '#0f172a';
+                const iconBg = isColorStyle ? `${catColor}18` : (isFilledStyle ? '#f1f5f9' : '#f8fafc');
+
+                return (
                   <div
-                    key={i}
-                    className="h-16 rounded-xl bg-white border border-landing-surface-container/60 animate-shimmer"
-                  />
-                ))
-              ) : previewIcons.length > 0 ? (
-                previewIcons.map((ic) => (
-                  <PreviewIconItem key={ic._id || ic.slug} icon={ic} />
-                ))
-              ) : (
-                <div className="col-span-5 py-4 text-center text-xs text-landing-on-surface-variant">
-                  No preview icons available for this style
-                </div>
-              )}
+                    key={item.title || idx}
+                    className="h-16 rounded-xl bg-white border border-landing-surface-container flex flex-col items-center justify-center p-1.5 shadow-2xs hover:shadow-xs transition-all group overflow-hidden cursor-default"
+                    title={item.title}
+                  >
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110 shrink-0 overflow-hidden"
+                      style={{
+                        backgroundColor: iconBg,
+                        color: iconColor,
+                      }}
+                    >
+                      <Comp
+                        className="w-4 h-4 sm:w-4.5 sm:h-4.5 transition-all"
+                        style={{
+                          strokeWidth: isFilledStyle ? 1.5 : (isOutlineStyle ? 2 : 1.75),
+                          fill: isFilledStyle ? (isColorStyle ? catColor : '#0f172a') : 'none',
+                          color: iconColor,
+                        }}
+                      />
+                    </div>
+                    <span className="text-[9px] font-semibold text-landing-on-surface truncate w-full text-center mt-1 px-0.5 leading-tight">
+                      {item.title}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
