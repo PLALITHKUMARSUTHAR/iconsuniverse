@@ -110,11 +110,39 @@ const IconCard = ({
     }
   }, [isAnimIcon, svgMarkup]);
 
+  // Synchronize state when icon prop changes (e.g. style switch, pagination, search results)
+  useEffect(() => {
+    const newDirect = icon.r2Url || getDirectR2Url(icon);
+    const newProxy = icon.svgUrl && icon.svgUrl.startsWith('/api') ? icon.svgUrl : (icon._id ? `/api/icons/svg/${icon._id}` : '');
+    setImgSrc(newDirect || newProxy);
+    setImgFailed(false);
+    const newCached = icon.svgContent
+      ? normalizeSvgForCanvas(icon.svgContent, iconId)
+      : (getCachedSvg(iconId) || getCachedSvg(newProxy) || getCachedSvg(newDirect));
+    setSvgMarkup(newCached);
+  }, [iconId, icon.r2Url, icon.svgUrl, icon.path, icon.svgContent]);
+
   const handleImgError = () => {
     if (imgSrc !== proxyUrl && proxyUrl) {
       setImgSrc(proxyUrl);
     } else {
-      setImgFailed(true);
+      // If direct image load fails (e.g. SVG has width="1.5" or no intrinsic size),
+      // fetch raw vector text and normalize it into inline svgMarkup
+      const fetchUrl = directCdnUrl || proxyUrl;
+      if (fetchUrl && !svgMarkup) {
+        fetchAndCacheSvg(fetchUrl, iconId, proxyUrl)
+          .then((raw) => {
+            if (raw) {
+              setSvgMarkup(raw);
+              setImgFailed(false);
+            } else {
+              setImgFailed(true);
+            }
+          })
+          .catch(() => setImgFailed(true));
+      } else {
+        setImgFailed(true);
+      }
     }
   };
 
@@ -189,7 +217,7 @@ const IconCard = ({
             src={imgSrc}
             alt={displayTitle}
             style={{ colorScheme: 'light' }}
-            className="w-full h-full object-contain m-auto pointer-events-none filter drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)]"
+            className="w-full h-full max-w-full max-h-full object-contain m-auto pointer-events-none filter drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)]"
             loading={isAboveFold ? 'eager' : 'lazy'}
             fetchPriority={index < 12 ? 'high' : 'auto'}
             decoding="async"

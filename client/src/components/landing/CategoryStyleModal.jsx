@@ -44,6 +44,28 @@ export const CATEGORY_PREVIEW_KEYWORDS = {
   arrows: 'arrow,chevron,direction,pointer',
   devices: 'phone,laptop,tablet,computer,device,screen',
   sports: 'ball,trophy,medal,football,basketball,tennis,sport',
+  design: 'palette,pen,brush,vector,layer,design,art',
+  social: 'share,heart,like,chat,message,social,user',
+  settings: 'settings,gear,cog,filter,adjust,sliders,tool',
+  cloud: 'cloud,storage,upload,download,server,database',
+  time: 'clock,watch,time,calendar,alarm,timer,hour',
+  home: 'home,house,building,door,roof,room,window',
+  photography: 'camera,photo,lens,focus,image,picture,film',
+  science: 'atom,flask,lab,test,molecule,dna,science',
+  calendar: 'calendar,date,schedule,event,month,year',
+  art: 'art,palette,brush,easel,canvas,draw,paint',
+  buildings: 'building,house,office,bank,store,city,tower',
+  mail: 'mail,email,envelope,inbox,send,letter,message',
+  maps: 'map,pin,location,navigation,gps,compass,marker',
+  alerts: 'alert,warning,info,bell,exclamation,error,notice',
+  energy: 'battery,power,lightning,energy,electricity,charge',
+  game: 'game,gamepad,controller,dice,play,joystick',
+  gifts: 'gift,box,present,ribbon,party,surprise',
+  people: 'user,users,person,people,team,group,profile',
+  notifications: 'bell,ring,notification,alarm,alert,notice',
+  network: 'network,wifi,signal,router,connection,globe',
+  shapes: 'circle,square,triangle,hexagon,star,shape,polygon',
+  communication: 'chat,message,bubble,speech,talk,discussion,phone',
 };
 
 export const previewCache = new Map();
@@ -64,8 +86,18 @@ export const prefetchCategoryPreviews = async (categorySlug, style = 'filled') =
       limit: 5,
       skipCount: 'true',
     };
-    const res = await iconService.getIcons(params);
-    if (res.data && res.data.icons) {
+    let res = await iconService.getIcons(params);
+    // Fallback: If keywords returned 0 icons, load top icons in category directly
+    if ((!res.data || !res.data.icons || res.data.icons.length === 0) && params.q) {
+      res = await iconService.getIcons({
+        category: categorySlug,
+        style: style !== 'all' ? style : undefined,
+        limit: 5,
+        skipCount: 'true',
+      });
+    }
+
+    if (res.data && res.data.icons && res.data.icons.length > 0) {
       const list = res.data.icons.slice(0, 5);
       previewCache.set(cacheKey, list);
       // Pre-warm SVG vector cache for all 5 preview icons
@@ -102,6 +134,14 @@ const PreviewIconItem = ({ icon }) => {
   const [imgFallback, setImgFallback] = useState(false);
 
   useEffect(() => {
+    const newCached = icon.svgContent
+      ? normalizeSvgForCanvas(icon.svgContent, iconId)
+      : (getCachedSvg(iconId) || getCachedSvg(proxyUrl) || getCachedSvg(directCdnUrl));
+    setSvgMarkup(newCached);
+    setImgFallback(false);
+  }, [iconId, directCdnUrl, proxyUrl, icon.svgContent]);
+
+  useEffect(() => {
     if (svgMarkup) return;
     let isMounted = true;
     const fetchUrl = directCdnUrl || proxyUrl;
@@ -127,19 +167,32 @@ const PreviewIconItem = ({ icon }) => {
       className="h-16 rounded-xl bg-white border border-landing-surface-container flex flex-col items-center justify-center p-1.5 shadow-2xs hover:shadow-xs transition-all group overflow-hidden"
       title={displayTitle}
     >
-      <div className="w-7 h-7 flex items-center justify-center transition-transform group-hover:scale-110">
+      <div className="w-7 h-7 flex items-center justify-center transition-transform group-hover:scale-110 overflow-hidden relative shrink-0">
         {svgMarkup ? (
           <div
-            className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:max-w-full [&>svg]:max-h-full"
+            className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:block [&>svg]:m-auto [&>svg]:overflow-hidden"
             dangerouslySetInnerHTML={{ __html: svgMarkup }}
           />
         ) : !imgFallback ? (
           <img
             src={directCdnUrl || proxyUrl}
             alt={displayTitle}
-            className="w-full h-full object-contain"
+            className="w-full h-full max-w-full max-h-full object-contain m-auto"
             loading="eager"
-            onError={() => setImgFallback(true)}
+            onError={() => {
+              // Try fetching raw vector on image load error
+              const fetchUrl = directCdnUrl || proxyUrl;
+              if (fetchUrl && !svgMarkup) {
+                fetchAndCacheSvg(fetchUrl, iconId, proxyUrl)
+                  .then((raw) => {
+                    if (raw) setSvgMarkup(normalizeSvgForCanvas(raw, iconId));
+                    else setImgFallback(true);
+                  })
+                  .catch(() => setImgFallback(true));
+              } else {
+                setImgFallback(true);
+              }
+            }}
           />
         ) : (
           <div className="w-4 h-4 rounded-full bg-landing-surface-container" />
@@ -179,7 +232,15 @@ const CategoryStyleModal = ({ isOpen, onClose, category }) => {
           limit: 5,
           skipCount: 'true',
         };
-        const res = await iconService.getIcons(params);
+        let res = await iconService.getIcons(params);
+        if ((!res.data || !res.data.icons || res.data.icons.length === 0) && params.q) {
+          res = await iconService.getIcons({
+            category: category.slug,
+            style: selectedStyle !== 'all' ? selectedStyle : undefined,
+            limit: 5,
+            skipCount: 'true',
+          });
+        }
         if (isMounted && res.data && res.data.icons) {
           const list = res.data.icons.slice(0, 5);
           previewCache.set(cacheKey, list);

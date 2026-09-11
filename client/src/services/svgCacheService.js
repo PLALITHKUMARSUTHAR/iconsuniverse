@@ -604,11 +604,10 @@ function composeTransforms(tf1, tf2) {
 
 export function getCorrectViewBox(svgText) {
   const vbMatch = svgText.match(/viewBox=["']([^"']+)["']/i);
-  let curVb = null;
   if (vbMatch) {
     const parts = vbMatch[1].trim().split(/[\s,]+/).map(Number);
-    if (parts.length === 4 && parts[2] > 0 && parts[3] > 0) {
-      // High-speed fast path: Valid viewBox exists, skip expensive regex path/arc bounding-box parsing
+    if (parts.length === 4 && parts[2] >= 16 && parts[3] >= 16 && Math.abs(parts[2] - parts[3]) < 0.01 && parts[0] === 0 && parts[1] === 0) {
+      // Standard square viewBox (e.g. 0 0 24 24, 0 0 512 512)
       return `${parts[0]} ${parts[1]} ${parts[2]} ${parts[3]}`;
     }
   }
@@ -853,9 +852,11 @@ export function normalizeSvgForCanvas(svgText, scopeId = null) {
     result = result.replace(/preserveAspectRatio=["'][^"']*["']/i, 'preserveAspectRatio="xMidYMid meet"');
   }
 
-  // 3. Ensure overflow="visible"
-  if (!/overflow=/i.test(result)) {
-    result = result.replace(/<svg\b([^>]*)>/i, '<svg $1 overflow="visible">');
+  // 3. Ensure overflow="hidden" so vector paths never bleed outside container boundary
+  if (/overflow=["'][^"']*["']/i.test(result)) {
+    result = result.replace(/overflow=["'][^"']*["']/i, 'overflow="hidden"');
+  } else {
+    result = result.replace(/<svg\b([^>]*)>/i, '<svg $1 overflow="hidden">');
   }
 
   // 4. Strip hardcoded width & height attributes and artificial display:none on root <svg>
