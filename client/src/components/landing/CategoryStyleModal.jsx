@@ -1,17 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CategoryIconMap } from '../../data/categoryIcons';
-import { iconService } from '../../services/iconService';
 import { X, Search, Check, Layers, CircleDot, Palette, Grid3X3, ArrowRight, SlidersHorizontal } from 'lucide-react';
 import { getAptPreloadedIcons } from '../../data/categoryPreloadData';
-import {
-  getDirectR2Url,
-  fetchAndCacheSvg,
-  getCachedSvg,
-  normalizeSvgForCanvas,
-  getSafeIconUrl,
-} from '../../services/svgCacheService';
-import { cleanIconTitle } from '../../utils/titleCleaner';
 
 const styleOptions = [
   { id: 'filled', label: 'Fill / Bold', icon: CircleDot, desc: 'Solid filled glyphs' },
@@ -20,268 +11,19 @@ const styleOptions = [
   { id: 'all', label: 'All Styles', icon: Grid3X3, desc: 'Complete category collection' },
 ];
 
-export const CATEGORY_PREVIEW_KEYWORDS = {
-  interface: 'home,settings,search,bell,user,menu,check,filter',
-  shopping: 'cart,store,basket,bag,shop,sale,price,checkout',
-  brands: 'google,apple,github,twitter,figma,spotify,slack,instagram,youtube',
-  charts: 'chart,graph,analytics,diagram,dashboard,statistic,pie',
-  ai: 'robot,brain,chip,neural,bot,spark,algorithm',
-  code: 'code,git,terminal,developer,browser,database,html',
-  files: 'file,folder,document,pdf,text,archive,paper',
-  business: 'briefcase,wallet,bank,cash,money,dollar,handshake',
-  food: 'coffee,burger,pizza,cake,drink,bread,food,restaurant',
-  transport: 'plane,car,truck,bus,train,vehicle,bicycle,ship',
-  weather: 'cloud,sun,rain,wind,umbrella,storm,snow,moon',
-  music: 'music,headphones,volume,sound,speaker,note,mic,audio',
-  media: 'camera,video,film,photo,play,movie,image',
-  security: 'shield,lock,padlock,password,protection,safe,guard',
-  'health-medical': 'hospital,medical,pill,stethoscope,doctor,pulse,cross',
-  nature: 'plant,tree,leaf,flower,seed,forest,sprout',
-  education: 'book,graduation,school,pencil,student,diploma',
-  emoji: 'smile,heart,laugh,grin,star,fire,happy',
-  animals: 'cat,dog,bird,fish,bear,rabbit,animal',
-  tools: 'wrench,hammer,screwdriver,tool,repair',
-  travel: 'passport,luggage,ticket,hotel,compass,map',
-  arrows: 'arrow,chevron,direction,pointer',
-  devices: 'phone,laptop,tablet,computer,device,screen',
-  sports: 'ball,trophy,medal,football,basketball,tennis,sport',
-  design: 'palette,pen,brush,vector,layer,design,art',
-  social: 'share,heart,like,chat,message,social,user',
-  settings: 'settings,gear,cog,filter,adjust,sliders,tool',
-  cloud: 'cloud,storage,upload,download,server,database',
-  time: 'clock,watch,time,calendar,alarm,timer,hour',
-  home: 'home,house,building,door,roof,room,window',
-  photography: 'camera,photo,lens,focus,image,picture,film',
-  science: 'atom,flask,lab,test,molecule,dna,science',
-  calendar: 'calendar,date,schedule,event,month,year',
-  art: 'art,palette,brush,easel,canvas,draw,paint',
-  buildings: 'building,house,office,bank,store,city,tower',
-  mail: 'mail,email,envelope,inbox,send,letter,message',
-  maps: 'map,pin,location,navigation,gps,compass,marker',
-  alerts: 'alert,warning,info,bell,exclamation,error,notice',
-  energy: 'battery,power,lightning,energy,electricity,charge',
-  game: 'game,gamepad,controller,dice,play,joystick',
-  gifts: 'gift,box,present,ribbon,party,surprise',
-  people: 'user,users,person,people,team,group,profile',
-  notifications: 'bell,ring,notification,alarm,alert,notice',
-  network: 'network,wifi,signal,router,connection,globe',
-  shapes: 'circle,square,triangle,hexagon,star,shape,polygon',
-  communication: 'chat,message,bubble,speech,talk,discussion,phone',
-};
-
-export const previewCache = new Map();
-
 /**
- * Prefetch category preview icons on hover for instantaneous modal render
+ * Retained for backwards compatibility across callers (CategoryGrid, AllCategoriesModal, SearchResultsPage)
  */
-export const prefetchCategoryPreviews = async (categorySlug, style = 'filled') => {
-  if (!categorySlug) return;
-  const cacheKey = `${categorySlug}_${style}`;
-  if (previewCache.has(cacheKey)) return;
-
-  try {
-    const params = {
-      category: categorySlug,
-      style: style !== 'all' ? style : undefined,
-      q: CATEGORY_PREVIEW_KEYWORDS[categorySlug] || undefined,
-      limit: 5,
-      skipCount: 'true',
-    };
-    let res = await iconService.getIcons(params);
-    // Fallback: If keywords returned 0 icons, load top icons in category directly
-    if ((!res.data || !res.data.icons || res.data.icons.length === 0) && params.q) {
-      res = await iconService.getIcons({
-        category: categorySlug,
-        style: style !== 'all' ? style : undefined,
-        limit: 5,
-        skipCount: 'true',
-      });
-    }
-
-    if (res.data && res.data.icons && res.data.icons.length > 0) {
-      const list = res.data.icons.slice(0, 5);
-      previewCache.set(cacheKey, list);
-      // Pre-warm SVG vector cache for all 5 preview icons
-      list.forEach((ic) => {
-        const iconId = ic._id || ic.slug;
-        const directCdnUrl = ic.r2Url || getDirectR2Url(ic);
-        const proxyUrl = ic.svgUrl && ic.svgUrl.startsWith('/api') ? ic.svgUrl : (ic._id ? `/api/icons/svg/${ic._id}` : '');
-        const fetchUrl = directCdnUrl || proxyUrl;
-        if (fetchUrl) {
-          fetchAndCacheSvg(fetchUrl, iconId, proxyUrl);
-        }
-      });
-    }
-  } catch (err) {
-    // Silently handle prefetch errors
-  }
-};
-
-/**
- * Individual preview item rendering real vector SVGs with direct DOM mounting,
- * normalization, caching, and fallback protection.
- */
-const PreviewIconItem = ({ icon }) => {
-  const iconId = icon._id || icon.slug;
-  const directCdnUrl = icon.r2Url || getDirectR2Url(icon);
-  const proxyUrl = icon.svgUrl && icon.svgUrl.startsWith('/api') ? icon.svgUrl : (icon._id ? `/api/icons/svg/${icon._id}` : '');
-  const displayTitle = cleanIconTitle(icon.title);
-
-  const cachedSvg = icon.svgContent
-    ? normalizeSvgForCanvas(icon.svgContent, iconId)
-    : (getCachedSvg(iconId) || getCachedSvg(proxyUrl) || getCachedSvg(directCdnUrl));
-
-  const [svgMarkup, setSvgMarkup] = useState(cachedSvg);
-  const [imgFallback, setImgFallback] = useState(false);
-
-  useEffect(() => {
-    const newCached = icon.svgContent
-      ? normalizeSvgForCanvas(icon.svgContent, iconId)
-      : (getCachedSvg(iconId) || getCachedSvg(proxyUrl) || getCachedSvg(directCdnUrl));
-    setSvgMarkup(newCached);
-    setImgFallback(false);
-  }, [iconId, directCdnUrl, proxyUrl, icon.svgContent]);
-
-  useEffect(() => {
-    if (svgMarkup) return;
-    let isMounted = true;
-    const fetchUrl = directCdnUrl || proxyUrl;
-    if (!fetchUrl) return;
-
-    fetchAndCacheSvg(fetchUrl, iconId, proxyUrl)
-      .then((raw) => {
-        if (isMounted && raw) {
-          setSvgMarkup(normalizeSvgForCanvas(raw, iconId));
-        }
-      })
-      .catch(() => {
-        if (isMounted) setImgFallback(true);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [iconId, directCdnUrl, proxyUrl, svgMarkup]);
-
-  return (
-    <div
-      className="h-16 rounded-xl bg-white border border-landing-surface-container flex flex-col items-center justify-center p-1.5 shadow-2xs hover:shadow-xs transition-all group overflow-hidden"
-      title={displayTitle}
-    >
-      <div className="w-7 h-7 flex items-center justify-center transition-transform group-hover:scale-110 overflow-hidden relative shrink-0">
-        {svgMarkup ? (
-          <div
-            className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:block [&>svg]:m-auto [&>svg]:overflow-hidden"
-            dangerouslySetInnerHTML={{ __html: svgMarkup }}
-          />
-        ) : !imgFallback ? (
-          <img
-            src={directCdnUrl || proxyUrl}
-            alt={displayTitle}
-            className="w-full h-full max-w-full max-h-full object-contain m-auto"
-            loading="eager"
-            onError={() => {
-              // Try fetching raw vector on image load error
-              const fetchUrl = directCdnUrl || proxyUrl;
-              if (fetchUrl && !svgMarkup) {
-                fetchAndCacheSvg(fetchUrl, iconId, proxyUrl)
-                  .then((raw) => {
-                    if (raw) setSvgMarkup(normalizeSvgForCanvas(raw, iconId));
-                    else setImgFallback(true);
-                  })
-                  .catch(() => setImgFallback(true));
-              } else {
-                setImgFallback(true);
-              }
-            }}
-          />
-        ) : (
-          <div className="w-4 h-4 rounded-full bg-landing-surface-container" />
-        )}
-      </div>
-      <span className="text-[9px] font-medium text-landing-on-surface-variant truncate w-full text-center mt-1 px-1">
-        {displayTitle}
-      </span>
-    </div>
-  );
-};
+export const prefetchCategoryPreviews = () => {};
 
 const CategoryStyleModal = ({ isOpen, onClose, category }) => {
   const navigate = useNavigate();
   const [selectedStyle, setSelectedStyle] = useState('filled');
-  const [previewIcons, setPreviewIcons] = useState([]);
-  const [loadingPreview, setLoadingPreview] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen || !category) return;
-
-    const cacheKey = `${category.slug}_${selectedStyle}`;
-    if (previewCache.has(cacheKey)) {
-      setPreviewIcons(previewCache.get(cacheKey));
-      setLoadingPreview(false);
-      return;
-    }
-
-    let isMounted = true;
-    const fetchPreviews = async () => {
-      setLoadingPreview(true);
-      try {
-        const params = {
-          category: category.slug,
-          style: selectedStyle !== 'all' ? selectedStyle : undefined,
-          q: CATEGORY_PREVIEW_KEYWORDS[category.slug] || undefined,
-          limit: 5,
-          skipCount: 'true',
-        };
-        let res = await iconService.getIcons(params);
-        if ((!res.data || !res.data.icons || res.data.icons.length === 0) && params.q) {
-          res = await iconService.getIcons({
-            category: category.slug,
-            style: selectedStyle !== 'all' ? selectedStyle : undefined,
-            limit: 5,
-            skipCount: 'true',
-          });
-        }
-        if (isMounted && res.data && res.data.icons) {
-          const list = res.data.icons.slice(0, 5);
-          previewCache.set(cacheKey, list);
-          setPreviewIcons(list);
-          // Pre-warm SVG vector cache for all 5 preview icons
-          list.forEach((ic) => {
-            const iconId = ic._id || ic.slug;
-            const directCdnUrl = ic.r2Url || getDirectR2Url(ic);
-            const proxyUrl = ic.svgUrl && ic.svgUrl.startsWith('/api') ? ic.svgUrl : (ic._id ? `/api/icons/svg/${ic._id}` : '');
-            const fetchUrl = directCdnUrl || proxyUrl;
-            if (fetchUrl) {
-              fetchAndCacheSvg(fetchUrl, iconId, proxyUrl);
-            }
-          });
-        }
-      } catch (err) {
-        if (isMounted) setPreviewIcons([]);
-      } finally {
-        if (isMounted) setLoadingPreview(false);
-      }
-    };
-
-    fetchPreviews();
-    return () => {
-      isMounted = false;
-    };
-  }, [isOpen, category, selectedStyle]);
-
-  // Background warm other styles when modal is opened for instant switching
-  useEffect(() => {
-    if (!isOpen || !category) return;
-    const otherStyles = ['outline', 'color', 'all', 'filled'].filter((s) => s !== selectedStyle);
-    otherStyles.forEach((style) => {
-      prefetchCategoryPreviews(category.slug, style);
-    });
-  }, [isOpen, category, selectedStyle]);
 
   if (!isOpen || !category) return null;
 
   const IconComp = CategoryIconMap[category.iconName] || Layers;
+  const preloadedList = getAptPreloadedIcons(category.slug || category.name);
 
   const handleSearch = () => {
     navigate(`/search?category=${category.slug}&style=${selectedStyle}`);
@@ -316,7 +58,7 @@ const CategoryStyleModal = ({ isOpen, onClose, category }) => {
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-landing-on-surface-variant hover:text-landing-primary hover:bg-landing-surface-container transition-colors"
+            className="p-2 rounded-xl text-landing-on-surface-variant hover:text-landing-primary hover:bg-landing-surface-container transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -367,7 +109,7 @@ const CategoryStyleModal = ({ isOpen, onClose, category }) => {
             </div>
 
             <div className="grid grid-cols-5 gap-2 pt-1">
-              {getAptPreloadedIcons(category.slug).map((item, idx) => {
+              {preloadedList.map((item, idx) => {
                 const Comp = item.comp;
                 const catColor = category.color || '#00327d';
                 const isFilledStyle = selectedStyle === 'filled';
@@ -391,10 +133,10 @@ const CategoryStyleModal = ({ isOpen, onClose, category }) => {
                       }}
                     >
                       <Comp
-                        className="w-4 h-4 sm:w-4.5 sm:h-4.5 transition-all"
+                        className="w-4 h-4 sm:w-4.5 sm:h-4.5 transition-all overflow-hidden"
                         style={{
                           strokeWidth: isFilledStyle ? 1.5 : (isOutlineStyle ? 2 : 1.75),
-                          fill: isFilledStyle ? (isColorStyle ? catColor : '#0f172a') : 'none',
+                          fill: isFilledStyle ? (isColorStyle ? catColor : '#0f172a') : (isColorStyle ? `${catColor}25` : 'none'),
                           color: iconColor,
                         }}
                       />
