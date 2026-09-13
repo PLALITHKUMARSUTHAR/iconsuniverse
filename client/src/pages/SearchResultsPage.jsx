@@ -103,9 +103,12 @@ const SearchResultsPage = () => {
         }
         const newBatch = res.data.icons;
         prefetchIconBatch(newBatch, 80);
-        const total = res.data.total || 0;
-        const more = pageNum < (res.data.totalPages || 1);
-        setTotalCount(total);
+        
+        // Preserve total count from initial page load and avoid overwriting with batch slice count
+        if (isReset || !totalCount || (res.data.total && !params.skipCount)) {
+          setTotalCount(res.data.total || 0);
+        }
+        const more = newBatch.length >= customLimit || (res.data.totalPages && pageNum < res.data.totalPages);
         setHasMore(more);
 
         setIcons((prev) => {
@@ -113,7 +116,7 @@ const SearchResultsPage = () => {
             // Save initial page to cache for instant re-switching
             queryCacheRef.current.set(cacheKey, {
               icons: newBatch,
-              total,
+              total: res.data.total || 0,
               availableStyles: res.data.availableStyles,
               hasMore: more,
             });
@@ -153,7 +156,7 @@ const SearchResultsPage = () => {
     fetchIconsBatch(1, true, 80);
   }, [queryParam, categoryParam, selectedShape, selectedColorType, selectedColor, selectedLicense, selectedSort, isAnimatedOnly]);
 
-  // Infinite scroll callback with proactive 1000px rootMargin
+  // Infinite scroll callback with proactive 1200px rootMargin
   const lastElementRef = useCallback(
     (node) => {
       if (loading || groupBy !== 'all' || !hasMore) return;
@@ -169,7 +172,7 @@ const SearchResultsPage = () => {
             });
           }
         },
-        { rootMargin: '1000px 0px' }
+        { rootMargin: '1200px 0px' }
       );
 
       if (node) observerRef.current.observe(node);

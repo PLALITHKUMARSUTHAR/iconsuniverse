@@ -576,8 +576,8 @@ function getCorrectViewBox(svgText) {
     return '0 0 24 24';
   }
 
-  // Calibrated 8% optical breathing padding ensures icons never exceed boundaries and are centered
-  const pad = Math.max(maxSpan * 0.08, 1.2);
+  // Calibrated 1.5% optical padding ensures icons fill their box fully while keeping strokes crisp
+  const pad = Math.max(maxSpan * 0.015, 0.4);
   const squareSize = Math.round((maxSpan + pad * 2) * 100) / 100;
   const cx = (overallMinX + overallMaxX) / 2;
   const cy = (overallMinY + overallMaxY) / 2;
@@ -821,45 +821,31 @@ exports.getIcons = async (req, res, next) => {
         }
       }
 
-      const catRegex = CATEGORY_DEFINITIONS[cleanCatSlug];
-      if (catRegex) {
-        // Enforce authentic category relevance:
-        // Returns genuine icons that match the category's domain (within categoryId or matching title/slug/tags)
-        // Strictly prevents irrelevant leftover scraper icons from polluting the category view
-        if (catId) {
-          andConditions.push({
-            $or: [
-              { categoryId: catId, title: catRegex },
-              { categoryId: catId, slug: catRegex },
-              { title: catRegex },
-              { slug: catRegex },
-              { tags: { $in: [catRegex] } },
-            ],
-          });
-          availableStyles = await getCategoryStyles(catId);
-        } else {
-          andConditions.push({
-            $or: [
-              { title: catRegex },
-              { slug: catRegex },
-              { tags: { $in: [catRegex] } },
-            ],
-          });
-        }
-      } else if (catId) {
+      if (catId) {
         filter.categoryId = catId;
         availableStyles = await getCategoryStyles(catId);
       } else {
-        return res.status(200).json({
-          success: true,
-          data: {
-            icons: [],
-            total: 0,
-            page: parseInt(page, 10) || 1,
-            totalPages: 0,
-            availableStyles: [],
-          },
-        });
+        const catRegex = CATEGORY_DEFINITIONS[cleanCatSlug];
+        if (catRegex) {
+          andConditions.push({
+            $or: [
+              { title: catRegex },
+              { slug: catRegex },
+              { tags: { $in: [catRegex] } },
+            ],
+          });
+        } else {
+          return res.status(200).json({
+            success: true,
+            data: {
+              icons: [],
+              total: 0,
+              page: parseInt(page, 10) || 1,
+              totalPages: 0,
+              availableStyles: [],
+            },
+          });
+        }
       }
     }
 

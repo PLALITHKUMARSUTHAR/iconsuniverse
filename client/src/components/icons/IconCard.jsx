@@ -32,28 +32,37 @@ const IconCard = ({
   const [imgFailed, setImgFailed] = useState(false);
   const containerRef = React.useRef(null);
 
-  const isAnimIcon = Boolean(icon.isAnimated);
-
-  // Active vector loader: fetch on mount so icons are normalized, dark-contrasted, and instantly visible
+  // Active vector loader: fetch once per iconId if not already cached
   useEffect(() => {
-    if (svgMarkup) return;
-    let isMounted = true;
     const fetchUrl = directCdnUrl || proxyUrl;
-    if (!fetchUrl) return;
+    setImgSrc(fetchUrl);
+    setImgFailed(false);
 
-    fetchAndCacheSvg(fetchUrl, iconId, proxyUrl)
-      .then((raw) => {
-        if (isMounted && raw) {
-          setSvgMarkup(raw);
-          setImgFailed(false);
-        }
-      })
-      .catch(() => {});
+    const cached = icon.svgContent
+      ? normalizeSvgForCanvas(icon.svgContent, iconId)
+      : (getCachedSvg(iconId) || getCachedSvg(directCdnUrl) || getCachedSvg(proxyUrl));
+    
+    if (cached) {
+      setSvgMarkup(cached);
+      return;
+    }
+
+    let isMounted = true;
+    if (fetchUrl) {
+      fetchAndCacheSvg(fetchUrl, iconId, proxyUrl)
+        .then((raw) => {
+          if (isMounted && raw) {
+            setSvgMarkup(raw);
+            setImgFailed(false);
+          }
+        })
+        .catch(() => {});
+    }
 
     return () => {
       isMounted = false;
     };
-  }, [iconId, directCdnUrl, proxyUrl, svgMarkup]);
+  }, [iconId, directCdnUrl, proxyUrl, icon.svgContent]);
 
   // On mount: Keep animated icons resting statically in their fully drawn visual state
   useEffect(() => {
@@ -113,34 +122,6 @@ const IconCard = ({
       }
     }
   }, [isAnimIcon, svgMarkup]);
-
-  // Synchronize state when icon prop changes (e.g. style switch, pagination, search results)
-  useEffect(() => {
-    const newDirect = icon.r2Url || getDirectR2Url(icon);
-    const newProxy = icon.svgUrl && icon.svgUrl.startsWith('/api')
-      ? icon.svgUrl
-      : (icon._id ? `/api/icons/svg/${icon._id}` : '');
-    setImgSrc(newDirect || newProxy);
-    setImgFailed(false);
-    const newCached = icon.svgContent
-      ? normalizeSvgForCanvas(icon.svgContent, iconId)
-      : (getCachedSvg(iconId) || getCachedSvg(newDirect) || getCachedSvg(newProxy));
-    setSvgMarkup(newCached);
-
-    if (!newCached) {
-      const fetchUrl = newDirect || newProxy;
-      if (fetchUrl) {
-        fetchAndCacheSvg(fetchUrl, iconId, newProxy)
-          .then((raw) => {
-            if (raw) {
-              setSvgMarkup(raw);
-              setImgFailed(false);
-            }
-          })
-          .catch(() => {});
-      }
-    }
-  }, [iconId, icon.r2Url, icon.svgUrl, icon.path, icon.svgContent]);
 
   const handleImgError = () => {
     if (imgSrc === directCdnUrl && proxyUrl) {
@@ -215,7 +196,7 @@ const IconCard = ({
       {/* Inner SVG Icon Container:
           The logo and its boundary with contrast container */}
       <div
-        className="w-10 h-10 sm:w-11 sm:h-11 p-1 flex items-center justify-center text-slate-800 bg-slate-50/80 border border-slate-100 rounded-lg group-hover:bg-slate-100/90 group-hover:scale-105 transition-all duration-150 relative shrink-0 overflow-hidden"
+        className="w-10 h-10 sm:w-11 sm:h-11 p-0.5 flex items-center justify-center text-slate-800 bg-slate-50/80 border border-slate-100 rounded-lg group-hover:bg-slate-100/90 group-hover:scale-105 transition-all duration-150 relative shrink-0 overflow-hidden"
       >
         {svgMarkup ? (
           <div

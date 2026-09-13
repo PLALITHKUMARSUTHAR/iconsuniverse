@@ -885,8 +885,8 @@ export function getCorrectViewBox(svgText) {
     return '0 0 24 24';
   }
 
-  // Calibrated 8% optical breathing padding ensures icons never exceed boundaries and are centered
-  const pad = Math.max(maxSpan * 0.08, 1.2);
+  // Calibrated 1.5% optical padding ensures icons fill their box fully while keeping strokes crisp
+  const pad = Math.max(maxSpan * 0.015, 0.4);
   const squareSize = Math.round((maxSpan + pad * 2) * 100) / 100;
   const cx = (overallMinX + overallMaxX) / 2;
   const cy = (overallMinY + overallMaxY) / 2;
