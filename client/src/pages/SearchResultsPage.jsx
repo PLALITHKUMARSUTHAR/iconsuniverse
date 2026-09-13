@@ -102,13 +102,10 @@ const SearchResultsPage = () => {
           setAvailableCategoryStyles(res.data.availableStyles);
         }
         const newBatch = res.data.icons;
-        prefetchIconBatch(newBatch, 80);
-        
-        // Preserve total count from initial page load and avoid overwriting with batch slice count
-        if (isReset || !totalCount || (res.data.total && !params.skipCount)) {
+        const more = Boolean(newBatch.length >= customLimit || (res.data.totalPages > 0 && pageNum < res.data.totalPages));
+        if (isReset || (res.data.total && !params.skipCount)) {
           setTotalCount(res.data.total || 0);
         }
-        const more = newBatch.length >= customLimit || (res.data.totalPages && pageNum < res.data.totalPages);
         setHasMore(more);
 
         setIcons((prev) => {
@@ -546,7 +543,7 @@ const SearchResultsPage = () => {
         {renderGroupedIcons()}
 
         {/* Infinite Scroll Sentinel */}
-        {groupBy === 'all' && hasMore && (
+        {Boolean(groupBy === 'all' && hasMore) && (
           <div ref={lastElementRef} className="py-8 flex items-center justify-center">
             {loading && (
               <div className="flex items-center gap-2 text-xs font-bold text-landing-primary animate-fade-in">
@@ -558,7 +555,7 @@ const SearchResultsPage = () => {
         )}
 
         {/* ALL ICONS LOADED COMPLETION BANNER */}
-        {isCategoryComplete && (
+        {Boolean(isCategoryComplete) && (
           <div className="my-6 p-6 sm:p-8 rounded-3xl bg-white border border-landing-surface-container text-center shadow-xs flex flex-col items-center justify-center gap-3 animate-fade-in">
             <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-2xs">
               <Check className="w-5 h-5" />

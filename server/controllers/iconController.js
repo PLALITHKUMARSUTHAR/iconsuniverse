@@ -801,27 +801,24 @@ exports.getIcons = async (req, res, next) => {
       if (qTerms.length > 1) {
         const termsRegexStr = qTerms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
         const phraseRegex = new RegExp(`\\b${escapedQ}\\b`, 'i');
-        const termsWordRegex = new RegExp(`\\b(${termsRegexStr})\\b`, 'i');
-        const slugRegex = new RegExp(`(^|[-_])(${escapedQ}|${termsRegexStr})([-_]|$)`, 'i');
+        const termsWordRegex = new RegExp(`\\b(${termsRegexStr})`, 'i');
+        const slugRegex = new RegExp(`(^|[-_])(${escapedQ}|${termsRegexStr})`, 'i');
 
         andConditions.push({
           $or: [
             { title: phraseRegex },
             { title: termsWordRegex },
             { slug: slugRegex },
-            { tags: { $in: [phraseRegex, termsWordRegex] } },
           ],
         });
       } else {
-        const wordRegex = new RegExp(`\\b${escapedQ}\\b`, 'i');
-        const slugRegex = new RegExp(`(^|[-_])${escapedQ}([-_]|$)`, 'i');
-        const titleRegex = cleanQ.length >= 3 ? new RegExp(`\\b${escapedQ}`, 'i') : wordRegex;
+        const titleRegex = new RegExp(`\\b${escapedQ}`, 'i');
+        const slugRegex = new RegExp(`(^|[-_])${escapedQ}`, 'i');
 
         andConditions.push({
           $or: [
             { title: titleRegex },
             { slug: slugRegex },
-            { tags: { $in: [wordRegex] } },
           ],
         });
       }
