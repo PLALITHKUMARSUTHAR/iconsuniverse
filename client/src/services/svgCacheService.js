@@ -209,10 +209,15 @@ export function getCachedSvg(iconIdOrUrl) {
 /**
  * Pre-warm / batch fetch a slice of icons in parallel to eliminate waterfall loading
  */
-export function prefetchIconBatch(icons = [], maxCount = 48) {
+export function prefetchIconBatch(icons = [], maxCount = 80) {
   if (!Array.isArray(icons) || icons.length === 0) return;
   const batch = icons.slice(0, maxCount);
-  batch.forEach((icon) => {
+
+  // 1. Immediately fetch the top 24 visible icons with maximum priority
+  const immediate = batch.slice(0, 24);
+  const remaining = batch.slice(24);
+
+  immediate.forEach((icon) => {
     const id = icon._id || icon.slug;
     const directUrl = icon.r2Url || getDirectR2Url(icon);
     const proxyUrl = icon.svgUrl && icon.svgUrl.startsWith('/api')
@@ -223,6 +228,30 @@ export function prefetchIconBatch(icons = [], maxCount = 48) {
       fetchAndCacheSvg(fetchUrl, id, proxyUrl);
     }
   });
+
+  // 2. Stream remaining icons in non-blocking micro-chunks for instant scroll responsiveness
+  if (remaining.length > 0) {
+    const runChunk = (chunk, delay) => {
+      setTimeout(() => {
+        chunk.forEach((icon) => {
+          const id = icon._id || icon.slug;
+          const directUrl = icon.r2Url || getDirectR2Url(icon);
+          const proxyUrl = icon.svgUrl && icon.svgUrl.startsWith('/api')
+            ? icon.svgUrl
+            : (icon._id ? `/api/icons/svg/${icon._id}` : '');
+          const fetchUrl = directUrl || proxyUrl;
+          if (fetchUrl && !getCachedSvg(id) && !getCachedSvg(fetchUrl)) {
+            fetchAndCacheSvg(fetchUrl, id, proxyUrl);
+          }
+        });
+      }, delay);
+    };
+
+    runChunk(remaining.slice(0, 28), 40);
+    if (remaining.length > 28) {
+      runChunk(remaining.slice(28), 100);
+    }
+  }
 }
 
 /**

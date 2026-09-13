@@ -58,7 +58,7 @@ const SearchResultsPage = () => {
   const observerRef = useRef(null);
 
   // Fetch icons batch from API with instant cache read
-  const fetchIconsBatch = async (pageNum, isReset = false, customLimit = 60) => {
+  const fetchIconsBatch = async (pageNum, isReset = false, customLimit = 80) => {
     const requestId = ++activeRequestIdRef.current;
     
     const params = {
@@ -72,6 +72,7 @@ const SearchResultsPage = () => {
       sort: selectedSort,
       page: pageNum,
       limit: customLimit,
+      skipCount: pageNum > 1 ? true : undefined,
     };
 
     const cacheKey = JSON.stringify(params);
@@ -84,7 +85,7 @@ const SearchResultsPage = () => {
       if (cached.availableStyles) setAvailableCategoryStyles(cached.availableStyles);
       setHasMore(cached.hasMore);
       setLoading(false);
-      prefetchIconBatch(cached.icons, 48);
+      prefetchIconBatch(cached.icons, 80);
       return;
     }
 
@@ -101,7 +102,7 @@ const SearchResultsPage = () => {
           setAvailableCategoryStyles(res.data.availableStyles);
         }
         const newBatch = res.data.icons;
-        prefetchIconBatch(newBatch, 48);
+        prefetchIconBatch(newBatch, 80);
         const total = res.data.total || 0;
         const more = pageNum < (res.data.totalPages || 1);
         setTotalCount(total);
@@ -149,24 +150,27 @@ const SearchResultsPage = () => {
   // Initial load or filter change
   useEffect(() => {
     setPage(1);
-    fetchIconsBatch(1, true, 60);
+    fetchIconsBatch(1, true, 80);
   }, [queryParam, categoryParam, selectedShape, selectedColorType, selectedColor, selectedLicense, selectedSort, isAnimatedOnly]);
 
-  // Infinite scroll callback
+  // Infinite scroll callback with proactive 1000px rootMargin
   const lastElementRef = useCallback(
     (node) => {
       if (loading || groupBy !== 'all' || !hasMore) return;
       if (observerRef.current) observerRef.current.disconnect();
 
-      observerRef.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMore && !loading) {
-          setPage((prevPage) => {
-            const nextPage = prevPage + 1;
-            fetchIconsBatch(nextPage, false, 60);
-            return nextPage;
-          });
-        }
-      });
+      observerRef.current = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting && hasMore && !loading) {
+            setPage((prevPage) => {
+              const nextPage = prevPage + 1;
+              fetchIconsBatch(nextPage, false, 80);
+              return nextPage;
+            });
+          }
+        },
+        { rootMargin: '1000px 0px' }
+      );
 
       if (node) observerRef.current.observe(node);
     },
