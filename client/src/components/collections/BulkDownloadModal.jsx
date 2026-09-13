@@ -223,11 +223,11 @@ const BulkDownloadModal = ({
     
     if (custom.shape === 'circle') {
       bgElement = `<circle cx="${size/2}" cy="${size/2}" r="${size/2}" fill="${color}" fill-opacity="${opacity}" />`;
-      innerScale = 0.68;
+      innerScale = 0.58;
     } else if (custom.shape === 'rounded') {
       const rx = size * 0.22;
       bgElement = `<rect x="0" y="0" width="${size}" height="${size}" rx="${rx}" fill="${color}" fill-opacity="${opacity}" />`;
-      innerScale = 0.72;
+      innerScale = 0.66;
     } else if (custom.shape === 'hexagon') {
       const p1 = `${size * 0.5},0`;
       const p2 = `${size * 0.933},${size * 0.25}`;
@@ -236,7 +236,7 @@ const BulkDownloadModal = ({
       const p5 = `${size * 0.067},${size * 0.75}`;
       const p6 = `${size * 0.067},${size * 0.25}`;
       bgElement = `<polygon points="${p1} ${p2} ${p3} ${p4} ${p5} ${p6}" fill="${color}" fill-opacity="${opacity}" />`;
-      innerScale = 0.62;
+      innerScale = 0.54;
     }
 
     // Calculate inner icon scale and offset so it is strictly within backdrop boundaries
@@ -774,12 +774,12 @@ const BulkDownloadModal = ({
                         <div
                           className={`flex items-center justify-center m-auto text-landing-primary [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:m-auto [&>svg]:max-w-full [&>svg]:max-h-full ${
                             custom.shape === 'circle'
-                              ? 'w-[68%] h-[68%]'
+                              ? 'w-[58%] h-[58%]'
                               : custom.shape === 'hexagon'
-                              ? 'w-[62%] h-[62%]'
+                              ? 'w-[54%] h-[54%]'
                               : custom.shape === 'rounded'
-                              ? 'w-[72%] h-[72%]'
-                              : 'w-full h-full p-1'
+                              ? 'w-[66%] h-[66%]'
+                              : 'w-[88%] h-[88%]'
                           }`}
                           style={{
                             transform: `rotate(${custom.rotation || 0}deg) scaleX(${custom.flipH ? -1 : 1}) scaleY(${custom.flipV ? -1 : 1})`,
@@ -794,12 +794,12 @@ const BulkDownloadModal = ({
                           alt={icon.title}
                           className={`object-contain m-auto ${
                             custom.shape === 'circle'
-                              ? 'w-[68%] h-[68%]'
+                              ? 'w-[58%] h-[58%]'
                               : custom.shape === 'hexagon'
-                              ? 'w-[62%] h-[62%]'
+                              ? 'w-[54%] h-[54%]'
                               : custom.shape === 'rounded'
-                              ? 'w-[72%] h-[72%]'
-                              : 'w-8 h-8'
+                              ? 'w-[66%] h-[66%]'
+                              : 'w-[88%] h-[88%]'
                           }`}
                           loading="lazy"
                           decoding="async"
