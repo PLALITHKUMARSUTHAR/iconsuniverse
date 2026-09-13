@@ -1,7 +1,6 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import LandingLayout from './layouts/LandingLayout';
-import SubpageLayout from './layouts/SubpageLayout';
+import AppLayout from './layouts/AppLayout';
 import HomePage from './pages/HomePage';
 import SearchResultsPage from './pages/SearchResultsPage';
 import IconDetailPage from './pages/IconDetailPage';
@@ -21,8 +20,8 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 function App() {
   return (
     <Routes>
-      {/* Landing Theme: Vibrant Glass & Energy (Protected - requires sign-up/login) */}
-      <Route element={<LandingLayout />}>
+      <Route element={<AppLayout />}>
+        {/* Protected App Pages */}
         <Route
           path="/"
           element={
@@ -31,19 +30,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-      </Route>
-
-      {/* Subpage Theme: Premium Glass & Geometry */}
-      <Route element={<SubpageLayout />}>
-        {/* Public Authentication Routes */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-        <Route path="/terms" element={<InfoPage />} />
-        <Route path="/privacy" element={<InfoPage />} />
-
-        {/* Protected App Content Routes (Requires Sign-up or Login) */}
         <Route
           path="/search"
           element={
@@ -75,6 +61,10 @@ function App() {
               <IconEditorPage />
             </ProtectedRoute>
           }
+        />
+        <Route
+          path="/pricing"
+          element={<PricingPage />}
         />
         <Route
           path="/profile"
@@ -124,6 +114,16 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Public Authentication & Policy Routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+        <Route path="/terms" element={<InfoPage />} />
+        <Route path="/privacy" element={<InfoPage />} />
+
+        {/* 404 Catch-All */}
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

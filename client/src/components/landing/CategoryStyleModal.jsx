@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CategoryIconMap } from '../../data/categoryIcons';
+import { CategoryIconMap } from '../../data/categories';
 import { X, Search, Check, Layers, CircleDot, Palette, Grid3X3, ArrowRight, SlidersHorizontal } from 'lucide-react';
 import { getAptPreloadedIcons } from '../../data/categoryPreloadData';
 
@@ -109,8 +109,8 @@ const CategoryStyleModal = ({ isOpen, onClose, category }) => {
             </div>
 
             <div className="grid grid-cols-5 gap-2 pt-1">
-              {preloadedList.map((item, idx) => {
-                const Comp = item.comp;
+              {(preloadedList || []).map((item, idx) => {
+                const Comp = item?.comp || Layers;
                 const catColor = category.color || '#00327d';
                 const isFilledStyle = selectedStyle === 'filled';
                 const isColorStyle = selectedStyle === 'color';
@@ -136,7 +136,7 @@ const CategoryStyleModal = ({ isOpen, onClose, category }) => {
                         className="w-4 h-4 sm:w-4.5 sm:h-4.5 transition-all overflow-hidden"
                         style={{
                           strokeWidth: isFilledStyle ? 1.5 : (isOutlineStyle ? 2 : 1.75),
-                          fill: isFilledStyle ? (isColorStyle ? catColor : '#0f172a') : (isColorStyle ? `${catColor}25` : 'none'),
+                          fill: isFilledStyle ? (isColorStyle ? `${catColor}35` : '#cbd5e1') : (isColorStyle ? `${catColor}25` : 'none'),
                           color: iconColor,
                         }}
                       />

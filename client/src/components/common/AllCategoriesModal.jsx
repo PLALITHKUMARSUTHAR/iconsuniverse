@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { all163CategoriesWithIcons } from '../../data/categories';
-import { CategoryIconMap } from '../../data/categoryIcons';
+import { all163CategoriesWithIcons, CategoryIconMap } from '../../data/categories';
 import { Grid3X3, Search, X, Folder } from 'lucide-react';
 import { prefetchCategoryPreviews } from '../landing/CategoryStyleModal';
 

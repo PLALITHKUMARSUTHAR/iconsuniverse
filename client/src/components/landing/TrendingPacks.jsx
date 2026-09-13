@@ -35,7 +35,7 @@ import {
   Globe,
   Navigation,
 } from 'lucide-react';
-import { packService } from '../../services/packService';
+import { packService } from '../../services/apiServices';
 
 const curatedRealPacks = [
   {

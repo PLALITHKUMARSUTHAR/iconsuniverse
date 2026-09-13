@@ -372,11 +372,15 @@ function composeTransforms(tf1, tf2) {
 
 function getCorrectViewBox(svgText) {
   const vbMatch = svgText.match(/viewBox=["']([^"']+)["']/i);
+  let curVb = null;
   if (vbMatch) {
     const parts = vbMatch[1].trim().split(/[\s,]+/).map(Number);
-    if (parts.length === 4 && parts[2] >= 16 && parts[3] >= 16 && Math.abs(parts[2] - parts[3]) < 0.01 && parts[0] === 0 && parts[1] === 0) {
-      // Fast path: standard square viewBox exists, skip expensive regex path and bezier parsing
-      return `${parts[0]} ${parts[1]} ${parts[2]} ${parts[3]}`;
+    if (parts.length === 4 && parts[2] > 0 && parts[3] > 0) {
+      curVb = { x: parts[0], y: parts[1], w: parts[2], h: parts[3] };
+      if (parts[2] >= 16 && parts[3] >= 16 && Math.abs(parts[2] - parts[3]) < 0.01 && parts[0] === 0 && parts[1] === 0) {
+        // Fast path: standard square viewBox exists, skip expensive regex path and bezier parsing
+        return `${parts[0]} ${parts[1]} ${parts[2]} ${parts[3]}`;
+      }
     }
   }
 

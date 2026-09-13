@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>IconsUniverse - A Universe of Icons</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "tertiary-container": "#651f00",
+                "surface-dim": "#dad9e0",
+                "primary-container": "#00327d",
+                "on-primary-fixed": "#001946",
+                "tertiary-fixed-dim": "#ffb59a",
+                "surface-container-lowest": "#ffffff",
+                "sunny-yellow": "#FFD54F",
+                "surface": "#faf8ff",
+                "on-background": "#1a1b20",
+                "on-surface-variant": "#434651",
+                "surface-container-high": "#e8e7ee",
+                "primary-fixed-dim": "#b1c5ff",
+                "on-error": "#ffffff",
+                "secondary-fixed-dim": "#ffb4aa",
+                "outline": "#747782",
+                "error-container": "#ffdad6",
+                "secondary-container": "#fd5d50",
+                "inverse-on-surface": "#f1f0f7",
+                "on-secondary-fixed-variant": "#910a0e",
+                "on-tertiary-fixed-variant": "#7b2f0d",
+                "on-surface": "#1a1b20",
+                "surface-container-low": "#f4f3fa",
+                "on-tertiary": "#ffffff",
+                "inverse-primary": "#b1c5ff",
+                "surface-container-highest": "#e2e2e9",
+                "vibrant-coral": "#FF5F52",
+                "error": "#ba1a1a",
+                "surface-bright": "#faf8ff",
+                "on-secondary": "#ffffff",
+                "surface-variant": "#e2e2e9",
+                "on-tertiary-container": "#eb845c",
+                "glass-border": "rgba(255, 255, 255, 0.4)",
+                "surface-glass": "rgba(255, 255, 255, 0.6)",
+                "tertiary": "#411100",
+                "surface-container": "#eeedf4",
+                "on-primary-fixed-variant": "#1d438e",
+                "primary": "#001e52",
+                "background": "#faf8ff",
+                "secondary": "#b32822",
+                "inverse-surface": "#2f3036",
+                "outline-variant": "#c4c6d3",
+                "on-tertiary-fixed": "#380d00",
+                "on-secondary-container": "#600004",
+                "secondary-fixed": "#ffdad5",
+                "tertiary-fixed": "#ffdbcf",
+                "on-secondary-fixed": "#410002",
+                "on-primary-container": "#7d9eee",
+                "primary-fixed": "#dae2ff",
+                "on-primary": "#ffffff",
+                "surface-tint": "#395ca7",
+                "electric-teal": "#00F5D4",
+                "on-error-container": "#93000a"
+        },
+        "borderRadius": {
+                "DEFAULT": "1rem",
+                "lg": "2rem",
+                "xl": "3rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "section-gap-lg": "120px",
+                "container-max": "1440px",
+                "padding-card": "40px",
+                "gutter": "32px",
+                "base": "8px",
+                "section-gap-md": "80px"
+        },
+        "fontFamily": {
+                "body-lg": [
+                        "Sora"
+                ],
+                "body-md": [
+                        "Sora"
+                ],
+                "label-lg": [
+                        "Sora"
+                ],
+                "headline-md": [
+                        "Sora"
+                ],
+                "label-sm": [
+                        "Sora"
+                ],
+                "headline-lg": [
+                        "Sora"
+                ],
+                "display-lg": [
+                        "Sora"
+                ],
+                "headline-lg-mobile": [
+                        "Sora"
+                ]
+        },
+        "fontSize": {
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-lg": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "label-sm": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "800"
+                        }
+                ],
+                "headline-lg": [
+                        "36px",
+                        {
+                                "lineHeight": "44px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "display-lg": [
+                        "64px",
+                        {
+                                "lineHeight": "72px",
+                                "letterSpacing": "-0.04em",
+                                "fontWeight": "800"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "30px",
+                        {
+                                "lineHeight": "38px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                        }
+                ]
+        },
+        boxShadow: {
+            'premium': '0 20px 40px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02)',
+            'premium-hover': '0 30px 60px rgba(0, 0, 0, 0.08), 0 2px 5px rgba(0, 0, 0, 0.04)',
+            'inset-soft': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.02)',
+        },
+        keyframes: {
+            'fade-up': {
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            'float': {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-6px)' },
+            }
+        },
+        animation: {
+            'fade-up': 'fade-up 0.8s ease-out forwards',
+            'float': 'float 4s ease-in-out infinite',
+            'float-delayed': 'float 4s ease-in-out 2s infinite',
+        }
+      },
+    },
+  }
+</script>
+<style type="text/tailwindcss">
+        @layer utilities {
+            .bg-tech-gradient {
+                background-image: linear-gradient(135deg, #00327D 0%, #00F5D4 100%);
+            }
+            .bg-energy-gradient {
+                background-image: linear-gradient(135deg, #FF5F52 0%, #FFD54F 100%);
+            }
+            .text-gradient-tech {
+                background: linear-gradient(135deg, #00327D 0%, #00F5D4 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            .bg-accent-gradient-frosted {
+                background-image: linear-gradient(135deg, rgba(255, 95, 82, 0.15) 0%, rgba(255, 213, 79, 0.15) 100%);
+            }
+            .glass-card {
+                @apply bg-surface-glass backdrop-blur-xl border border-glass-border shadow-premium rounded-[2rem];
+            }
+        }
+    </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface antialiased overflow-x-hidden min-h-screen flex flex-col relative">
+<!-- Decorative Background Blobs -->
+<div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+<div class="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] rounded-full bg-electric-teal/10 blur-[120px]"></div>
+<div class="absolute top-[20%] -right-[10%] w-[40%] h-[40%] rounded-full bg-vibrant-coral/10 blur-[100px]"></div>
+<div class="absolute bottom-[-10%] left-[20%] w-[45%] h-[45%] rounded-full bg-sunny-yellow/10 blur-[120px]"></div>
+</div>
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full backdrop-blur-xl bg-surface-glass border-b border-glass-border shadow-sm z-50">
+<div class="flex justify-between items-center max-w-container-max mx-auto px-6 md:px-12 h-20">
+<!-- Brand -->
+<div class="flex items-center gap-2">
+<img alt="IconsUniverse Logo" class="h-10 w-10 object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XzO-poFJ78cEsVAm5OA2TBjMX_d4_zD2cS0c-T2m1l48Ch0zpUVs2VAyW_RFdiw0j_wpfFrZNWQeolTuKcGvQKSXhxc932n6WHn2_VxK4VkqKzonon_5TgA2tfbloDZdcbrdKb3e_0QuJaaLd-DgFuu7duY9QJnaFUvyUO4wz5v-UW_zaJWdJRZ6e81DKKbyVDiOe59BUQEotsxposNJoMX7sIXDixDWUSfBMReA9REcLPmQ309zFCMqnm"/>
+<span class="font-headline-md text-headline-md font-bold text-primary">IconsUniverse</span>
+</div>
+<!-- Navigation -->
+<nav class="hidden md:flex gap-8 items-center">
+<a class="text-primary font-bold border-b-2 border-primary pb-1 font-label-lg text-label-lg" href="#">Browse</a>
+<a class="text-on-surface-variant hover:text-vibrant-coral transition-colors font-label-lg text-label-lg" href="#">Styles</a>
+<a class="text-on-surface-variant hover:text-electric-teal transition-colors font-label-lg text-label-lg" href="#">Collections</a>
+</nav>
+<!-- Actions -->
+<div class="hidden md:flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors font-label-lg text-label-lg">Log In</button>
+<button class="bg-energy-gradient text-on-primary px-8 py-3 rounded-full font-label-lg text-label-lg shadow-md hover:scale-105 transition-all duration-300">Sign Up</button>
+</div>
+<!-- Mobile Menu Toggle -->
+<button class="md:hidden text-primary">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow pt-32 pb-section-gap-md flex flex-col gap-section-gap-md relative z-10">
+<!-- Hero Section -->
+<section class="max-w-container-max mx-auto px-6 md:px-12 w-full text-center relative animate-fade-up">
+<div class="inline-block mb-4 px-4 py-1.5 rounded-full bg-surface-container-highest border border-glass-border text-label-sm font-label-sm text-vibrant-coral uppercase tracking-wider">Spark your creativity 🚀</div>
+<h1 class="font-display-lg text-display-lg text-primary mb-6 leading-tight">A Universe of Assets</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto mb-10">Discover millions of high-quality icons, crafted for modern creators. Effortlessly search and integrate into your next masterpiece.</p>
+<!-- Search Bar -->
+<div class="max-w-3xl mx-auto relative group">
+<div class="absolute inset-y-0 left-6 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline text-2xl group-focus-within:text-electric-teal transition-colors" data-icon="search">search</span>
+</div>
+<input class="w-full h-16 pl-16 pr-32 rounded-full border-none shadow-premium bg-surface-container-lowest focus:ring-4 focus:ring-electric-teal/30 text-body-lg placeholder-outline-variant transition-all" placeholder="Search for icons (e.g., rocket, user, dashboard)..." type="text"/>
+<button class="absolute inset-y-2 right-2 bg-tech-gradient text-on-primary px-6 rounded-full font-label-lg text-label-lg shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300">Search</button>
+</div>
+</section>
+<!-- Categories Mini Boxes -->
+<section class="max-w-container-max mx-auto px-6 md:px-12 w-full animate-fade-up" style="animation-delay: 0.2s; opacity: 0;">
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-8 text-center">Explore Playful Categories ✨</h2>
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+<!-- Category Box 1 -->
+<a class="glass-card p-6 flex flex-col items-center justify-center gap-4 hover:-translate-y-2 hover:shadow-premium-hover transition-all duration-300 group cursor-pointer animate-float" href="#">
+<div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center group-hover:bg-accent-gradient-frosted group-hover:scale-110 transition-all duration-300">
+<span class="material-symbols-outlined text-vibrant-coral text-4xl" data-icon="business_center">business_center</span>
+</div>
+<span class="font-label-lg text-label-lg text-on-surface">Business</span>
+</a>
+<!-- Category Box 2 -->
+<a class="glass-card p-6 flex flex-col items-center justify-center gap-4 hover:-translate-y-2 hover:shadow-premium-hover transition-all duration-300 group cursor-pointer animate-float-delayed" href="#">
+<div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center group-hover:bg-accent-gradient-frosted group-hover:scale-110 transition-all duration-300">
+<span class="material-symbols-outlined text-electric-teal text-4xl" data-icon="devices">devices</span>
+</div>
+<span class="font-label-lg text-label-lg text-on-surface">Technology</span>
+</a>
+<!-- Category Box 3 -->
+<a class="glass-card p-6 flex flex-col items-center justify-center gap-4 hover:-translate-y-2 hover:shadow-premium-hover transition-all duration-300 group cursor-pointer animate-float" href="#">
+<div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center group-hover:bg-accent-gradient-frosted group-hover:scale-110 transition-all duration-300">
+<span class="material-symbols-outlined text-sunny-yellow text-4xl" data-icon="medical_services">medical_services</span>
+</div>
+<span class="font-label-lg text-label-lg text-on-surface">Medical</span>
+</a>
+<!-- Category Box 4 -->
+<a class="glass-card p-6 flex flex-col items-center justify-center gap-4 hover:-translate-y-2 hover:shadow-premium-hover transition-all duration-300 group cursor-pointer animate-float-delayed" href="#">
+<div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center group-hover:bg-accent-gradient-frosted group-hover:scale-110 transition-all duration-300">
+<span class="material-symbols-outlined text-primary text-4xl" data-icon="school">school</span>
+</div>
+<span class="font-label-lg text-label-lg text-on-surface">Education</span>
+</a>
+<!-- Category Box 5 -->
+<a class="glass-card p-6 flex flex-col items-center justify-center gap-4 hover:-translate-y-2 hover:shadow-premium-hover transition-all duration-300 group cursor-pointer animate-float" href="#">
+<div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center group-hover:bg-accent-gradient-frosted group-hover:scale-110 transition-all duration-300">
+<span class="material-symbols-outlined text-vibrant-coral text-4xl" data-icon="storefront">storefront</span>
+</div>
+<span class="font-label-lg text-label-lg text-on-surface">E-commerce</span>
+</a>
+<!-- Category Box 6 -->
+<a class="glass-card p-6 flex flex-col items-center justify-center gap-4 hover:-translate-y-2 hover:shadow-premium-hover transition-all duration-300 group cursor-pointer animate-float-delayed" href="#">
+<div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center group-hover:bg-accent-gradient-frosted group-hover:scale-110 transition-all duration-300">
+<span class="material-symbols-outlined text-electric-teal text-4xl" data-icon="explore">explore</span>
+</div>
+<span class="font-label-lg text-label-lg text-on-surface">Travel</span>
+</a>
+</div>
+</section>
+<!-- Curated Icon Packs Section -->
+<section class="max-w-container-max mx-auto px-6 md:px-12 w-full mb-section-gap-md animate-fade-up" style="animation-delay: 0.4s; opacity: 0;">
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-8">Fresh Curated Packs 🎨</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Pack Card 1 -->
+<div class="glass-card p-8 group cursor-pointer hover:shadow-premium-hover transition-all duration-300 hover:-translate-y-1 animate-float">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface group-hover:text-vibrant-coral transition-colors">Essential UI</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">450 Icons • Linear</p>
+</div>
+<span class="bg-vibrant-coral/10 text-vibrant-coral px-4 py-1.5 rounded-full font-label-sm text-label-sm">Free</span>
+</div>
+<div class="grid grid-cols-4 gap-4 mb-4">
+<div class="aspect-square bg-surface-container-lowest rounded-full flex items-center justify-center shadow-sm group-hover:bg-vibrant-coral/5 transition-colors"><span class="material-symbols-outlined text-2xl text-on-surface" data-icon="home">home</span></div>
+<div class="aspect-square bg-surface-container-lowest rounded-full flex items-center justify-center shadow-sm group-hover:bg-vibrant-coral/5 transition-colors"><span class="material-symbols-outlined text-2xl text-on-surface" data-icon="settings">settings</span></div>
+<div class="aspect-square bg-surface-container-lowest rounded-full flex items-center justify-center shadow-sm group-hover:bg-vibrant-coral/5 transition-colors"><span class="material-symbols-outlined text-2xl text-on-surface" data-icon="favorite">favorite</span></div>
+<div class="aspect-square bg-surface-container-lowest rounded-full flex items-center justify-center shadow-sm group-hover:bg-vibrant-coral/5 transition-colors"><span class="material-symbols-outlined text-2xl text-on-surface" data-icon="person">person</span></div>
+</div>
+</div>
+<!-- Pack Card 2 -->
+<div class="glass-card p-8 group cursor-pointer hover:shadow-premium-hover transition-all duration-300 hover:-translate-y-1 animate-float-delayed">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface group-hover:text-electric-teal transition-colors">Data Visualization</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">120 Icons • Solid</p>
+</div>
+<span class="bg-electric-teal/10 text-teal-600 px-4 py-1.5 rounded-full font-label-sm text-label-sm">Free</span>
+</div>
+<div class="grid grid-cols-4 gap-4 mb-4">
+<div class="aspect-square bg-surface-container-lowest rounded-full flex items-center justify-center shadow-sm group-hover:bg-electric-teal/5 transition-colors"><span class="material-symbols-outlined text-2xl text-on-surface" data-icon="bar_chart" data-weight="fill">bar_chart</span></div>
+<div class="aspect-square bg-surface-container-lowest rounded-full flex items-center justify-center shadow-sm group-hover:bg-electric-teal/5 transition-colors"><span class="material-symbols-outlined text-2xl text-on-surface" data-icon="pie_chart" data-weight="fill">pie_chart</span></div>
+<div class="aspect-square bg-surface-container-lowest rounded-full flex items-center justify-center shadow-sm group-hover:bg-electric-teal/5 transition-colors"><span class="material-symbols-outlined text-2xl text-on-surface" data-icon="timeline" data-weight="fill">timeline</span></div>
+<div class="aspect-square bg-surface-container-lowest rounded-full flex items-center justify-center shadow-sm group-hover:bg-electric-teal/5 transition-colors"><span class="material-symbols-outlined text-2xl text-on-surface" data-icon="monitoring" data-weight="fill">monitoring</span></div>
+</div>
+</div>
+<!-- Pack Card 3 -->
+<div class="glass-card p-8 group cursor-pointer hover:shadow-premium-hover transition-all duration-300 hover:-translate-y-1 animate-float">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface group-hover:text-sunny-yellow transition-colors">Social Media</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">80 Icons • Duotone</p>
+</div>
+<span class="bg-sunny-yellow/20 text-yellow-700 px-4 py-1.5 rounded-full font-label-sm text-label-sm">Free</span>
+</div>
+<div class="grid grid-cols-4 gap-4 mb-4">
+<div class="aspect-square bg-surface-container-lowest rounded-full flex items-center justify-center shadow-sm text-secondary group-hover:bg-sunny-yellow/10 transition-colors"><span class="material-symbols-outlined text-2xl" data-icon="share">share</span></div>
+<div class="aspect-square bg-surface-container-lowest rounded-full flex items-center justify-center shadow-sm text-secondary group-hover:bg-sunny-yellow/10 transition-colors"><span class="material-symbols-outlined text-2xl" data-icon="thumb_up">thumb_up</span></div>
+<div class="aspect-square bg-surface-container-lowest rounded-full flex items-center justify-center shadow-sm text-secondary group-hover:bg-sunny-yellow/10 transition-colors"><span class="material-symbols-outlined text-2xl" data-icon="chat">chat</span></div>
+<div class="aspect-square bg-surface-container-lowest rounded-full flex items-center justify-center shadow-sm text-secondary group-hover:bg-sunny-yellow/10 transition-colors"><span class="material-symbols-outlined text-2xl" data-icon="forum">forum</span></div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Comprehensive Footer -->
+<footer class="bg-surface-container-low border-t border-glass-border w-full py-16 px-6 md:px-12 mt-auto z-10 relative overflow-hidden">
+<!-- Subtle footer blob -->
+<div class="absolute top-0 right-0 w-64 h-64 bg-primary-fixed/30 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+<div class="max-w-container-max mx-auto">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 mb-12">
+<!-- Brand Col -->
+<div class="lg:col-span-2">
+<div class="flex items-center gap-2 mb-6">
+<img alt="IconsUniverse Logo" class="h-10 w-10 object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XzO-poFJ78cEsVAm5OA2TBjMX_d4_zD2cS0c-T2m1l48Ch0zpUVs2VAyW_RFdiw0j_wpfFrZNWQeolTuKcGvQKSXhxc932n6WHn2_VxK4VkqKzonon_5TgA2tfbloDZdcbrdKb3e_0QuJaaLd-DgFuu7duY9QJnaFUvyUO4wz5v-UW_zaJWdJRZ6e81DKKbyVDiOe59BUQEotsxposNJoMX7sIXDixDWUSfBMReA9REcLPmQ309zFCMqnm"/>
+<span class="font-headline-md text-headline-md font-bold text-primary">IconsUniverse</span>
+</div>
+<p class="font-body-md text-on-surface-variant mb-6 max-w-sm">
+        The ultimate universe of assets for modern creators. Vibrant, playful, and endlessly inspiring.
+      </p>
+<!-- Socials -->
+<div class="flex gap-4">
+<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary hover:bg-vibrant-coral hover:text-on-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">photo_camera</span> <!-- Placeholder for IG -->
+</a>
+<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary hover:bg-electric-teal hover:text-on-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined">facebook</span>
+</a>
+<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary hover:bg-sunny-yellow hover:text-on-surface transition-all duration-300" href="#">
+<span class="material-symbols-outlined">alternate_email</span> <!-- Placeholder for X -->
+</a>
+</div>
+</div>
+<!-- Resources -->
+<div>
+<h4 class="font-label-lg text-label-lg text-on-surface mb-6 uppercase tracking-wider">Resources</h4>
+<ul class="flex flex-col gap-4">
+<li><a class="font-body-md text-on-surface-variant hover:text-vibrant-coral transition-colors" href="#">Search icons</a></li>
+<li><a class="font-body-md text-on-surface-variant hover:text-vibrant-coral transition-colors" href="#">Search stickers</a></li>
+<li><a class="font-body-md text-on-surface-variant hover:text-vibrant-coral transition-colors" href="#">Search interface icons</a></li>
+<li><a class="font-body-md text-on-surface-variant hover:text-vibrant-coral transition-colors" href="#">Search icons by pack</a></li>
+<li><a class="font-body-md text-on-surface-variant hover:text-vibrant-coral transition-colors" href="#">Search icons by author</a></li>
+<li><a class="font-body-md text-on-surface-variant hover:text-vibrant-coral transition-colors" href="#">Icon of the month</a></li>
+<li><a class="font-body-md text-on-surface-variant hover:text-vibrant-coral transition-colors" href="#">Style of the month</a></li>
+</ul>
+</div>
+<!-- Company -->
+<div>
+<h4 class="font-label-lg text-label-lg text-on-surface mb-6 uppercase tracking-wider">Company</h4>
+<ul class="flex flex-col gap-4">
+<li><a class="font-body-md text-on-surface-variant hover:text-electric-teal transition-colors" href="#">About us</a></li>
+<li><a class="font-body-md text-on-surface-variant hover:text-electric-teal transition-colors" href="#">Our team</a></li>
+<li><a class="font-body-md text-on-surface-variant hover:text-electric-teal transition-colors" href="#">Newsroom</a></li>
+<li><a class="font-body-md text-on-surface-variant hover:text-electric-teal transition-colors" href="#">Jobs</a></li>
+<li><a class="font-body-md text-on-surface-variant hover:text-electric-teal transition-colors" href="#">Careers</a></li>
+</ul>
+</div>
+<!-- Support -->
+<div>
+<h4 class="font-label-lg text-label-lg text-on-surface mb-6 uppercase tracking-wider">Support</h4>
+<ul class="flex flex-col gap-4">
+<li><a class="font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Help center</a></li>
+<li><a class="font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Contact us</a></li>
+<li><a class="font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Request a feature</a></li>
+<li><a class="font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Report a bug</a></li>
+</ul>
+</div>
+<!-- Legal -->
+<div>
+<h4 class="font-label-lg text-label-lg text-on-surface mb-6 uppercase tracking-wider">Legal</h4>
+<ul class="flex flex-col gap-4">
+<li><a class="font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Terms of use</a></li>
+<li><a class="font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy policy</a></li>
+<li><a class="font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Cookie policy</a></li>
+<li><a class="font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">License agreements</a></li>
+</ul>
+</div>
+</div>
+<div class="pt-8 border-t border-glass-border flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="font-body-md text-on-surface-variant text-center md:text-left">© 2024 IconsUniverse. All rights reserved. Crafted for creators with 💖.</p>
+</div>
+</div>
+</footer>
+</body></html>

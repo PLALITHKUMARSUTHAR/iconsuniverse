@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronUp, ChevronDown, Sparkles, ArrowRight, Layers } from 'lucide-react';
-import { main17FeaturedCategories } from '../../data/categories';
-import { CategoryIconMap } from '../../data/categoryIcons';
+import { main17FeaturedCategories, CategoryIconMap } from '../../data/categories';
 
 const Footer = ({ collapsible = false, exploreCategoriesSlot = null }) => {
   const [isExpanded, setIsExpanded] = useState(false);

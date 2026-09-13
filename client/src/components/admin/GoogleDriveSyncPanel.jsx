@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Cloud, RefreshCw, CheckCircle2, AlertCircle, Folder, FileCheck, Layers } from 'lucide-react';
 import Button from '../common/Button';
-import { driveService } from '../../services/driveService';
+import { driveService } from '../../services/apiServices';
 import { useToast } from '../../context/ToastContext';
 
 const GoogleDriveSyncPanel = () => {

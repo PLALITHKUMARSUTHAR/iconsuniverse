@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from './ToastContext';
 import { useAuth } from './AuthContext';
-import { collectionService } from '../services/collectionService';
+import { collectionService } from '../services/apiServices';
 
 const CollectionsContext = createContext(null);
 

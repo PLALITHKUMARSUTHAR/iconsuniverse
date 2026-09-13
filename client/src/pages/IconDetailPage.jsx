@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Download, Palette, Copy, Check, FolderPlus, Crown, ArrowLeft, ImageOff } from 'lucide-react';
-import { iconService } from '../services/iconService';
+import { iconService } from '../services/apiServices';
 import { useCollections } from '../context/CollectionsContext';
 import { useToast } from '../context/ToastContext';
 import Button from '../components/common/Button';

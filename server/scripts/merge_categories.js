@@ -179,7 +179,13 @@ async function executeMerge() {
   let totalIconsMoved = 0;
   const deletedCategoryIds = [];
 
-  for (const [sourceSlug, targetSlug] of Object.entries(categoryMergeMap)) {
+  const cliSource = process.argv[2];
+  const cliTarget = process.argv[3];
+  const activeMap = (cliSource && cliTarget)
+    ? { [cliSource]: cliTarget }
+    : categoryMergeMap;
+
+  for (const [sourceSlug, targetSlug] of Object.entries(activeMap)) {
     const sourceCat = categoryBySlug[sourceSlug];
     const targetCat = categoryBySlug[targetSlug];
 

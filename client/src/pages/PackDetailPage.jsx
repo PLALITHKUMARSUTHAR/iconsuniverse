@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Layers, Download, Crown, ArrowLeft, FolderArchive } from 'lucide-react';
-import { packService } from '../services/packService';
+import { packService } from '../services/apiServices';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/common/Button';

@@ -5,12 +5,11 @@ import IconGrid from '../components/icons/IconGrid';
 import BulkDownloadModal from '../components/collections/BulkDownloadModal';
 import CategoryStyleModal, { prefetchCategoryPreviews } from '../components/landing/CategoryStyleModal';
 import AllCategoriesModal from '../components/common/AllCategoriesModal';
-import { iconService } from '../services/iconService';
+import { iconService } from '../services/apiServices';
 import { Search, Sparkles, Download, X, Layers, Check, ArrowRight, Grid3X3, CircleDot, Palette, Award, Compass, Film } from 'lucide-react';
 import Button from '../components/common/Button';
 import Footer from '../components/common/Footer';
-import { main17FeaturedCategories, all163CategoriesWithIcons } from '../data/categories';
-import { CategoryIconMap } from '../data/categoryIcons';
+import { main17FeaturedCategories, all163CategoriesWithIcons, CategoryIconMap } from '../data/categories';
 import SEOHead from '../components/common/SEOHead';
 
 const quickStylePills = [

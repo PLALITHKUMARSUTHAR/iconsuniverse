@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import {
   main44FeaturedCategories,
   all163CategoriesWithIcons,
+  CategoryIconMap,
 } from '../../data/categories';
-import { CategoryIconMap } from '../../data/categoryIcons';
 import { ArrowRight, Grid3X3, Layers } from 'lucide-react';
 import CategoryStyleModal, { prefetchCategoryPreviews } from './CategoryStyleModal';
 import AllCategoriesModal from '../common/AllCategoriesModal';

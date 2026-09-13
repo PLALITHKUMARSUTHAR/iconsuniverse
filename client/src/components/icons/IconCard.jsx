@@ -16,24 +16,27 @@ const IconCard = ({
 }) => {
   const iconId = icon._id || icon.slug;
   const directCdnUrl = icon.r2Url || getDirectR2Url(icon);
-  const proxyUrl = icon.svgUrl && icon.svgUrl.startsWith('/api') ? icon.svgUrl : (icon._id ? `/api/icons/svg/${icon._id}` : '');
+  const proxyUrl = icon.svgUrl && icon.svgUrl.startsWith('/api')
+    ? icon.svgUrl
+    : (icon._id ? `/api/icons/svg/${icon._id}` : '');
+  const primarySrc = directCdnUrl || proxyUrl;
   const displayTitle = cleanIconTitle(icon.title);
 
   // Check if SVG is already in memory
   const cachedSvg = icon.svgContent
     ? normalizeSvgForCanvas(icon.svgContent, iconId)
-    : (getCachedSvg(iconId) || getCachedSvg(proxyUrl) || getCachedSvg(directCdnUrl));
+    : (getCachedSvg(iconId) || getCachedSvg(directCdnUrl) || getCachedSvg(proxyUrl));
 
   const [svgMarkup, setSvgMarkup] = useState(cachedSvg);
-  const [imgSrc, setImgSrc] = useState(directCdnUrl || proxyUrl);
+  const [imgSrc, setImgSrc] = useState(primarySrc);
   const [imgFailed, setImgFailed] = useState(false);
   const containerRef = React.useRef(null);
 
   const isAnimIcon = Boolean(icon.isAnimated);
 
-  // Active vector loader for animated icons: fetch on mount so we can freeze at currentTime=10 and animate on hover
+  // Active vector loader: fetch on mount so icons are normalized, dark-contrasted, and instantly visible
   useEffect(() => {
-    if (!isAnimIcon || svgMarkup) return;
+    if (svgMarkup) return;
     let isMounted = true;
     const fetchUrl = directCdnUrl || proxyUrl;
     if (!fetchUrl) return;
@@ -42,6 +45,7 @@ const IconCard = ({
       .then((raw) => {
         if (isMounted && raw) {
           setSvgMarkup(raw);
+          setImgFailed(false);
         }
       })
       .catch(() => {});
@@ -49,7 +53,7 @@ const IconCard = ({
     return () => {
       isMounted = false;
     };
-  }, [isAnimIcon, iconId, directCdnUrl, proxyUrl, svgMarkup]);
+  }, [iconId, directCdnUrl, proxyUrl, svgMarkup]);
 
   // On mount: Keep animated icons resting statically in their fully drawn visual state
   useEffect(() => {
@@ -66,7 +70,7 @@ const IconCard = ({
     }
   }, [isAnimIcon, svgMarkup]);
 
-  // Trigger animation only on hover and prefetch vector SVG for instant modal/editor opening
+  // Trigger animation on hover and prefetch/inline vector SVG for instant high-def display
   const handleMouseEnter = useCallback(() => {
     if (containerRef.current) {
       const svg = containerRef.current.querySelector('svg');
@@ -86,14 +90,14 @@ const IconCard = ({
     }
 
     if (svgMarkup) return;
-    const fetchUrl = directCdnUrl || proxyUrl;
+    const fetchUrl = proxyUrl || directCdnUrl;
     if (!fetchUrl) return;
-    fetchAndCacheSvg(fetchUrl, iconId, proxyUrl)
+    fetchAndCacheSvg(fetchUrl, iconId, directCdnUrl)
       .then((raw) => {
-        if (raw && isAnimIcon) setSvgMarkup(raw);
+        if (raw) setSvgMarkup(raw);
       })
       .catch(() => {});
-  }, [svgMarkup, directCdnUrl, proxyUrl, iconId, isAnimIcon]);
+  }, [svgMarkup, proxyUrl, directCdnUrl, iconId]);
 
   // When hover ends, settle back to the completed static state
   const handleMouseLeave = useCallback(() => {
@@ -113,36 +117,49 @@ const IconCard = ({
   // Synchronize state when icon prop changes (e.g. style switch, pagination, search results)
   useEffect(() => {
     const newDirect = icon.r2Url || getDirectR2Url(icon);
-    const newProxy = icon.svgUrl && icon.svgUrl.startsWith('/api') ? icon.svgUrl : (icon._id ? `/api/icons/svg/${icon._id}` : '');
+    const newProxy = icon.svgUrl && icon.svgUrl.startsWith('/api')
+      ? icon.svgUrl
+      : (icon._id ? `/api/icons/svg/${icon._id}` : '');
     setImgSrc(newDirect || newProxy);
     setImgFailed(false);
     const newCached = icon.svgContent
       ? normalizeSvgForCanvas(icon.svgContent, iconId)
-      : (getCachedSvg(iconId) || getCachedSvg(newProxy) || getCachedSvg(newDirect));
+      : (getCachedSvg(iconId) || getCachedSvg(newDirect) || getCachedSvg(newProxy));
     setSvgMarkup(newCached);
-  }, [iconId, icon.r2Url, icon.svgUrl, icon.path, icon.svgContent]);
 
-  const handleImgError = () => {
-    if (imgSrc !== proxyUrl && proxyUrl) {
-      setImgSrc(proxyUrl);
-    } else {
-      // If direct image load fails (e.g. SVG has width="1.5" or no intrinsic size),
-      // fetch raw vector text and normalize it into inline svgMarkup
-      const fetchUrl = directCdnUrl || proxyUrl;
-      if (fetchUrl && !svgMarkup) {
-        fetchAndCacheSvg(fetchUrl, iconId, proxyUrl)
+    if (!newCached) {
+      const fetchUrl = newDirect || newProxy;
+      if (fetchUrl) {
+        fetchAndCacheSvg(fetchUrl, iconId, newProxy)
           .then((raw) => {
             if (raw) {
               setSvgMarkup(raw);
               setImgFailed(false);
-            } else {
-              setImgFailed(true);
             }
           })
-          .catch(() => setImgFailed(true));
-      } else {
-        setImgFailed(true);
+          .catch(() => {});
       }
+    }
+  }, [iconId, icon.r2Url, icon.svgUrl, icon.path, icon.svgContent]);
+
+  const handleImgError = () => {
+    if (imgSrc === directCdnUrl && proxyUrl) {
+      setImgSrc(proxyUrl);
+    } else if (imgSrc === proxyUrl && directCdnUrl) {
+      setImgSrc(directCdnUrl);
+    }
+    const fetchUrl = directCdnUrl || proxyUrl;
+    if (fetchUrl && !svgMarkup) {
+      fetchAndCacheSvg(fetchUrl, iconId, proxyUrl)
+        .then((raw) => {
+          if (raw) {
+            setSvgMarkup(raw);
+            setImgFailed(false);
+          } else {
+            setImgFailed(true);
+          }
+        })
+        .catch(() => setImgFailed(true));
     }
   };
 
@@ -151,7 +168,6 @@ const IconCard = ({
 
   return (
     <div
-      style={{ contentVisibility: 'auto', containIntrinsicSize: '64px 76px', colorScheme: 'light' }}
       className={`group relative flex flex-col items-center justify-center p-1.5 rounded-xl bg-white transition-all duration-150 transform hover:-translate-y-0.5 cursor-pointer select-none ${
         isSelected
           ? 'ring-2 ring-landing-primary border-transparent bg-landing-primary/5 shadow-sm'
@@ -199,7 +215,6 @@ const IconCard = ({
       {/* Inner SVG Icon Container:
           The logo and its boundary with contrast container */}
       <div
-        style={{ colorScheme: 'light' }}
         className="w-10 h-10 sm:w-11 sm:h-11 p-1 flex items-center justify-center text-slate-800 bg-slate-50/80 border border-slate-100 rounded-lg group-hover:bg-slate-100/90 group-hover:scale-105 transition-all duration-150 relative shrink-0 overflow-hidden"
       >
         {svgMarkup ? (
@@ -216,8 +231,7 @@ const IconCard = ({
           <img
             src={imgSrc}
             alt={displayTitle}
-            style={{ colorScheme: 'light' }}
-            className="w-full h-full max-w-full max-h-full object-contain m-auto pointer-events-none filter drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)]"
+            className="w-full h-full block aspect-square max-w-full max-h-full object-contain m-auto pointer-events-none filter drop-shadow-[0_1px_1px_rgba(0,0,0,0.12)]"
             loading={isAboveFold ? 'eager' : 'lazy'}
             fetchPriority={index < 12 ? 'high' : 'auto'}
             decoding="async"
