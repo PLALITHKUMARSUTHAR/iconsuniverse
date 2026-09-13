@@ -148,7 +148,7 @@ const SearchResultsPage = () => {
     const isAnim = searchParams.get('animated') === 'true';
     setIsAnimatedOnly(isAnim);
     setAvailableCategoryStyles(null);
-  }, [categoryParam]);
+  }, [searchParams]);
 
   // Initial load or filter change
   useEffect(() => {

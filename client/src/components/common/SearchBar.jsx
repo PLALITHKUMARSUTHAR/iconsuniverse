@@ -27,15 +27,20 @@ const SearchBar = ({ initialQuery = '', placeholder = 'Search 10,00,000 icons...
 
   const handleSearch = (e) => {
     if (e) e.preventDefault();
-    if (!query.trim()) return;
-    const styleParam = selectedStyle !== 'all' ? `&style=${selectedStyle}` : '';
-    navigate(`/search?q=${encodeURIComponent(query.trim())}${styleParam}`);
+    const cleanQ = (query || '').trim();
+    const styleParam = selectedStyle && selectedStyle !== 'all' ? `&style=${selectedStyle}` : '';
+    if (cleanQ) {
+      navigate(`/search?q=${encodeURIComponent(cleanQ)}${styleParam}`);
+    } else {
+      navigate(`/search${styleParam ? `?${styleParam.slice(1)}` : ''}`);
+    }
     setIsOpen(false);
   };
 
   const handleSelectKeyword = (kw) => {
     setQuery(kw);
-    navigate(`/search?q=${encodeURIComponent(kw)}`);
+    const styleParam = selectedStyle && selectedStyle !== 'all' ? `&style=${selectedStyle}` : '';
+    navigate(`/search?q=${encodeURIComponent(kw)}${styleParam}`);
     setIsOpen(false);
   };
 

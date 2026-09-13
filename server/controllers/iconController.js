@@ -784,19 +784,27 @@ exports.getIcons = async (req, res, next) => {
     // Text search (title, slug, tags)
     const andConditions = [];
     if (q && q.trim()) {
-      const qTerms = q.trim().split(',').map((s) => s.trim()).filter(Boolean);
+      const cleanQ = q.trim();
+      const escapedQ = cleanQ.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const qTerms = cleanQ.split(/[\s,]+/).map((s) => s.trim()).filter(Boolean);
+
       if (qTerms.length > 1) {
-        const regexPattern = `\\b(${qTerms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\b`;
-        const searchRegex = new RegExp(regexPattern, 'i');
+        const termsRegexStr = qTerms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+        const phraseRegex = new RegExp(escapedQ, 'i');
+        const termsRegex = new RegExp(`(${termsRegexStr})`, 'i');
+
         andConditions.push({
           $or: [
-            { title: searchRegex },
-            { slug: searchRegex },
-            { tags: { $in: [searchRegex] } },
+            { title: phraseRegex },
+            { slug: phraseRegex },
+            { tags: { $in: [phraseRegex] } },
+            { title: termsRegex },
+            { slug: termsRegex },
+            { tags: { $in: [termsRegex] } },
           ],
         });
       } else {
-        const searchRegex = new RegExp(q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+        const searchRegex = new RegExp(escapedQ, 'i');
         andConditions.push({
           $or: [
             { title: searchRegex },

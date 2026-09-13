@@ -207,6 +207,65 @@ const BulkDownloadModal = ({
     return normalizeSvgForCanvas(content);
   };
 
+  const generateSvgWithBackdrop = (rawSvg, custom, size = 512) => {
+    if (!rawSvg) return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}"></svg>`;
+    
+    // If no backdrop shape and no rotation/flip, return the raw normalized SVG
+    if (custom.shape === 'none' && !custom.rotation && !custom.flipH && !custom.flipV) {
+      return rawSvg;
+    }
+
+    const opacity = (custom.badgeOpacity ?? 100) / 100;
+    const color = custom.badgeColor || '#f4f3fa';
+    
+    let bgElement = '';
+    let innerScale = custom.shape === 'none' ? 0.88 : 0.72;
+    
+    if (custom.shape === 'circle') {
+      bgElement = `<circle cx="${size/2}" cy="${size/2}" r="${size/2}" fill="${color}" fill-opacity="${opacity}" />`;
+      innerScale = 0.68;
+    } else if (custom.shape === 'rounded') {
+      const rx = size * 0.22;
+      bgElement = `<rect x="0" y="0" width="${size}" height="${size}" rx="${rx}" fill="${color}" fill-opacity="${opacity}" />`;
+      innerScale = 0.72;
+    } else if (custom.shape === 'hexagon') {
+      const p1 = `${size * 0.5},0`;
+      const p2 = `${size * 0.933},${size * 0.25}`;
+      const p3 = `${size * 0.933},${size * 0.75}`;
+      const p4 = `${size * 0.5},${size}`;
+      const p5 = `${size * 0.067},${size * 0.75}`;
+      const p6 = `${size * 0.067},${size * 0.25}`;
+      bgElement = `<polygon points="${p1} ${p2} ${p3} ${p4} ${p5} ${p6}" fill="${color}" fill-opacity="${opacity}" />`;
+      innerScale = 0.62;
+    }
+
+    // Calculate inner icon scale and offset so it is strictly within backdrop boundaries
+    const iconSize = size * innerScale;
+    const offset = (size - iconSize) / 2;
+
+    const rot = custom.rotation || 0;
+    const sx = custom.flipH ? -1 : 1;
+    const sy = custom.flipV ? -1 : 1;
+
+    let transformAttr = '';
+    if (rot || sx !== 1 || sy !== 1) {
+      transformAttr = `transform="translate(${size/2}, ${size/2}) rotate(${rot}) scale(${sx}, ${sy}) translate(-${size/2}, -${size/2})"`;
+    }
+
+    const vbMatch = rawSvg.match(/viewBox=["']([^"']+)["']/i);
+    const innerVb = vbMatch ? vbMatch[1] : '0 0 24 24';
+    const innerBody = rawSvg.replace(/<svg\b[^>]*>/i, '').replace(/<\/svg>/i, '');
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
+  ${bgElement}
+  <g ${transformAttr}>
+    <svg x="${offset}" y="${offset}" width="${iconSize}" height="${iconSize}" viewBox="${innerVb}">
+      ${innerBody}
+    </svg>
+  </g>
+</svg>`;
+  };
+
   // Generic download function: downloads either specific targetIcons or all sourceIcons
   const executeDownload = async (targetIcons, downloadLabel) => {
     if (!targetIcons || targetIcons.length === 0) {
@@ -245,7 +304,8 @@ const BulkDownloadModal = ({
           }
         }
 
-        const validSvg = processed || `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><title>${icon.title}</title></svg>`;
+        const baseSvg = processed || `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><title>${icon.title}</title></svg>`;
+        const validSvg = generateSvgWithBackdrop(baseSvg, custom, format === 'png' ? (pngResolution || 512) : 512);
 
         if (format === 'png') {
           const pngBlob = await new Promise((resolve) => {
@@ -707,15 +767,23 @@ const BulkDownloadModal = ({
 
                     {/* Centered Canvas Preview with backdrop shapes and transforms */}
                     <div
-                      className="w-14 h-14 my-1.5 flex items-center justify-center transition-all shadow-2xs overflow-hidden m-auto relative"
+                      className="w-14 h-14 my-1.5 flex items-center justify-center transition-all shadow-2xs overflow-hidden m-auto relative shrink-0"
                       style={getShapeStyle()}
                     >
                       {processedSvg ? (
                         <div
-                          className="w-full h-full flex items-center justify-center m-auto text-landing-primary [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:m-auto [&>svg]:max-w-full [&>svg]:max-h-full"
+                          className={`flex items-center justify-center m-auto text-landing-primary [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:m-auto [&>svg]:max-w-full [&>svg]:max-h-full ${
+                            custom.shape === 'circle'
+                              ? 'w-[68%] h-[68%]'
+                              : custom.shape === 'hexagon'
+                              ? 'w-[62%] h-[62%]'
+                              : custom.shape === 'rounded'
+                              ? 'w-[72%] h-[72%]'
+                              : 'w-full h-full p-1'
+                          }`}
                           style={{
                             transform: `rotate(${custom.rotation || 0}deg) scaleX(${custom.flipH ? -1 : 1}) scaleY(${custom.flipV ? -1 : 1})`,
-                            padding: custom.shape !== 'none' ? `${Math.max(6, custom.padding || 8)}px` : `${custom.padding || 2}px`,
+                            padding: custom.shape !== 'none' ? `${custom.padding ? custom.padding / 2 : 0}px` : `${custom.padding || 0}px`,
                             color: !custom.useOriginalColor && custom.color ? custom.color : '#00327d',
                           }}
                           dangerouslySetInnerHTML={{ __html: processedSvg }}
@@ -724,7 +792,15 @@ const BulkDownloadModal = ({
                         <img
                           src={getSafeIconUrl(icon.svgUrl || icon.pngPreviewUrl || (icon.path ? `https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev/icons/${icon.path}` : ''))}
                           alt={icon.title}
-                          className="w-8 h-8 object-contain m-auto"
+                          className={`object-contain m-auto ${
+                            custom.shape === 'circle'
+                              ? 'w-[68%] h-[68%]'
+                              : custom.shape === 'hexagon'
+                              ? 'w-[62%] h-[62%]'
+                              : custom.shape === 'rounded'
+                              ? 'w-[72%] h-[72%]'
+                              : 'w-8 h-8'
+                          }`}
                           loading="lazy"
                           decoding="async"
                         />
