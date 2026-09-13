@@ -32,6 +32,8 @@ const IconCard = ({
   const [imgFailed, setImgFailed] = useState(false);
   const containerRef = React.useRef(null);
 
+  const isAnimIcon = Boolean(icon.isAnimated);
+
   // Active vector loader: fetch once per iconId if not already cached
   useEffect(() => {
     const fetchUrl = directCdnUrl || proxyUrl;
