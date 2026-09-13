@@ -1,15 +1,55 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Sparkles, X, ArrowRight } from 'lucide-react';
+import { Search, Sparkles, X, ArrowRight, Flame } from 'lucide-react';
+import api from '../../services/api';
 
-const popularKeywords = ['cart', 'user', 'arrow', 'cloud', 'ai', 'settings', 'crypto', 'heart', 'phone'];
+const defaultTrendingPool = [
+  'cart', 'user', 'arrow', 'cloud', 'ai', 'settings', 'crypto', 'heart', 'phone',
+  'security', 'camera', 'folder', 'location', 'mail', 'calendar', 'analytics',
+  'delivery', 'chat', 'weather', 'shield', 'shopping', 'robot', 'document',
+  'medical', 'game', 'star', 'video', 'message', 'finance', 'social', 'globe',
+  'dashboard', 'bell', 'filter', 'lock', 'tag', 'edit', 'download'
+];
+
+function shuffleKeywords(pool, count = 10, topReal = []) {
+  const combined = new Set(topReal);
+  const shuffled = [...pool].sort(() => 0.5 - Math.random());
+  for (const kw of shuffled) {
+    if (!combined.has(kw)) {
+      combined.add(kw);
+    }
+    if (combined.size >= count) break;
+  }
+  return Array.from(combined);
+}
 
 const SearchBar = ({ initialQuery = '', placeholder = 'Search 10,00,000 icons...', isHero = false }) => {
   const [query, setQuery] = useState(initialQuery);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedStyle, setSelectedStyle] = useState('all');
+  const [realTrending, setRealTrending] = useState([]);
+  const [trendingKeywords, setTrendingKeywords] = useState(() => shuffleKeywords(defaultTrendingPool, 10));
   const navigate = useNavigate();
   const searchRef = useRef(null);
+
+  // Fetch analyzed real user traffic trending searches from backend
+  useEffect(() => {
+    let isMounted = true;
+    api.get('/icons/trending-searches')
+      .then((res) => {
+        if (isMounted && res.data && res.data.data && Array.isArray(res.data.data.trending)) {
+          const fetched = res.data.data.trending;
+          const realTop = fetched.slice(0, res.data.data.realTrendingCount || 0);
+          setRealTrending(realTop);
+          setTrendingKeywords(shuffleKeywords(defaultTrendingPool, 10, realTop));
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     setQuery(initialQuery);
@@ -24,6 +64,12 @@ const SearchBar = ({ initialQuery = '', placeholder = 'Search 10,00,000 icons...
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const handleOpenDropdown = () => {
+    // Re-randomize pool every time the dropdown is opened so suggestions are always fresh and dynamic
+    setTrendingKeywords(shuffleKeywords(defaultTrendingPool, 10, realTrending));
+    setIsOpen(true);
+  };
 
   const handleSearch = (e) => {
     if (e) e.preventDefault();
@@ -63,9 +109,9 @@ const SearchBar = ({ initialQuery = '', placeholder = 'Search 10,00,000 icons...
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
-            setIsOpen(true);
+            if (!isOpen) handleOpenDropdown();
           }}
-          onFocus={() => setIsOpen(true)}
+          onFocus={handleOpenDropdown}
           placeholder={placeholder}
           className={`w-full bg-transparent px-3 text-landing-on-surface placeholder:text-landing-on-surface-variant/60 focus:outline-none ${
             isHero ? 'text-sm sm:text-base font-medium' : 'text-xs'
@@ -97,23 +143,43 @@ const SearchBar = ({ initialQuery = '', placeholder = 'Search 10,00,000 icons...
 
       {/* Auto-suggest dropdown */}
       {isOpen && (
-        <div className="absolute left-0 right-0 top-full mt-3 glass-dropdown rounded-3xl p-5 shadow-2xl z-40 animate-fade-in border border-white/60">
-          <div className="flex items-center gap-2 mb-3 text-xs font-bold uppercase tracking-wider text-landing-on-surface-variant">
-            <Sparkles className="w-3.5 h-3.5 text-landing-vibrant-coral" />
-            <span>Trending Searches</span>
+        <div className="absolute left-0 right-0 top-full mt-3 glass-dropdown rounded-3xl p-5 shadow-2xl z-50 animate-fade-in border border-white/60 bg-white/95 backdrop-blur-xl">
+          <div className="flex items-center justify-between gap-2 mb-3 text-xs font-bold uppercase tracking-wider text-landing-on-surface-variant">
+            <div className="flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-landing-vibrant-coral" />
+              <span>Trending & Popular Searches</span>
+            </div>
+            {realTrending.length > 0 && (
+              <span className="text-[10px] text-landing-vibrant-coral font-bold flex items-center gap-1">
+                <Flame className="w-3 h-3 text-landing-vibrant-coral" />
+                Live Traffic
+              </span>
+            )}
           </div>
+
           <div className="flex flex-wrap gap-2">
-            {popularKeywords.map((kw) => (
-              <button
-                key={kw}
-                type="button"
-                onClick={() => handleSelectKeyword(kw)}
-                className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-landing-surface-container-low hover:bg-landing-primary hover:text-white transition-colors text-landing-on-surface flex items-center gap-1.5"
-              >
-                <Search className="w-3 h-3 opacity-60" />
-                {kw}
-              </button>
-            ))}
+            {trendingKeywords.map((kw, idx) => {
+              const isRealHot = realTrending.includes(kw);
+              return (
+                <button
+                  key={kw}
+                  type="button"
+                  onClick={() => handleSelectKeyword(kw)}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    isRealHot
+                      ? 'bg-landing-vibrant-coral/10 text-landing-vibrant-coral border border-landing-vibrant-coral/30 hover:bg-landing-vibrant-coral hover:text-white shadow-2xs'
+                      : 'bg-landing-surface-container-low hover:bg-landing-primary hover:text-white text-landing-on-surface'
+                  }`}
+                >
+                  {isRealHot ? (
+                    <Flame className="w-3 h-3 text-landing-vibrant-coral group-hover:text-white" />
+                  ) : (
+                    <Search className="w-3 h-3 opacity-60" />
+                  )}
+                  <span>{kw}</span>
+                </button>
+              );
+            })}
           </div>
 
           <div className="mt-4 pt-3 border-t border-landing-surface-container flex items-center justify-between text-xs text-landing-on-surface-variant">
@@ -124,9 +190,9 @@ const SearchBar = ({ initialQuery = '', placeholder = 'Search 10,00,000 icons...
                   key={style}
                   type="button"
                   onClick={() => setSelectedStyle(style)}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize transition-all ${
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize transition-all cursor-pointer ${
                     selectedStyle === style
-                      ? 'bg-landing-primary text-white'
+                      ? 'bg-landing-primary text-white shadow-xs'
                       : 'bg-landing-surface-container hover:bg-landing-surface-dim text-landing-on-surface'
                   }`}
                 >

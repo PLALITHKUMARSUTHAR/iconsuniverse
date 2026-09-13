@@ -3,6 +3,7 @@ const Category = require('../models/Category');
 const Pack = require('../models/Pack');
 const Download = require('../models/Download');
 const User = require('../models/User');
+const SearchAnalytics = require('../models/SearchAnalytics');
 const { sanitizeSVG, extractColorsFromSVG, svgToDataUrl } = require('../utils/svgSanitizer');
 const { cleanIconTitle } = require('../utils/titleCleaner');
 
@@ -788,6 +789,15 @@ exports.getIcons = async (req, res, next) => {
       const escapedQ = cleanQ.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const qTerms = cleanQ.split(/[\s,]+/).map((s) => s.trim()).filter(Boolean);
 
+      // Asynchronously track search analytics for real traffic popularity
+      if (cleanQ.length >= 2 && (!page || parseInt(page, 10) === 1)) {
+        SearchAnalytics.updateOne(
+          { query: cleanQ.toLowerCase().slice(0, 50) },
+          { $inc: { count: 1 }, $set: { lastSearchedAt: new Date() } },
+          { upsert: true }
+        ).catch(() => {});
+      }
+
       if (qTerms.length > 1) {
         const termsRegexStr = qTerms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
         const phraseRegex = new RegExp(escapedQ, 'i');
@@ -1354,6 +1364,58 @@ exports.deleteIcon = async (req, res, next) => {
     const icon = await Icon.findByIdAndDelete(req.params.id);
     if (!icon) return res.status(404).json({ success: false, message: 'Icon not found' });
     res.status(200).json({ success: true, data: {} });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get dynamic trending searches based on real traffic + randomized categories
+// @route   GET /api/icons/trending-searches
+// @access  Public
+exports.getTrendingSearches = async (req, res, next) => {
+  try {
+    const defaultPool = [
+      'arrow', 'cart', 'user', 'ai', 'crypto', 'settings', 'music', 'heart',
+      'security', 'camera', 'cloud', 'folder', 'location', 'phone', 'mail',
+      'calendar', 'analytics', 'delivery', 'chat', 'weather', 'shield',
+      'shopping', 'robot', 'document', 'search', 'medical', 'game', 'star',
+      'video', 'message', 'finance', 'social', 'globe', 'dashboard', 'bell',
+      'download', 'filter', 'lock', 'tag', 'edit', 'power', 'chart'
+    ];
+
+    // Fetch top searched queries from real user traffic
+    let topSearches = [];
+    try {
+      topSearches = await SearchAnalytics.find()
+        .sort({ count: -1, lastSearchedAt: -1 })
+        .limit(6)
+        .select('query count')
+        .lean();
+    } catch (e) {}
+
+    const realQueries = topSearches.map((s) => s.query.trim().toLowerCase()).filter(Boolean);
+
+    // Shuffle default pool to generate fresh randomized searches on every load
+    const shuffledPool = [...defaultPool].sort(() => 0.5 - Math.random());
+    const combinedSet = new Set(realQueries);
+
+    for (const item of shuffledPool) {
+      if (!combinedSet.has(item)) {
+        combinedSet.add(item);
+      }
+      if (combinedSet.size >= 12) break;
+    }
+
+    const trending = Array.from(combinedSet);
+
+    res.set('Cache-Control', 'public, max-age=10, stale-while-revalidate=60');
+    res.status(200).json({
+      success: true,
+      data: {
+        trending,
+        realTrendingCount: realQueries.length,
+      },
+    });
   } catch (err) {
     next(err);
   }

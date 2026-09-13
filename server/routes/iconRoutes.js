@@ -1,6 +1,7 @@
 const express = require('express');
 const {
   getIcons,
+  getTrendingSearches,
   getIconSvg,
   getIconBySlug,
   downloadIcon,
@@ -15,6 +16,7 @@ const upload = require('../middleware/upload');
 const router = express.Router();
 
 router.get('/', getIcons);
+router.get('/trending-searches', getTrendingSearches);
 router.get('/svg/:id', getIconSvg);
 router.get('/:slug', getIconBySlug);
 router.get('/:id/download', protect, downloadBurstLimiter, downloadLimiter, downloadIcon);
