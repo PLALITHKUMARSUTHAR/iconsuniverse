@@ -782,7 +782,7 @@ exports.getIcons = async (req, res, next) => {
       filter.isAnimated = true;
     }
 
-    // Text search (title, slug, tags)
+    // Text search (ONLY current title, NO older names / tags / scraper slugs)
     const andConditions = [];
     if (q && q.trim()) {
       const cleanQ = q.trim();
@@ -800,33 +800,21 @@ exports.getIcons = async (req, res, next) => {
 
       if (qTerms.length > 1) {
         const escapedTerms = qTerms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-        const phraseRegex = new RegExp(`\\b${escapedQ}\\b`, 'i');
-        const slugPhraseRegex = new RegExp(`(^|[-_])${escapedQ.replace(/[\s,]+/g, '[-_ ]')}([-_]|$)`, 'i');
-
-        // Multi-word search: all terms must match as distinct words in title or slug
-        const termConditions = escapedTerms.map((t) => ({
-          $or: [
-            { title: new RegExp(`\\b${t}\\b`, 'i') },
-            { slug: new RegExp(`(^|[-_])${t}([-_]|$)`, 'i') },
-          ],
+        const phraseRegex = new RegExp(`(?:^|[\\s_\\-–—/])${escapedQ}(?:[\\s_\\-–—/]|$)`, 'i');
+        const allTermsConditions = escapedTerms.map((t) => ({
+          title: new RegExp(`(?:^|[\\s_\\-–—/])${t}(?:[\\s_\\-–—/]|$)`, 'i'),
         }));
 
         andConditions.push({
           $or: [
             { title: phraseRegex },
-            { slug: slugPhraseRegex },
-            { $and: termConditions },
+            { $and: allTermsConditions },
           ],
         });
       } else {
-        const wordBoundaryTitle = new RegExp(`\\b${escapedQ}\\b`, 'i');
-        const wordBoundarySlug = new RegExp(`(^|[-_])${escapedQ}([-_]|$)`, 'i');
-
+        const wordBoundaryTitle = new RegExp(`(?:^|[\\s_\\-–—/])${escapedQ}(?:[\\s_\\-–—/]|$)`, 'i');
         andConditions.push({
-          $or: [
-            { title: wordBoundaryTitle },
-            { slug: wordBoundarySlug },
-          ],
+          title: wordBoundaryTitle,
         });
       }
     }
@@ -1001,19 +989,61 @@ exports.getIcons = async (req, res, next) => {
     }
 
     const cdnBase = process.env.R2_PUBLIC_URL || 'https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev';
-    const icons = rawIcons.map((icon) => {
+    
+    // Format icons and strictly ensure CURRENT title contains the searched word(s)
+    const cleanSearchQuery = q && q.trim() ? q.trim().toLowerCase() : null;
+    const searchTerms = cleanSearchQuery ? cleanSearchQuery.split(/[\s,]+/).map((s) => s.trim()).filter(Boolean) : [];
+
+    let icons = [];
+    for (const icon of rawIcons) {
+      const currentTitle = cleanIconTitle(icon.title);
+
+      // Strict validation on CURRENT name when a search query is active
+      if (cleanSearchQuery) {
+        const lowerTitle = currentTitle.toLowerCase();
+        let matches = false;
+
+        if (searchTerms.length > 1) {
+          const phraseRegex = new RegExp(`\\b${cleanSearchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+          const allTermsMatch = searchTerms.every((term) =>
+            new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(lowerTitle)
+          );
+          matches = phraseRegex.test(lowerTitle) || allTermsMatch;
+        } else {
+          matches = new RegExp(`\\b${cleanSearchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(lowerTitle);
+        }
+
+        // If current name doesn't match the search word, do not include it
+        if (!matches) {
+          continue;
+        }
+      }
+
       const safePath = icon.path ? icon.path.split('/').map(encodeURIComponent).join('/') : null;
       const r2Url = safePath ? `${cdnBase}/icons/${safePath}` : null;
       const proxyUrl = `/api/icons/svg/${icon._id}`;
-      return {
+
+      icons.push({
         ...icon,
-        title: cleanIconTitle(icon.title),
+        title: currentTitle,
         isAnimated: !!icon.isAnimated,
         svgUrl: proxyUrl,
         r2Url: r2Url,
         pngPreviewUrl: proxyUrl,
-      };
-    });
+      });
+    }
+
+    // Rank search results: exact match on current name first, then starts-with, then others
+    if (cleanSearchQuery && (sort === 'trending' || !sort)) {
+      icons.sort((a, b) => {
+        const aTitle = a.title.toLowerCase();
+        const bTitle = b.title.toLowerCase();
+        const aExact = aTitle === cleanSearchQuery ? 0 : aTitle.startsWith(cleanSearchQuery) ? 1 : 2;
+        const bExact = bTitle === cleanSearchQuery ? 0 : bTitle.startsWith(cleanSearchQuery) ? 1 : 2;
+        if (aExact !== bExact) return aExact - bExact;
+        return (b.downloadCount || 0) - (a.downloadCount || 0);
+      });
+    }
 
     res.set('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800');
     res.status(200).json({
