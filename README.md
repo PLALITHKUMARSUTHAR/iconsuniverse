@@ -46,6 +46,7 @@
 ## 🚀 Quick Start
 
 ### 1. Server Setup (Backend)
+
 ```bash
 cd server
 npm install
@@ -55,6 +56,7 @@ npm run dev       # Start API server on http://localhost:5000
 ```
 
 ### 2. Client Setup (Frontend)
+
 ```bash
 cd client
 npm install

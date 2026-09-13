@@ -1,12 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
 
 @layer base {
   html,
   body {
     scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
     font-family: 'Inter', system-ui, sans-serif;
   }
 
@@ -24,29 +23,29 @@
   /* Ultra-smooth Glassmorphism */
   .glass-landing {
     background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.6);
   }
 
   .glass-subpage {
     background: rgba(255, 255, 255, 0.82);
-    backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.5);
   }
 
   .glass-dark {
     background: rgba(11, 28, 48, 0.85);
-    backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .glass-dropdown {
     background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
     border: 1px solid rgba(0, 50, 125, 0.08);
     box-shadow: 0 20px 40px rgba(0, 30, 82, 0.12);
   }
