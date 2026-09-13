@@ -6,6 +6,7 @@ import BulkDownloadModal from '../components/collections/BulkDownloadModal';
 import CategoryStyleModal, { prefetchCategoryPreviews } from '../components/landing/CategoryStyleModal';
 import AllCategoriesModal from '../components/common/AllCategoriesModal';
 import { iconService } from '../services/apiServices';
+import { prefetchIconBatch } from '../services/svgCacheService';
 import { Search, Sparkles, Download, X, Layers, Check, ArrowRight, Grid3X3, CircleDot, Palette, Award, Compass, Film } from 'lucide-react';
 import Button from '../components/common/Button';
 import Footer from '../components/common/Footer';
@@ -83,6 +84,7 @@ const SearchResultsPage = () => {
       if (cached.availableStyles) setAvailableCategoryStyles(cached.availableStyles);
       setHasMore(cached.hasMore);
       setLoading(false);
+      prefetchIconBatch(cached.icons, 48);
       return;
     }
 
@@ -99,6 +101,7 @@ const SearchResultsPage = () => {
           setAvailableCategoryStyles(res.data.availableStyles);
         }
         const newBatch = res.data.icons;
+        prefetchIconBatch(newBatch, 48);
         const total = res.data.total || 0;
         const more = pageNum < (res.data.totalPages || 1);
         setTotalCount(total);

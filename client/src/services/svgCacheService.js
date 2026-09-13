@@ -113,8 +113,8 @@ export function scopeSvgIds(svgText, scopeId = null) {
 }
 
 /**
- * Fetch raw SVG vector text with instant in-memory cache, in-flight deduplication,
- * and dual-tier failover (Direct CDN primary + Server Proxy fallback).
+ * Fetch raw SVG vector text with instant in-memory cache, sessionStorage persistence,
+ * in-flight deduplication, and dual-tier failover (Direct CDN primary + Server Proxy fallback).
  */
 export async function fetchAndCacheSvg(url, iconId = null, fallbackUrl = null) {
   if (!url && !fallbackUrl) return null;
@@ -122,9 +122,22 @@ export async function fetchAndCacheSvg(url, iconId = null, fallbackUrl = null) {
   const secondaryUrl = url && fallbackUrl && url !== fallbackUrl ? fallbackUrl : null;
   const key = iconId || primaryUrl;
 
+  // 1. Check L1 in-memory cache
   if (memoryCache.has(key)) {
     return memoryCache.get(key);
   }
+
+  // 2. Check L2 sessionStorage cache (persists across category switches & fast navigation)
+  try {
+    const sessionCached = sessionStorage.getItem(`iu_svg_${key}`);
+    if (sessionCached) {
+      memoryCache.set(key, sessionCached);
+      if (iconId && iconId !== primaryUrl) {
+        memoryCache.set(iconId, sessionCached);
+      }
+      return sessionCached;
+    }
+  } catch (e) {}
 
   // Deduplicate concurrent requests for the exact same key
   if (inFlightPromises.has(key)) {
@@ -135,7 +148,7 @@ export async function fetchAndCacheSvg(url, iconId = null, fallbackUrl = null) {
     const tryFetch = async (targetUrl) => {
       if (!targetUrl) return null;
       try {
-        const res = await fetch(targetUrl);
+        const res = await fetch(targetUrl, { priority: 'high' });
         if (!res.ok) return null;
         const text = await res.text();
         if (text && text.includes('<svg')) {
@@ -160,6 +173,9 @@ export async function fetchAndCacheSvg(url, iconId = null, fallbackUrl = null) {
       if (iconId && iconId !== primaryUrl) {
         memoryCache.set(iconId, normalized);
       }
+      try {
+        sessionStorage.setItem(`iu_svg_${key}`, normalized);
+      } catch (e) {}
       return normalized;
     }
 
@@ -173,11 +189,40 @@ export async function fetchAndCacheSvg(url, iconId = null, fallbackUrl = null) {
 }
 
 /**
- * Get synchronously from cache
+ * Get synchronously from cache (checks L1 memory then L2 session storage)
  */
 export function getCachedSvg(iconIdOrUrl) {
   if (!iconIdOrUrl) return null;
-  return memoryCache.get(iconIdOrUrl) || null;
+  if (memoryCache.has(iconIdOrUrl)) {
+    return memoryCache.get(iconIdOrUrl);
+  }
+  try {
+    const sessionVal = sessionStorage.getItem(`iu_svg_${iconIdOrUrl}`);
+    if (sessionVal) {
+      memoryCache.set(iconIdOrUrl, sessionVal);
+      return sessionVal;
+    }
+  } catch (e) {}
+  return null;
+}
+
+/**
+ * Pre-warm / batch fetch a slice of icons in parallel to eliminate waterfall loading
+ */
+export function prefetchIconBatch(icons = [], maxCount = 48) {
+  if (!Array.isArray(icons) || icons.length === 0) return;
+  const batch = icons.slice(0, maxCount);
+  batch.forEach((icon) => {
+    const id = icon._id || icon.slug;
+    const directUrl = icon.r2Url || getDirectR2Url(icon);
+    const proxyUrl = icon.svgUrl && icon.svgUrl.startsWith('/api')
+      ? icon.svgUrl
+      : (icon._id ? `/api/icons/svg/${icon._id}` : '');
+    const fetchUrl = directUrl || proxyUrl;
+    if (fetchUrl && !getCachedSvg(id) && !getCachedSvg(fetchUrl)) {
+      fetchAndCacheSvg(fetchUrl, id, proxyUrl);
+    }
+  });
 }
 
 /**
@@ -187,6 +232,9 @@ export function setCachedSvg(iconIdOrUrl, svgText) {
   if (!iconIdOrUrl || !svgText) return;
   const normalized = normalizeSvgForCanvas(svgText, iconIdOrUrl);
   memoryCache.set(iconIdOrUrl, normalized);
+  try {
+    sessionStorage.setItem(`iu_svg_${iconIdOrUrl}`, normalized);
+  } catch (e) {}
 }
 
 /**

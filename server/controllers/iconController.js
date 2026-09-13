@@ -1063,7 +1063,7 @@ exports.getIcons = async (req, res, next) => {
       };
     });
 
-    res.set('Cache-Control', 'public, max-age=600, stale-while-revalidate=86400');
+    res.set('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800');
     res.status(200).json({
       success: true,
       data: {
