@@ -4,11 +4,10 @@ import { Search, Sparkles, X, ArrowRight, Flame } from 'lucide-react';
 import api from '../../services/api';
 
 const defaultTrendingPool = [
-  'cart', 'user', 'arrow', 'cloud', 'ai', 'settings', 'crypto', 'heart', 'phone',
-  'security', 'camera', 'folder', 'location', 'mail', 'calendar', 'analytics',
-  'delivery', 'chat', 'weather', 'shield', 'shopping', 'robot', 'document',
-  'medical', 'game', 'star', 'video', 'message', 'finance', 'social', 'globe',
-  'dashboard', 'bell', 'filter', 'lock', 'tag', 'edit', 'download'
+  'arrow', 'cart', 'user', 'heart', 'star', 'cloud', 'settings', 'bell', 'lock', 'search',
+  'camera', 'mail', 'phone', 'music', 'folder', 'shield', 'check', 'edit', 'trash', 'calendar',
+  'chat', 'home', 'globe', 'download', 'share', 'plus', 'eye', 'wifi', 'play', 'filter',
+  'bookmark', 'cpu', 'sparkles', 'rocket', 'dollar', 'shopping-bag', 'link', 'refresh', 'code'
 ];
 
 function shuffleKeywords(pool, count = 10, topReal = []) {
@@ -147,7 +146,7 @@ const SearchBar = ({ initialQuery = '', placeholder = 'Search 10,00,000 icons...
           <div className="flex items-center justify-between gap-2 mb-3 text-xs font-bold uppercase tracking-wider text-landing-on-surface-variant">
             <div className="flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-landing-vibrant-coral" />
-              <span>Trending & Popular Searches</span>
+              <span>Trending Searches</span>
             </div>
             {realTrending.length > 0 && (
               <span className="text-[10px] text-landing-vibrant-coral font-bold flex items-center gap-1">
