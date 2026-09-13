@@ -799,26 +799,33 @@ exports.getIcons = async (req, res, next) => {
       }
 
       if (qTerms.length > 1) {
-        const termsRegexStr = qTerms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+        const escapedTerms = qTerms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
         const phraseRegex = new RegExp(`\\b${escapedQ}\\b`, 'i');
-        const termsWordRegex = new RegExp(`\\b(${termsRegexStr})`, 'i');
-        const slugRegex = new RegExp(`(^|[-_])(${escapedQ}|${termsRegexStr})`, 'i');
+        const slugPhraseRegex = new RegExp(`(^|[-_])${escapedQ.replace(/[\s,]+/g, '[-_ ]')}([-_]|$)`, 'i');
+
+        // Multi-word search: all terms must match as distinct words in title or slug
+        const termConditions = escapedTerms.map((t) => ({
+          $or: [
+            { title: new RegExp(`\\b${t}\\b`, 'i') },
+            { slug: new RegExp(`(^|[-_])${t}([-_]|$)`, 'i') },
+          ],
+        }));
 
         andConditions.push({
           $or: [
             { title: phraseRegex },
-            { title: termsWordRegex },
-            { slug: slugRegex },
+            { slug: slugPhraseRegex },
+            { $and: termConditions },
           ],
         });
       } else {
-        const titleRegex = new RegExp(`\\b${escapedQ}`, 'i');
-        const slugRegex = new RegExp(`(^|[-_])${escapedQ}`, 'i');
+        const wordBoundaryTitle = new RegExp(`\\b${escapedQ}\\b`, 'i');
+        const wordBoundarySlug = new RegExp(`(^|[-_])${escapedQ}([-_]|$)`, 'i');
 
         andConditions.push({
           $or: [
-            { title: titleRegex },
-            { slug: slugRegex },
+            { title: wordBoundaryTitle },
+            { slug: wordBoundarySlug },
           ],
         });
       }
@@ -848,7 +855,6 @@ exports.getIcons = async (req, res, next) => {
             $or: [
               { title: catRegex },
               { slug: catRegex },
-              { tags: { $in: [catRegex] } },
             ],
           });
         } else {
@@ -937,8 +943,8 @@ exports.getIcons = async (req, res, next) => {
           .select('title slug path isFilled isAnimated isPremium style downloadCount')
           .lean();
 
-        // If specific keyword filter yielded fewer icons, supplement with popular icons in this category
-        if (rawIcons.length < limitNum && filter.categoryId) {
+        // If in category view (without search query) and results are few, supplement with popular icons in category
+        if (!q && rawIcons.length < limitNum && filter.categoryId) {
           const fallbackFilter = {
             status: { $ne: 'rejected' },
             isAnimated: { $ne: true },
@@ -992,63 +998,6 @@ exports.getIcons = async (req, res, next) => {
           .lean(),
         countPromise,
       ]);
-    }
-
-    // Fallback: If animated filter in this category yielded 0 icons, relax the category filter so user sees animated icons
-    if (rawIcons.length === 0 && wantsAnimated && filter.categoryId) {
-      delete filter.categoryId;
-      if (shouldSkipCount) {
-        rawIcons = await Icon.find(filter)
-          .sort(sortQuery)
-          .skip(skip)
-          .limit(limitNum)
-          .populate('categoryId', 'name slug')
-          .populate('packId', 'title slug')
-          .select('title slug path isFilled isAnimated isPremium style tags downloadCount colors categoryId packId')
-          .lean();
-        total = rawIcons.length;
-      } else {
-        [rawIcons, total] = await Promise.all([
-          Icon.find(filter)
-            .sort(sortQuery)
-            .skip(skip)
-            .limit(limitNum)
-            .populate('categoryId', 'name slug')
-            .populate('packId', 'title slug')
-            .select('title slug path isFilled isAnimated isPremium style tags downloadCount colors categoryId packId')
-            .lean(),
-          Icon.countDocuments(filter),
-        ]);
-      }
-    }
-
-    // Fallback: If style filter yielded 0 icons in this category, relax the style filter so user always gets icons
-    if (rawIcons.length === 0 && style && style !== 'all') {
-      delete filter.$or;
-      delete filter.style;
-      if (shouldSkipCount) {
-        rawIcons = await Icon.find(filter)
-          .sort(sortQuery)
-          .skip(skip)
-          .limit(limitNum)
-          .populate('categoryId', 'name slug')
-          .populate('packId', 'title slug')
-          .select('title slug path isFilled isAnimated isPremium style tags downloadCount colors categoryId packId')
-          .lean();
-        total = rawIcons.length;
-      } else {
-        [rawIcons, total] = await Promise.all([
-          Icon.find(filter)
-            .sort(sortQuery)
-            .skip(skip)
-            .limit(limitNum)
-            .populate('categoryId', 'name slug')
-            .populate('packId', 'title slug')
-            .select('title slug path isFilled isAnimated isPremium style tags downloadCount colors categoryId packId')
-            .lean(),
-          Icon.countDocuments(filter),
-        ]);
-      }
     }
 
     const cdnBase = process.env.R2_PUBLIC_URL || 'https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev';
