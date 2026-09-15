@@ -518,6 +518,16 @@ const SearchResultsPage = () => {
           actionSlot={
             selectedIds.size === 1 && selectedIconObjects[0] ? (
               <div className="flex items-center gap-2 animate-fade-in">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setIsBulkModalOpen(true)}
+                  icon={Sparkles}
+                  className="shadow-sm font-bold text-xs"
+                >
+                  Studio / Customize
+                </Button>
+
                 <FormatDownloadMenu
                   icon={selectedIconObjects[0]}
                   onDownload={async (fmt, sz) => {

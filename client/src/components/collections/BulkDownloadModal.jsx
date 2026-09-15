@@ -215,62 +215,10 @@ const BulkDownloadModal = ({
   };
 
   const generateSvgWithBackdrop = (rawSvg, custom, size = 512) => {
-    if (!rawSvg) return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}"></svg>`;
-    
-    // If no backdrop shape and no rotation/flip, return the raw normalized SVG
-    if (custom.shape === 'none' && !custom.rotation && !custom.flipH && !custom.flipV) {
-      return rawSvg;
-    }
-
-    const opacity = (custom.badgeOpacity ?? 100) / 100;
-    const color = custom.badgeColor || '#f4f3fa';
-    
-    let bgElement = '';
-    let innerScale = custom.shape === 'none' ? 0.88 : 0.72;
-    
-    if (custom.shape === 'circle') {
-      bgElement = `<circle cx="${size/2}" cy="${size/2}" r="${size/2}" fill="${color}" fill-opacity="${opacity}" />`;
-      innerScale = 0.58;
-    } else if (custom.shape === 'rounded') {
-      const rx = size * 0.22;
-      bgElement = `<rect x="0" y="0" width="${size}" height="${size}" rx="${rx}" fill="${color}" fill-opacity="${opacity}" />`;
-      innerScale = 0.66;
-    } else if (custom.shape === 'hexagon') {
-      const p1 = `${size * 0.5},0`;
-      const p2 = `${size * 0.933},${size * 0.25}`;
-      const p3 = `${size * 0.933},${size * 0.75}`;
-      const p4 = `${size * 0.5},${size}`;
-      const p5 = `${size * 0.067},${size * 0.75}`;
-      const p6 = `${size * 0.067},${size * 0.25}`;
-      bgElement = `<polygon points="${p1} ${p2} ${p3} ${p4} ${p5} ${p6}" fill="${color}" fill-opacity="${opacity}" />`;
-      innerScale = 0.54;
-    }
-
-    // Calculate inner icon scale and offset so it is strictly within backdrop boundaries
-    const iconSize = size * innerScale;
-    const offset = (size - iconSize) / 2;
-
-    const rot = custom.rotation || 0;
-    const sx = custom.flipH ? -1 : 1;
-    const sy = custom.flipV ? -1 : 1;
-
-    let transformAttr = '';
-    if (rot || sx !== 1 || sy !== 1) {
-      transformAttr = `transform="translate(${size/2}, ${size/2}) rotate(${rot}) scale(${sx}, ${sy}) translate(-${size/2}, -${size/2})"`;
-    }
-
-    const vbMatch = rawSvg.match(/viewBox=["']([^"']+)["']/i);
-    const innerVb = vbMatch ? vbMatch[1] : '0 0 24 24';
-    const innerBody = rawSvg.replace(/<svg\b[^>]*>/i, '').replace(/<\/svg>/i, '');
-
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
-  ${bgElement}
-  <g ${transformAttr}>
-    <svg x="${offset}" y="${offset}" width="${iconSize}" height="${iconSize}" viewBox="${innerVb}">
-      ${innerBody}
-    </svg>
-  </g>
-</svg>`;
+    return prepareSvgForExport(rawSvg, {
+      ...custom,
+      size,
+    });
   };
 
   // Generic download function: downloads either specific targetIcons or all sourceIcons
@@ -416,10 +364,12 @@ const BulkDownloadModal = ({
           </div>
           <div>
             <h2 className="font-heading font-extrabold text-base sm:text-lg text-landing-primary">
-              Bulk Download Studio
+              {sourceIcons.length === 1 ? 'Icon Customization & Download Studio' : 'Bulk Download Studio'}
             </h2>
             <p className="text-xs text-landing-on-surface-variant">
-              Customizing {activeSelectedIds.size} of {sourceIcons.length} icons
+              {sourceIcons.length === 1
+                ? `Customizing "${sourceIcons[0]?.title || 'Selected Icon'}" • Live Vector Recolor, Transforms & Badges`
+                : `Customizing ${activeSelectedIds.size} of ${sourceIcons.length} icons`}
             </p>
           </div>
         </div>
@@ -831,10 +781,14 @@ const BulkDownloadModal = ({
             </div>
           </div>
 
-          {/* Bottom Sticky Action Footer with Download Selected (Left) and Download All (Right) */}
+          {/* Bottom Sticky Action Footer */}
           <div className="p-4 bg-white rounded-3xl border border-landing-surface-container shadow-md flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0 mt-4">
-            <div className="text-xs text-landing-on-surface-variant">
-              <span>{activeSelectedIds.size} Selected • {sourceIcons.length} Total in Studio</span>
+            <div className="text-xs text-landing-on-surface-variant font-medium">
+              {sourceIcons.length === 1 ? (
+                <span>1 Icon Selected in Studio • Format: <strong className="text-landing-primary">{format.toUpperCase()}</strong></span>
+              ) : (
+                <span>{activeSelectedIds.size} Selected • {sourceIcons.length} Total in Studio</span>
+              )}
             </div>
 
             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
@@ -842,31 +796,49 @@ const BulkDownloadModal = ({
                 Cancel
               </Button>
 
-              {/* Download Selected Button (Beside on the left) */}
-              <Button
-                variant="glass"
-                size="lg"
-                onClick={handleDownloadSelected}
-                isLoading={isProcessing}
-                disabled={activeSelectedIds.size === 0}
-                icon={Download}
-                className="w-full sm:w-auto text-landing-primary border-landing-primary/30"
-              >
-                Download Selected ({activeSelectedIds.size}) Icons
-              </Button>
+              {sourceIcons.length === 1 ? (
+                /* Single Icon in Studio: Direct Download SVG/PNG (NO ZIP) */
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={handleDownloadAll}
+                  isLoading={isProcessing}
+                  disabled={sourceIcons.length === 0}
+                  icon={Download}
+                  className="w-full sm:w-auto font-bold px-6 shadow-md"
+                >
+                  Download {format.toUpperCase()}
+                </Button>
+              ) : (
+                /* Multiple Icons in Studio: Bulk ZIP Options */
+                <>
+                  <Button
+                    variant="glass"
+                    size="lg"
+                    onClick={handleDownloadSelected}
+                    isLoading={isProcessing}
+                    disabled={activeSelectedIds.size === 0}
+                    icon={activeSelectedIds.size === 1 ? Download : FileArchive}
+                    className="w-full sm:w-auto text-landing-primary border-landing-primary/30"
+                  >
+                    {activeSelectedIds.size === 1
+                      ? `Download Selected Icon (${format.toUpperCase()})`
+                      : `Download Selected (${activeSelectedIds.size}) Icons ZIP`}
+                  </Button>
 
-              {/* Download All Button */}
-              <Button
-                variant="primary"
-                size="lg"
-                onClick={handleDownloadAll}
-                isLoading={isProcessing}
-                disabled={sourceIcons.length === 0}
-                icon={FileArchive}
-                className="w-full sm:w-auto"
-              >
-                Download All ({sourceIcons.length}) Icons ({format.toUpperCase()} ZIP)
-              </Button>
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    onClick={handleDownloadAll}
+                    isLoading={isProcessing}
+                    disabled={sourceIcons.length === 0}
+                    icon={FileArchive}
+                    className="w-full sm:w-auto"
+                  >
+                    Download All ({sourceIcons.length}) Icons ({format.toUpperCase()} ZIP)
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>

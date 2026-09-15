@@ -6,6 +6,7 @@ import {
   recolorSvg,
   getDirectR2Url,
   getSafeIconUrl,
+  sanitizeSvgRootAttributes,
 } from '../services/svgCacheService';
 import api from '../services/api';
 
@@ -34,15 +35,20 @@ export function triggerBrowserDownload(blobOrUrl, filename) {
 /**
  * Ensures root SVG has valid namespaces, explicit width/height, viewBox,
  * and solid visible colors (replaces invisible currentColor).
+ * Guarantees 100% valid XML with no duplicated attributes.
  */
 export function prepareSvgForExport(rawSvg, options = {}) {
   if (!rawSvg || typeof rawSvg !== 'string') {
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512"></svg>`;
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512"></svg>`;
   }
 
   const targetSize = options.size || 512;
   const targetColor = options.color || '#1e293b';
-  let svg = rawSvg.trim();
+  let svg = rawSvg.trim()
+    .replace(/<\?xml[^>]*\?>/gi, '')
+    .replace(/<!DOCTYPE[^>]*>/gi, '')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .trim();
 
   // 1. Recolor if color option is provided and not using original color
   if (options.useOriginalColor === false && options.color) {
@@ -66,12 +72,7 @@ export function prepareSvgForExport(rawSvg, options = {}) {
     }
   }
 
-  // 4. Ensure xmlns namespace
-  if (!svg.includes('xmlns="http://www.w3.org/2000/svg"')) {
-    svg = svg.replace(/<svg\b/i, '<svg xmlns="http://www.w3.org/2000/svg"');
-  }
-
-  // 5. Handle backdrop shape and transforms if specified
+  // 4. Handle backdrop shape and transforms if specified
   const shape = options.shape || 'none';
   const rotation = options.rotation || 0;
   const flipH = options.flipH || false;
@@ -113,8 +114,7 @@ export function prepareSvgForExport(rawSvg, options = {}) {
 
     const innerBody = svg.replace(/<svg\b[^>]*>/i, '').replace(/<\/svg>/i, '');
 
-    return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${targetSize} ${targetSize}" width="${targetSize}" height="${targetSize}">
+    const compositeSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${targetSize} ${targetSize}" width="${targetSize}" height="${targetSize}">
   ${bgElement}
   <g ${transformAttr}>
     <svg x="${offset}" y="${offset}" width="${iconSize}" height="${iconSize}" viewBox="${viewBox}">
@@ -122,23 +122,19 @@ export function prepareSvgForExport(rawSvg, options = {}) {
     </svg>
   </g>
 </svg>`;
+
+    return `<?xml version="1.0" encoding="UTF-8"?>\n${compositeSvg}`;
   }
 
-  // 6. Enforce explicit width, height, and viewBox on root <svg>
-  svg = svg.replace(/<svg\b([^>]*)>/i, (match, attrs) => {
-    let cleanAttrs = attrs
-      .replace(/\bwidth=["'][^"']*["']/gi, '')
-      .replace(/\bheight=["'][^"']*["']/gi, '')
-      .replace(/\bviewBox=["'][^"']*["']/gi, '')
-      .trim();
-    return `<svg ${cleanAttrs} width="${targetSize}" height="${targetSize}" viewBox="${viewBox}">`;
+  // 5. Enforce explicit width, height, and viewBox on root <svg> without duplicate attributes
+  svg = sanitizeSvgRootAttributes(svg, {
+    width: targetSize,
+    height: targetSize,
+    viewBox: viewBox,
+    'data-iu-normalized': null,
   });
 
-  if (!svg.startsWith('<?xml')) {
-    svg = `<?xml version="1.0" encoding="UTF-8"?>\n` + svg;
-  }
-
-  return svg;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n${svg}`;
 }
 
 /**
@@ -285,7 +281,11 @@ export async function downloadSingleIcon({
     const blob = new Blob([preparedSvg], { type: 'image/svg+xml;charset=utf-8' });
     triggerBrowserDownload(blob, `${slug}.svg`);
   } else if (normalizedFormat === 'png') {
-    const pngBlob = await renderSvgToPngBlob(rawSvg, targetSize);
+    const preparedSvg = prepareSvgForExport(rawSvg, {
+      size: targetSize,
+      ...customOptions,
+    });
+    const pngBlob = await renderSvgToPngBlob(preparedSvg, targetSize);
     triggerBrowserDownload(pngBlob, `${slug}-${targetSize}px.png`);
   } else if (normalizedFormat === 'base64') {
     const preparedSvg = prepareSvgForExport(rawSvg, {

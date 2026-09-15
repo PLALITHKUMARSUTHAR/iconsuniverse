@@ -123,27 +123,38 @@ const CollectionDrawer = () => {
               </div>
             </div>
 
-            {/* Bottom Actions: Single direct download for 1 icon, Bulk ZIP for >1 icons */}
+            {/* Bottom Actions: Single direct download & Studio for 1 icon, Bulk ZIP Studio for >1 icons */}
             {collectionIcons.length === 1 && (
-              <div className="pt-4 border-t border-landing-surface-container flex gap-2">
+              <div className="pt-4 border-t border-landing-surface-container flex flex-col gap-2">
                 <Button
                   variant="primary"
                   size="md"
-                  onClick={() => handleDownloadSingle('svg')}
-                  icon={Download}
-                  className="flex-1 text-xs"
+                  onClick={() => setIsBulkDownloadModalOpen(true)}
+                  icon={Sparkles}
+                  className="w-full text-xs font-bold shadow-xs"
                 >
-                  Download SVG
+                  Open Download Studio / Customize
                 </Button>
-                <Button
-                  variant="subpagePrimary"
-                  size="md"
-                  onClick={() => handleDownloadSingle('png')}
-                  icon={Download}
-                  className="flex-1 text-xs"
-                >
-                  Download PNG
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="glass"
+                    size="sm"
+                    onClick={() => handleDownloadSingle('svg')}
+                    icon={Download}
+                    className="flex-1 text-[11px] font-bold text-landing-primary border-landing-primary/20"
+                  >
+                    Direct SVG
+                  </Button>
+                  <Button
+                    variant="glass"
+                    size="sm"
+                    onClick={() => handleDownloadSingle('png')}
+                    icon={Download}
+                    className="flex-1 text-[11px] font-bold text-landing-primary border-landing-primary/20"
+                  >
+                    Direct PNG
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -154,9 +165,9 @@ const CollectionDrawer = () => {
                   size="lg"
                   onClick={() => setIsBulkDownloadModalOpen(true)}
                   icon={FileArchive}
-                  className="w-full text-xs sm:text-sm"
+                  className="w-full text-xs sm:text-sm shadow-md font-bold"
                 >
-                  Bulk Download ({collectionIcons.length} Icons ZIP)
+                  Bulk Download Studio ({collectionIcons.length} Icons ZIP)
                 </Button>
               </div>
             )}

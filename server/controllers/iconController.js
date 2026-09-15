@@ -587,6 +587,84 @@ function getCorrectViewBox(svgText) {
   return `${vx} ${vy} ${squareSize} ${squareSize}`;
 }
 
+function sanitizeSvgRootAttributes(svgString, extraAttributes = {}) {
+  if (!svgString || typeof svgString !== 'string' || !svgString.includes('<svg')) {
+    return svgString;
+  }
+
+  return svgString.replace(/<svg\b([^>]*)>/i, (fullMatch, attrString) => {
+    const attrMap = new Map();
+    const styleMap = new Map();
+
+    const attrRegex = /([a-zA-Z0-9_:-]+)(?:\s*=\s*(?:(?:"([^"]*)")|(?:'([^']*)')|([^\s>]+)))?/g;
+    let match;
+
+    while ((match = attrRegex.exec(attrString)) !== null) {
+      const name = match[1];
+      const nameLower = name.toLowerCase();
+      const value = match[2] !== undefined ? match[2] : match[3] !== undefined ? match[3] : match[4] !== undefined ? match[4] : '';
+
+      if (nameLower === 'style') {
+        const declarations = value.split(';').map((s) => s.trim()).filter(Boolean);
+        declarations.forEach((decl) => {
+          const colonIdx = decl.indexOf(':');
+          if (colonIdx > 0) {
+            const prop = decl.slice(0, colonIdx).trim().toLowerCase();
+            const val = decl.slice(colonIdx + 1).trim();
+            if (prop && val) {
+              styleMap.set(prop, val);
+            }
+          }
+        });
+      } else {
+        attrMap.set(nameLower, { origName: name, value });
+      }
+    }
+
+    Object.entries(extraAttributes).forEach(([key, val]) => {
+      const nameLower = key.toLowerCase();
+      if (val === null || val === undefined) {
+        attrMap.delete(nameLower);
+        if (nameLower === 'style') styleMap.clear();
+      } else if (nameLower === 'style') {
+        const declarations = String(val).split(';').map((s) => s.trim()).filter(Boolean);
+        declarations.forEach((decl) => {
+          const colonIdx = decl.indexOf(':');
+          if (colonIdx > 0) {
+            const prop = decl.slice(0, colonIdx).trim().toLowerCase();
+            const v = decl.slice(colonIdx + 1).trim();
+            if (prop && v) styleMap.set(prop, v);
+          }
+        });
+      } else {
+        attrMap.set(nameLower, { origName: key, value: String(val) });
+      }
+    });
+
+    const finalAttrs = [];
+    if (!attrMap.has('xmlns')) {
+      finalAttrs.push('xmlns="http://www.w3.org/2000/svg"');
+    }
+
+    for (const [nameLower, { origName, value }] of attrMap.entries()) {
+      if (value === '' || value === true) {
+        finalAttrs.push(origName);
+      } else {
+        finalAttrs.push(`${origName}="${value}"`);
+      }
+    }
+
+    if (styleMap.size > 0) {
+      const styleStr = Array.from(styleMap.entries())
+        .map(([k, v]) => `${k}: ${v}`)
+        .join('; ');
+      finalAttrs.push(`style="${styleStr}"`);
+    }
+
+    return `<svg ${finalAttrs.join(' ')}>`;
+  });
+}
+
 function normalizeAndFixSvg(svgText) {
   if (!svgText || typeof svgText !== 'string' || !svgText.includes('<svg')) {
     return svgText;
@@ -624,14 +702,14 @@ function normalizeAndFixSvg(svgText) {
     result = result.replace(/<svg\b([^>]*)>/i, '<svg $1 overflow="hidden">');
   }
 
-  // 4. Strip hardcoded width & height attributes and artificial display:none on root <svg>
-  result = result.replace(/<svg\b([^>]*)>/i, (match, attrs) => {
-    let cleanAttrs = attrs
-      .replace(/\bwidth=["'][^"']*["']/gi, '')
-      .replace(/\bheight=["'][^"']*["']/gi, '')
-      .replace(/\bdisplay=["']none["']/gi, '')
-      .replace(/\bvisibility=["']hidden["']/gi, '');
-    return `<svg width="100%" height="100%" style="color: #0f172a; color-scheme: light;" ${cleanAttrs.trim()}>`;
+  // 4. Clean attributes without duplication
+  result = sanitizeSvgRootAttributes(result, {
+    'data-iu-normalized': '1',
+    width: '100%',
+    height: '100%',
+    style: 'color: #0f172a; color-scheme: light;',
+    display: null,
+    visibility: null,
   });
 
   // 5. Intelligent stroke & fill recovery for unstyled icons without mutating multi-color assets
