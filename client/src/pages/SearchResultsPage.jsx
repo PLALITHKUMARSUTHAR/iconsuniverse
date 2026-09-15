@@ -3,10 +3,13 @@ import { useSearchParams, Link } from 'react-router-dom';
 import IconFilters from '../components/icons/IconFilters';
 import IconGrid from '../components/icons/IconGrid';
 import BulkDownloadModal from '../components/collections/BulkDownloadModal';
+import FormatDownloadMenu from '../components/icons/FormatDownloadMenu';
 import CategoryStyleModal, { prefetchCategoryPreviews } from '../components/landing/CategoryStyleModal';
 import AllCategoriesModal from '../components/common/AllCategoriesModal';
 import { iconService } from '../services/apiServices';
 import { prefetchIconBatch } from '../services/svgCacheService';
+import { downloadSingleIcon } from '../utils/downloadHelper';
+import { useToast } from '../context/ToastContext';
 import { Search, Sparkles, Download, X, Layers, Check, ArrowRight, Grid3X3, CircleDot, Palette, Award, Compass, Film } from 'lucide-react';
 import Button from '../components/common/Button';
 import Footer from '../components/common/Footer';
@@ -21,6 +24,7 @@ const quickStylePills = [
 ];
 
 const SearchResultsPage = () => {
+  const { addToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const queryParam = searchParams.get('q') || '';
   const categoryParam = searchParams.get('category') || '';
@@ -512,7 +516,46 @@ const SearchResultsPage = () => {
           onToggleAnimated={handleToggleAnimated}
           onResetFilters={handleResetFilters}
           actionSlot={
-            selectedIds.size > 0 ? (
+            selectedIds.size === 1 && selectedIconObjects[0] ? (
+              <div className="flex items-center gap-2 animate-fade-in">
+                <FormatDownloadMenu
+                  icon={selectedIconObjects[0]}
+                  onDownload={async (fmt, sz) => {
+                    try {
+                      await downloadSingleIcon({
+                        icon: selectedIconObjects[0],
+                        format: fmt,
+                        size: sz || 512,
+                      });
+                      addToast(`Downloaded ${selectedIconObjects[0].title} as ${fmt.toUpperCase()}!`, 'success');
+                    } catch (err) {
+                      addToast('Download error: ' + err.message, 'error');
+                    }
+                  }}
+                  onOpenAttribution={async (fmt, sz) => {
+                    try {
+                      await downloadSingleIcon({
+                        icon: selectedIconObjects[0],
+                        format: fmt,
+                        size: sz || 512,
+                      });
+                      addToast(`Downloaded ${selectedIconObjects[0].title} as ${fmt.toUpperCase()}!`, 'success');
+                    } catch (err) {
+                      addToast('Download error: ' + err.message, 'error');
+                    }
+                  }}
+                />
+
+                <button
+                  type="button"
+                  onClick={handleClearSelection}
+                  className="p-1.5 rounded-xl hover:bg-rose-50 text-landing-error transition-colors cursor-pointer"
+                  title="Clear selection"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : selectedIds.size > 1 ? (
               <div className="flex items-center gap-2 animate-fade-in">
                 <Button
                   variant="primary"
@@ -521,7 +564,7 @@ const SearchResultsPage = () => {
                   icon={Download}
                   className="shadow-sm font-bold text-xs"
                 >
-                  Open Download ({selectedIds.size} Selected)
+                  Bulk Download ({selectedIds.size} Icons)
                 </Button>
 
                 <button

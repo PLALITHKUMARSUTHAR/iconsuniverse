@@ -343,7 +343,19 @@ export async function downloadBulkIconsZip({
   onProgress = null,
 }) {
   if (!icons || icons.length === 0) {
-    throw new Error('No icons selected for bulk download');
+    throw new Error('No icons selected for download');
+  }
+
+  // If only 1 icon is selected, download directly as single file (NO ZIP!)
+  if (icons.length === 1) {
+    const single = icons[0];
+    const singleCustom = customMap[single._id || single.slug] || {};
+    return await downloadSingleIcon({
+      icon: single,
+      format,
+      size: resolution,
+      customOptions: singleCustom,
+    });
   }
 
   const zip = new JSZip();
@@ -374,7 +386,6 @@ export async function downloadBulkIconsZip({
           const pngBlob = await renderSvgToPngBlob(preparedSvg, resSize);
           folder.file(`${slug}-${resSize}px.png`, pngBlob);
         } catch (err) {
-          // If canvas fails on edge-case, fallback to SVG with warning
           folder.file(`${slug}.svg`, preparedSvg);
         }
       } else {
@@ -391,22 +402,6 @@ export async function downloadBulkIconsZip({
       onProgress({ current: completed, total: icons.length });
     }
   }
-
-  // Include License & Attribution file
-  const readmeContent = `IconsUniverse Download Package
-======================================
-Downloaded from IconsUniverse (https://iconsuniverse.com)
-Total Assets: ${completed} icons
-Selected Format: ${normalizedFormat.toUpperCase()}
-Resolution: ${normalizedFormat === 'png' ? `${resSize}x${resSize}px` : 'Scalable Vector'}
-
-Licensing:
-- Free Tier Assets: Attribution required ("Icons by IconsUniverse - https://iconsuniverse.com")
-- Pro Tier Assets: Unlimited commercial use, no attribution required.
-
-Thank you for using IconsUniverse!`;
-
-  folder.file('README-LICENSE.txt', readmeContent);
 
   const zipBlob = await zip.generateAsync({
     type: 'blob',

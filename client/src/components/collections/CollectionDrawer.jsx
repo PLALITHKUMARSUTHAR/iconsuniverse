@@ -4,6 +4,7 @@ import { useCollections } from '../../context/CollectionsContext';
 import { useToast } from '../../context/ToastContext';
 import Button from '../common/Button';
 import BulkDownloadModal from './BulkDownloadModal';
+import { downloadSingleIcon } from '../../utils/downloadHelper';
 
 const CollectionDrawer = () => {
   const {
@@ -14,8 +15,24 @@ const CollectionDrawer = () => {
     clearCollection,
     activeCollectionName,
   } = useCollections();
+  const { addToast } = useToast();
 
   const [isBulkDownloadModalOpen, setIsBulkDownloadModalOpen] = useState(false);
+
+  const handleDownloadSingle = async (format) => {
+    if (!collectionIcons.length) return;
+    const singleIcon = collectionIcons[0];
+    try {
+      await downloadSingleIcon({
+        icon: singleIcon,
+        format,
+        size: 512,
+      });
+      addToast(`Downloaded ${singleIcon.title} as ${format.toUpperCase()}!`, 'success');
+    } catch (err) {
+      addToast('Download error: ' + err.message, 'error');
+    }
+  };
 
   if (!isDrawerOpen) return null;
 
@@ -38,7 +55,7 @@ const CollectionDrawer = () => {
                     {activeCollectionName}
                   </h3>
                   <p className="text-xs text-landing-on-surface-variant">
-                    {collectionIcons.length} icon{collectionIcons.length !== 1 ? 's' : ''} saved (Daily limit: 100/day)
+                    {collectionIcons.length} icon{collectionIcons.length !== 1 ? 's' : ''} saved
                   </p>
                 </div>
 
@@ -73,7 +90,7 @@ const CollectionDrawer = () => {
                     </div>
                     <h4 className="font-bold text-sm text-landing-on-surface mb-1">Your collection is empty</h4>
                     <p className="text-xs text-landing-on-surface-variant leading-relaxed">
-                      Hover over any icon and click <strong>Collect</strong> to organize and bulk download up to 100 icons per day.
+                      Hover over any icon and click <strong>Collect</strong> to organize and download icons.
                     </p>
                   </div>
                 ) : (
@@ -106,8 +123,31 @@ const CollectionDrawer = () => {
               </div>
             </div>
 
-            {/* Bottom Primary Bulk Download Button */}
-            {collectionIcons.length > 0 && (
+            {/* Bottom Actions: Single direct download for 1 icon, Bulk ZIP for >1 icons */}
+            {collectionIcons.length === 1 && (
+              <div className="pt-4 border-t border-landing-surface-container flex gap-2">
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={() => handleDownloadSingle('svg')}
+                  icon={Download}
+                  className="flex-1 text-xs"
+                >
+                  Download SVG
+                </Button>
+                <Button
+                  variant="subpagePrimary"
+                  size="md"
+                  onClick={() => handleDownloadSingle('png')}
+                  icon={Download}
+                  className="flex-1 text-xs"
+                >
+                  Download PNG
+                </Button>
+              </div>
+            )}
+
+            {collectionIcons.length > 1 && (
               <div className="pt-4 border-t border-landing-surface-container">
                 <Button
                   variant="primary"
@@ -116,7 +156,7 @@ const CollectionDrawer = () => {
                   icon={FileArchive}
                   className="w-full text-xs sm:text-sm"
                 >
-                  Bulk Download & Edit ({collectionIcons.length} Icons)
+                  Bulk Download ({collectionIcons.length} Icons ZIP)
                 </Button>
               </div>
             )}

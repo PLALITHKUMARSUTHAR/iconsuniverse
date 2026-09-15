@@ -21,6 +21,7 @@ import {
   prepareSvgForExport,
   fetchIconSvgContent,
   triggerBrowserDownload,
+  downloadSingleIcon,
 } from '../../utils/downloadHelper';
 
 const resolutions = [16, 24, 32, 64, 128, 256, 512];
@@ -285,6 +286,29 @@ const BulkDownloadModal = ({
     }
 
     setIsProcessing(true);
+
+    // If only 1 icon is selected, download directly as a single file (NO ZIP!)
+    if (targetIcons.length === 1) {
+      const singleIcon = targetIcons[0];
+      const singleId = singleIcon._id || singleIcon.slug;
+      const singleCustom = iconCustomMap[singleId] || defaultCustomization;
+      try {
+        await downloadSingleIcon({
+          icon: singleIcon,
+          format,
+          size: pngResolution || 512,
+          customOptions: singleCustom,
+        });
+        addToast(`Downloaded ${singleIcon.title} as ${format.toUpperCase()}!`, 'success');
+        onClose();
+      } catch (err) {
+        addToast('Download error: ' + err.message, 'error');
+      } finally {
+        setIsProcessing(false);
+      }
+      return;
+    }
+
     try {
       const zip = new JSZip();
       const folderName = activeName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -335,11 +359,6 @@ const BulkDownloadModal = ({
           folder.file(`${cleanSlug}.svg`, validSvg);
         }
       }
-
-      folder.file(
-        'README-LICENSE.txt',
-        `IconsUniverse Download Package\n==============================\nTotal Assets: ${targetIcons.length} icons\nSelected Format: ${normalizedFormat.toUpperCase()}\nDimensions: ${normalizedFormat === 'png' ? `${resSize}x${resSize}px` : 'Scalable Vector'}\nDownloaded from https://iconsuniverse.com\n\nLicensing:\n- Free Tier Assets: Attribution required ("Icons by IconsUniverse - https://iconsuniverse.com")\n- Pro Tier Assets: Unlimited commercial use, no attribution required.`
-      );
 
       const blob = await zip.generateAsync({
         type: 'blob',

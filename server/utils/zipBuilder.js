@@ -66,20 +66,5 @@ exports.streamIconsZip = async (icons, zipFilename, res) => {
     archive.append(content, { name: `${slug}.svg` });
   });
 
-  // Include License & Attribution file
-  const readmeContent = `IconsUniverse — Asset Download Package
-======================================
-Downloaded from IconsUniverse (https://iconsuniverse.com)
-Total Assets: ${icons.length}
-Format: SVG Vector
-
-Licensing:
-- Free Tier Assets: Attribution required ("Icons by IconsUniverse - https://iconsuniverse.com")
-- Pro Tier Assets: Unlimited commercial use, no attribution required.
-
-Thank you for choosing IconsUniverse!`;
-
-  archive.append(readmeContent, { name: 'README-LICENSE.txt' });
-
   await archive.finalize();
 };
