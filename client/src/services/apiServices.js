@@ -1,4 +1,5 @@
 import api from './api';
+import { downloadSingleIcon } from '../utils/downloadHelper';
 
 export const iconService = {
   // Get/search icons
@@ -11,16 +12,17 @@ export const iconService = {
     return await api.get(`/icons/${slug}`);
   },
 
-  // Download single icon
-  downloadIcon: async (id, format = 'svg', size = 512) => {
-    if (format === 'base64') {
-      return await api.get(`/icons/${id}/download`, { params: { format, size } });
-    }
-    const token = localStorage.getItem('iu_token');
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
-    const downloadUrl = `${baseUrl}/icons/${id}/download?format=${format}&size=${size}${token ? `&token=${token}` : ''}`;
-    window.open(downloadUrl, '_blank');
-    return { success: true };
+  // Download single icon directly as .svg or .png (never a zip)
+  downloadIcon: async (iconOrId, format = 'svg', size = 512, customOptions = null) => {
+    const iconObj = typeof iconOrId === 'object' && iconOrId !== null
+      ? iconOrId
+      : { _id: iconOrId, slug: iconOrId };
+    return await downloadSingleIcon({
+      icon: iconObj,
+      format,
+      size,
+      customOptions,
+    });
   },
 
   // Upload new icon (Contributor/Admin)

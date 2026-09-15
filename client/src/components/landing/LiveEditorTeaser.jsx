@@ -7,6 +7,7 @@ import ShapeBadgeControls from '../editor/ShapeBadgeControls';
 import Button from '../common/Button';
 import { useToast } from '../../context/ToastContext';
 import { recolorSvg } from '../../services/svgCacheService';
+import { renderSvgToPngBlob, prepareSvgForExport, triggerBrowserDownload } from '../../utils/downloadHelper';
 
 const sampleIcons = [
   {
@@ -44,16 +45,46 @@ const LiveEditorTeaser = () => {
   const { addToast } = useToast();
   const current = sampleIcons[selectedIconIndex];
 
-  const handleDownload = () => {
-    let finalSvg = recolorSvg(current.svg, color);
-    const blob = new Blob([finalSvg], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${current.title.toLowerCase()}-edited.svg`;
-    a.click();
-    URL.revokeObjectURL(url);
-    addToast('Downloaded customized SVG!', 'success');
+  const handleDownloadSvg = () => {
+    try {
+      const prepared = prepareSvgForExport(current.svg, {
+        color,
+        useOriginalColor: !color,
+        size: 512,
+        rotation,
+        flipH,
+        flipV,
+        shape,
+        badgeColor,
+        badgeOpacity,
+      });
+      const blob = new Blob([prepared], { type: 'image/svg+xml;charset=utf-8' });
+      triggerBrowserDownload(blob, `${current.title.toLowerCase()}-edited.svg`);
+      addToast('Downloaded customized SVG!', 'success');
+    } catch (err) {
+      addToast('Failed to export SVG: ' + err.message, 'error');
+    }
+  };
+
+  const handleDownloadPng = async (resolution = 512) => {
+    try {
+      const prepared = prepareSvgForExport(current.svg, {
+        color,
+        useOriginalColor: !color,
+        size: resolution,
+        rotation,
+        flipH,
+        flipV,
+        shape,
+        badgeColor,
+        badgeOpacity,
+      });
+      const pngBlob = await renderSvgToPngBlob(prepared, resolution);
+      triggerBrowserDownload(pngBlob, `${current.title.toLowerCase()}-${resolution}px.png`);
+      addToast(`Downloaded ${resolution} × ${resolution} px PNG!`, 'success');
+    } catch (err) {
+      addToast('Failed to export PNG: ' + err.message, 'error');
+    }
   };
 
   const handleCopy = () => {
@@ -201,11 +232,14 @@ const LiveEditorTeaser = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2 pt-1">
-                <Button variant="primary" size="md" onClick={handleDownload} icon={Download} className="flex-1">
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <Button variant="primary" size="md" onClick={handleDownloadSvg} icon={Download} className="flex-1">
                   Download SVG
                 </Button>
-                <Button variant="glass" size="md" onClick={handleCopy} icon={hasCopied ? Check : Copy}>
+                <Button variant="subpagePrimary" size="md" onClick={() => handleDownloadPng(512)} icon={Download} className="flex-1">
+                  Download PNG
+                </Button>
+                <Button variant="glass" size="md" onClick={handleCopy} icon={hasCopied ? Check : Copy} className="w-full sm:w-auto">
                   {hasCopied ? 'Copied' : 'Copy SVG'}
                 </Button>
               </div>

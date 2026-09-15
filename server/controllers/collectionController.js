@@ -133,7 +133,7 @@ exports.bulkDownloadCollection = async (req, res, next) => {
       await user.save();
     }
 
-    streamIconsZip(collection.iconIds, collection.name, res);
+    await streamIconsZip(collection.iconIds, collection.name, res);
   } catch (err) {
     next(err);
   }

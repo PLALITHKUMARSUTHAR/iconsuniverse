@@ -97,9 +97,14 @@ const IconDetailPage = () => {
     }
   };
 
-  const handleConfirmDownload = (format = 'svg', size = 512) => {
-    iconService.downloadIcon(icon._id, format, size);
-    addToast(`Downloading ${icon.title} (${format.toUpperCase()})...`, 'success');
+  const handleConfirmDownload = async (format = 'svg', size = 512) => {
+    try {
+      const fullIcon = { ...icon, svgContent: svgData || icon.svgContent };
+      await iconService.downloadIcon(fullIcon, format, size);
+      addToast(`Downloaded ${cleanIconTitle(icon.title)} (${format.toUpperCase()})!`, 'success');
+    } catch (err) {
+      addToast(`Download failed: ${err.message}`, 'error');
+    }
   };
 
   return (

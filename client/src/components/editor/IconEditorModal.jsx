@@ -9,6 +9,7 @@ import ShapeBadgeControls from './ShapeBadgeControls';
 import { useToast } from '../../context/ToastContext';
 import { useCollections } from '../../context/CollectionsContext';
 import { fetchAndCacheSvg, getCachedSvg, getSafeIconUrl, recolorSvg, normalizeSvgForCanvas } from '../../services/svgCacheService';
+import { renderSvgToPngBlob, prepareSvgForExport, triggerBrowserDownload } from '../../utils/downloadHelper';
 
 const IconEditorModal = ({ isOpen, onClose, icon }) => {
   const [activeTab, setActiveTab] = useState('colors'); // 'colors' | 'transforms' | 'badge'
@@ -83,61 +84,48 @@ const IconEditorModal = ({ isOpen, onClose, icon }) => {
 
   // Export customized SVG in 512x512 px
   const handleDownloadCustomSvg = () => {
-    let finalSvg = currentSvg;
-    if (color) {
-      finalSvg = recolorSvg(finalSvg, color);
+    try {
+      const prepared = prepareSvgForExport(currentSvg, {
+        color,
+        useOriginalColor: !color,
+        size: 512,
+        rotation,
+        flipH,
+        flipV,
+        shape,
+        badgeColor,
+        badgeOpacity,
+      });
+      const blob = new Blob([prepared], { type: 'image/svg+xml;charset=utf-8' });
+      const slug = (icon.slug || icon.title || 'custom-icon').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      triggerBrowserDownload(blob, `${slug}.svg`);
+      addToast('Downloaded 512 × 512 px SVG!', 'success');
+    } catch (err) {
+      addToast('Failed to export SVG: ' + err.message, 'error');
     }
-    finalSvg = normalizeSvgForCanvas(finalSvg);
-
-    const blob = new Blob([finalSvg], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${icon.slug || 'custom-icon'}-512px.svg`;
-    a.click();
-    URL.revokeObjectURL(url);
-    addToast('Downloaded 512 × 512 px SVG!', 'success');
   };
 
   // Export customized PNG in 512x512 px
-  const handleDownloadCustomPng = (resolution = 512) => {
-    let finalSvg = currentSvg;
-    if (color) {
-      finalSvg = recolorSvg(finalSvg, color);
+  const handleDownloadCustomPng = async (resolution = 512) => {
+    try {
+      const prepared = prepareSvgForExport(currentSvg, {
+        color,
+        useOriginalColor: !color,
+        size: resolution,
+        rotation,
+        flipH,
+        flipV,
+        shape,
+        badgeColor,
+        badgeOpacity,
+      });
+      const pngBlob = await renderSvgToPngBlob(prepared, resolution);
+      const slug = (icon.slug || icon.title || 'custom-icon').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      triggerBrowserDownload(pngBlob, `${slug}-${resolution}px.png`);
+      addToast(`Downloaded ${resolution} × ${resolution} px PNG!`, 'success');
+    } catch (err) {
+      addToast('Failed to export PNG: ' + err.message, 'error');
     }
-    finalSvg = normalizeSvgForCanvas(finalSvg);
-
-    const img = new Image();
-    const blob = new Blob([finalSvg], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = resolution;
-      canvas.height = resolution;
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, resolution, resolution);
-      ctx.drawImage(img, 0, 0, resolution, resolution);
-      URL.revokeObjectURL(url);
-
-      canvas.toBlob((pngBlob) => {
-        if (!pngBlob) return;
-        const pngUrl = URL.createObjectURL(pngBlob);
-        const a = document.createElement('a');
-        a.href = pngUrl;
-        a.download = `${icon.slug || 'custom-icon'}-${resolution}px.png`;
-        a.click();
-        URL.revokeObjectURL(pngUrl);
-        addToast(`Downloaded ${resolution} × ${resolution} px PNG!`, 'success');
-      }, 'image/png');
-    };
-
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      addToast('Failed to export PNG', 'error');
-    };
-
-    img.src = url;
   };
 
   // Copy SVG Code

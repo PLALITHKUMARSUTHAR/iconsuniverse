@@ -16,6 +16,12 @@ import {
   normalizeHexColor,
   getCachedSvg,
 } from '../../services/svgCacheService';
+import {
+  renderSvgToPngBlob,
+  prepareSvgForExport,
+  fetchIconSvgContent,
+  triggerBrowserDownload,
+} from '../../utils/downloadHelper';
 
 const resolutions = [16, 24, 32, 64, 128, 256, 512];
 
@@ -283,75 +289,65 @@ const BulkDownloadModal = ({
       const zip = new JSZip();
       const folderName = activeName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       const folder = zip.folder(folderName);
+      const resSize = parseInt(pngResolution, 10) || 512;
+      const normalizedFormat = (format || 'svg').toLowerCase();
 
-      for (const icon of targetIcons) {
+      for (let idx = 0; idx < targetIcons.length; idx++) {
+        const icon = targetIcons[idx];
         const id = icon._id || icon.slug;
-        const filename = `${icon.slug || icon.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.${format}`;
-        const custom = iconCustomMap[id] || defaultCustomization;
-        let processed = processIconSvg(icon);
+        const cleanSlug = (icon.slug || icon.title || `icon-${idx + 1}`)
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
 
-        if (!processed) {
-          const targetUrl = getSafeIconUrl(
-            icon.svgUrl || icon.pngPreviewUrl || (icon.path ? `https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev/icons/${icon.path}` : ''),
-            id
-          );
-          if (targetUrl) {
-            const raw = await fetchAndCacheSvg(targetUrl, id);
-            if (raw) {
-              processed = !custom.useOriginalColor && custom.color ? recolorSvg(raw, custom.color) : raw;
-              processed = normalizeSvgForCanvas(processed);
-            }
+        const custom = iconCustomMap[id] || defaultCustomization;
+        let rawSvg = svgStringsMap[id];
+
+        if (!rawSvg) {
+          rawSvg = await fetchIconSvgContent(icon);
+          if (rawSvg) {
+            setSvgStringsMap((prev) => ({ ...prev, [id]: rawSvg }));
           }
         }
 
-        const baseSvg = processed || `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><title>${icon.title}</title></svg>`;
-        const validSvg = generateSvgWithBackdrop(baseSvg, custom, format === 'png' ? (pngResolution || 512) : 512);
+        if (!rawSvg) {
+          continue;
+        }
 
-        if (format === 'png') {
-          const pngBlob = await new Promise((resolve) => {
-            const img = new Image();
-            const svgBlob = new Blob([validSvg], { type: 'image/svg+xml;charset=utf-8' });
-            const url = URL.createObjectURL(svgBlob);
-            img.onload = () => {
-              const resSize = pngResolution || 512;
-              const canvas = document.createElement('canvas');
-              canvas.width = resSize;
-              canvas.height = resSize;
-              const ctx = canvas.getContext('2d');
-              ctx.clearRect(0, 0, resSize, resSize);
-              ctx.drawImage(img, 0, 0, resSize, resSize);
-              URL.revokeObjectURL(url);
-              canvas.toBlob((b) => resolve(b), 'image/png');
-            };
-            img.onerror = () => {
-              URL.revokeObjectURL(url);
-              resolve(null);
-            };
-            img.src = url;
-          });
+        // Apply color customization
+        let coloredSvg = rawSvg;
+        if (!custom.useOriginalColor && custom.color) {
+          coloredSvg = recolorSvg(rawSvg, custom.color);
+        }
 
-          if (pngBlob) {
-            folder.file(filename, pngBlob);
-          } else {
-            folder.file(filename.replace(/\.png$/, '.svg'), validSvg);
+        // Apply transform, badge, and explicit SVG dimensions
+        const validSvg = generateSvgWithBackdrop(coloredSvg, custom, normalizedFormat === 'png' ? resSize : 512);
+
+        if (normalizedFormat === 'png') {
+          try {
+            const pngBlob = await renderSvgToPngBlob(validSvg, resSize);
+            folder.file(`${cleanSlug}-${resSize}px.png`, pngBlob);
+          } catch (err) {
+            console.error(`PNG conversion failed for ${cleanSlug}:`, err);
+            folder.file(`${cleanSlug}.svg`, validSvg);
           }
         } else {
-          folder.file(filename, validSvg);
+          folder.file(`${cleanSlug}.svg`, validSvg);
         }
       }
 
       folder.file(
-        'LICENSE.txt',
-        `IconsUniverse Download Package\n==============================\nTotal: ${targetIcons.length} icons\nFormat: ${format.toUpperCase()}\nDimensions: ${format === 'png' ? pngResolution : '512'}x${format === 'png' ? pngResolution : '512'}px\nDownloaded from https://iconsuniverse.com`
+        'README-LICENSE.txt',
+        `IconsUniverse Download Package\n==============================\nTotal Assets: ${targetIcons.length} icons\nSelected Format: ${normalizedFormat.toUpperCase()}\nDimensions: ${normalizedFormat === 'png' ? `${resSize}x${resSize}px` : 'Scalable Vector'}\nDownloaded from https://iconsuniverse.com\n\nLicensing:\n- Free Tier Assets: Attribution required ("Icons by IconsUniverse - https://iconsuniverse.com")\n- Pro Tier Assets: Unlimited commercial use, no attribution required.`
       );
 
-      const blob = await zip.generateAsync({ type: 'blob' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${folderName}-${format}-bundle.zip`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const blob = await zip.generateAsync({
+        type: 'blob',
+        compression: 'DEFLATE',
+        compressionOptions: { level: 6 },
+      });
+
+      triggerBrowserDownload(blob, `${folderName}-${normalizedFormat}-bundle.zip`);
 
       if (!isPro) {
         const todayStr = new Date().toISOString().slice(0, 10);
@@ -362,7 +358,7 @@ const BulkDownloadModal = ({
         } catch (e) {}
       }
 
-      addToast(`Downloaded ${targetIcons.length} icons as ${format.toUpperCase()} ZIP!`, 'success');
+      addToast(`Downloaded ${targetIcons.length} icons as ${normalizedFormat.toUpperCase()} ZIP!`, 'success');
       onClose();
     } catch (err) {
       addToast('Download error: ' + err.message, 'error');

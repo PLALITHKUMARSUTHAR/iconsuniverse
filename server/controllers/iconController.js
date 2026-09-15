@@ -1183,7 +1183,7 @@ exports.getIconBySlug = async (req, res, next) => {
 // @access  Public (rate-limited for free users)
 exports.downloadIcon = async (req, res, next) => {
   try {
-    const { format = 'svg', size = 512 } = req.query;
+    const { format = 'svg', size = 512, trackOnly } = req.query;
     const icon = await Icon.findById(req.params.id);
 
     if (!icon) {
@@ -1233,14 +1233,39 @@ exports.downloadIcon = async (req, res, next) => {
       ipAddress: req.ip,
     });
 
+    if (trackOnly === 'true' || trackOnly === true) {
+      return res.status(200).json({
+        success: true,
+        message: 'Download tracked successfully',
+        downloadCountToday: user.downloadCountToday,
+      });
+    }
+
     const filename = `${icon.slug || 'icon'}.${format === 'base64' ? 'json' : format}`;
 
     let svgData = icon.svgContent;
-    if (!svgData && icon.svgUrl) {
+    if (!svgData && icon._id && svgCache.has(icon._id.toString())) {
+      svgData = svgCache.get(icon._id.toString());
+    }
+
+    if (!svgData && icon.path) {
+      const cdnBase = process.env.R2_PUBLIC_URL || 'https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev';
+      const cleanPath = icon.path.replace(/^\/?icons\//, '').replace(/^\/+/, '');
+      const safePath = cleanPath.split('/').map(seg => encodeURIComponent(decodeURIComponent(seg))).join('/');
+      const url = `${cdnBase}/icons/${safePath}`;
+
       try {
-        const fetchRes = await fetch(icon.svgUrl);
-        if (fetchRes.ok) {
-          svgData = await fetchRes.text();
+        let upstreamRes = await fetch(url);
+        if (!upstreamRes.ok && cleanPath !== icon.path) {
+          const fallbackUrl = `${cdnBase}/icons/${icon.path.split('/').map(encodeURIComponent).join('/')}`;
+          upstreamRes = await fetch(fallbackUrl);
+        }
+        if (upstreamRes.ok) {
+          const rawSvg = await upstreamRes.text();
+          svgData = normalizeAndFixSvg(rawSvg);
+          if (icon._id) {
+            svgCache.set(icon._id.toString(), svgData);
+          }
         }
       } catch (e) {}
     }

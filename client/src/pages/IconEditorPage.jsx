@@ -8,6 +8,7 @@ import Button from '../components/common/Button';
 import { useToast } from '../context/ToastContext';
 import { useCollections } from '../context/CollectionsContext';
 import { seedIcons } from '../data/seedData';
+import { renderSvgToPngBlob, prepareSvgForExport, triggerBrowserDownload } from '../utils/downloadHelper';
 
 const IconEditorPage = () => {
   const [currentIcon, setCurrentIcon] = useState(seedIcons[0]);
@@ -45,18 +46,47 @@ const IconEditorPage = () => {
   };
 
   const handleDownloadSvg = () => {
-    let finalSvg = currentIcon.svgContent || '';
-    finalSvg = finalSvg.replace(/currentColor/gi, color);
-    finalSvg = finalSvg.replace(/stroke="#[0-9a-fA-F]{3,6}"/gi, `stroke="${color}"`);
+    try {
+      const prepared = prepareSvgForExport(currentIcon.svgContent || '', {
+        color,
+        useOriginalColor: !color,
+        size: 512,
+        rotation,
+        flipH,
+        flipV,
+        shape,
+        badgeColor,
+        badgeOpacity,
+      });
+      const blob = new Blob([prepared], { type: 'image/svg+xml;charset=utf-8' });
+      const slug = ((currentIcon.title || 'icon').toLowerCase().replace(/\s+/g, '-')) + '-edited';
+      triggerBrowserDownload(blob, `${slug}.svg`);
+      addToast('Downloaded customized SVG!', 'success');
+    } catch (err) {
+      addToast('Failed to export SVG: ' + err.message, 'error');
+    }
+  };
 
-    const blob = new Blob([finalSvg], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${(currentIcon.title || 'icon').toLowerCase().replace(/\s+/g, '-')}-edited.svg`;
-    a.click();
-    URL.revokeObjectURL(url);
-    addToast('Downloaded customized SVG!', 'success');
+  const handleDownloadPng = async (resolution = 512) => {
+    try {
+      const prepared = prepareSvgForExport(currentIcon.svgContent || '', {
+        color,
+        useOriginalColor: !color,
+        size: resolution,
+        rotation,
+        flipH,
+        flipV,
+        shape,
+        badgeColor,
+        badgeOpacity,
+      });
+      const pngBlob = await renderSvgToPngBlob(prepared, resolution);
+      const slug = ((currentIcon.title || 'icon').toLowerCase().replace(/\s+/g, '-')) + '-edited';
+      triggerBrowserDownload(pngBlob, `${slug}-${resolution}px.png`);
+      addToast(`Downloaded ${resolution} × ${resolution} px PNG!`, 'success');
+    } catch (err) {
+      addToast('Failed to export PNG: ' + err.message, 'error');
+    }
   };
 
   const handleCopySvg = () => {
@@ -241,16 +271,27 @@ const IconEditorPage = () => {
             </div>
 
             {/* Export Toolbar */}
-            <div className="flex flex-col gap-3 pt-2 border-t border-subpage-surface-container">
-              <Button
-                variant="primary"
-                size="lg"
-                onClick={handleDownloadSvg}
-                icon={Download}
-                className="w-full"
-              >
-                Download Customized SVG
-              </Button>
+            <div className="flex flex-col gap-2.5 pt-2 border-t border-subpage-surface-container">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={handleDownloadSvg}
+                  icon={Download}
+                  className="flex-1"
+                >
+                  Download SVG
+                </Button>
+                <Button
+                  variant="subpagePrimary"
+                  size="md"
+                  onClick={() => handleDownloadPng(512)}
+                  icon={Download}
+                  className="flex-1"
+                >
+                  Download PNG (512px)
+                </Button>
+              </div>
 
               <div className="flex items-center gap-2">
                 <Button

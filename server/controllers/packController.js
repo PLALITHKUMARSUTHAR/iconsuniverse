@@ -105,7 +105,7 @@ exports.downloadPack = async (req, res, next) => {
       await user.save();
     }
 
-    streamIconsZip(icons, pack.slug, res);
+    await streamIconsZip(icons, pack.slug, res);
   } catch (err) {
     next(err);
   }
