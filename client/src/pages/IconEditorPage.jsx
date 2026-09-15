@@ -13,7 +13,7 @@ import { renderSvgToPngBlob, prepareSvgForExport, triggerBrowserDownload } from 
 const IconEditorPage = () => {
   const [currentIcon, setCurrentIcon] = useState(seedIcons[0]);
   const [activeTab, setActiveTab] = useState('colors');
-  const [color, setColor] = useState('#00327d');
+  const [color, setColor] = useState('#000000');
   const [layerOverrides, setLayerOverrides] = useState({});
   const [rotation, setRotation] = useState(0);
   const [flipH, setFlipH] = useState(false);

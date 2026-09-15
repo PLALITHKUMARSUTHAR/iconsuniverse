@@ -707,7 +707,7 @@ function normalizeAndFixSvg(svgText) {
     'data-iu-normalized': '1',
     width: '100%',
     height: '100%',
-    style: 'color: #0f172a; color-scheme: light;',
+    style: 'color: #000000; color-scheme: light;',
     display: null,
     visibility: null,
   });

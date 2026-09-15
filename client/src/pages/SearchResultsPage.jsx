@@ -525,36 +525,8 @@ const SearchResultsPage = () => {
                   icon={Sparkles}
                   className="shadow-sm font-bold text-xs"
                 >
-                  Studio / Customize
+                  Studio Download
                 </Button>
-
-                <FormatDownloadMenu
-                  icon={selectedIconObjects[0]}
-                  onDownload={async (fmt, sz) => {
-                    try {
-                      await downloadSingleIcon({
-                        icon: selectedIconObjects[0],
-                        format: fmt,
-                        size: sz || 512,
-                      });
-                      addToast(`Downloaded ${selectedIconObjects[0].title} as ${fmt.toUpperCase()}!`, 'success');
-                    } catch (err) {
-                      addToast('Download error: ' + err.message, 'error');
-                    }
-                  }}
-                  onOpenAttribution={async (fmt, sz) => {
-                    try {
-                      await downloadSingleIcon({
-                        icon: selectedIconObjects[0],
-                        format: fmt,
-                        size: sz || 512,
-                      });
-                      addToast(`Downloaded ${selectedIconObjects[0].title} as ${fmt.toUpperCase()}!`, 'success');
-                    } catch (err) {
-                      addToast('Download error: ' + err.message, 'error');
-                    }
-                  }}
-                />
 
                 <button
                   type="button"

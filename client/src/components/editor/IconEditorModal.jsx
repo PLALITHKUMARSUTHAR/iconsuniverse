@@ -13,7 +13,7 @@ import { renderSvgToPngBlob, prepareSvgForExport, triggerBrowserDownload } from 
 
 const IconEditorModal = ({ isOpen, onClose, icon }) => {
   const [activeTab, setActiveTab] = useState('colors'); // 'colors' | 'transforms' | 'badge'
-  const [color, setColor] = useState('#00327d');
+  const [color, setColor] = useState('#000000');
   const [layerColorOverrides, setLayerColorOverrides] = useState({});
   const [rotation, setRotation] = useState(0);
   const [flipH, setFlipH] = useState(false);
@@ -78,7 +78,7 @@ const IconEditorModal = ({ isOpen, onClose, icon }) => {
     setScale(1);
     setPadding(0);
     setShape('none');
-    setColor('#00327d');
+    setColor('#000000');
     setLayerColorOverrides({});
   };
 

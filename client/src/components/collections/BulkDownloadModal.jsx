@@ -27,7 +27,7 @@ import {
 const resolutions = [16, 24, 32, 64, 128, 256, 512];
 
 const defaultCustomization = {
-  color: '#00327d',
+  color: '#000000',
   useOriginalColor: true,
   rotation: 0,
   flipH: false,
@@ -564,7 +564,7 @@ const BulkDownloadModal = ({
                       <label className="w-11 h-11 rounded-2xl overflow-hidden cursor-pointer border border-landing-surface-container shrink-0 shadow-xs flex items-center justify-center bg-white hover:scale-105 transition-transform">
                         <input
                           type="color"
-                          value={normalizeHexColor(sampleActiveCustom.color, '#00327d')}
+                          value={normalizeHexColor(sampleActiveCustom.color, '#000000')}
                           onChange={(e) => {
                             const val = e.target.value;
                             updateCustomizations((prev) => ({
@@ -579,7 +579,7 @@ const BulkDownloadModal = ({
 
                       <input
                         type="text"
-                        value={sampleActiveCustom.color || '#00327D'}
+                        value={sampleActiveCustom.color || '#000000'}
                         onChange={(e) => {
                           let val = e.target.value.trim();
                           if (val && !val.startsWith('#')) {
@@ -591,7 +591,7 @@ const BulkDownloadModal = ({
                             useOriginalColor: false,
                           }));
                         }}
-                        placeholder="#00327D"
+                        placeholder="#000000"
                         maxLength={7}
                         className="w-full bg-landing-surface-container-low px-4 py-2.5 rounded-2xl text-xs font-mono font-bold text-landing-on-surface border border-landing-outline-variant/40 focus:outline-none focus:ring-2 focus:ring-landing-primary uppercase"
                       />
@@ -749,7 +749,7 @@ const BulkDownloadModal = ({
                           style={{
                             transform: `rotate(${custom.rotation || 0}deg) scaleX(${custom.flipH ? -1 : 1}) scaleY(${custom.flipV ? -1 : 1})`,
                             padding: custom.shape !== 'none' ? `${custom.padding ? custom.padding / 2 : 0}px` : `${custom.padding || 0}px`,
-                            color: !custom.useOriginalColor && custom.color ? custom.color : '#00327d',
+                            color: !custom.useOriginalColor && custom.color ? custom.color : '#000000',
                           }}
                           dangerouslySetInnerHTML={{ __html: processedSvg }}
                         />

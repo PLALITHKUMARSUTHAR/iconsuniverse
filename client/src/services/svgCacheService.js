@@ -360,7 +360,7 @@ export function sanitizeSvgRootAttributes(svgString, extraAttributes = {}) {
 /**
  * Validates and normalizes hex color code
  */
-export function normalizeHexColor(hex, fallback = '#00327d') {
+export function normalizeHexColor(hex, fallback = '#000000') {
   if (!hex || typeof hex !== 'string') return fallback;
   let clean = hex.trim();
   if (!clean.startsWith('#')) {
@@ -1029,7 +1029,7 @@ export function normalizeSvgForCanvas(svgText, scopeId = null) {
     'data-iu-normalized': '1',
     width: '100%',
     height: '100%',
-    style: 'color: #0f172a; color-scheme: light;',
+    style: 'color: #000000; color-scheme: light;',
     display: null,
     visibility: null,
   });

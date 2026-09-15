@@ -4,11 +4,11 @@ import { Pipette, Check, RefreshCw, Palette } from 'lucide-react';
 const paletteGroups = {
   vibrant: {
     label: 'Brand & Vibrant',
-    colors: ['#00327d', '#FF5F52', '#00F5D4', '#FFD54F', '#6366f1', '#10b981', '#f43f5e', '#8b5cf6'],
+    colors: ['#000000', '#FF5F52', '#00F5D4', '#FFD54F', '#6366f1', '#10b981', '#f43f5e', '#8b5cf6'],
   },
   classic: {
     label: 'Classic & Neutral',
-    colors: ['#1a1b20', '#374151', '#4b5563', '#6b7280', '#9ca3af', '#cbd5e1', '#001e52', '#0047AB'],
+    colors: ['#000000', '#1a1b20', '#374151', '#4b5563', '#6b7280', '#9ca3af', '#cbd5e1', '#001e52'],
   },
   nature: {
     label: 'Nature & Warmth',
@@ -21,7 +21,7 @@ const paletteGroups = {
 };
 
 const ColorPalettePicker = ({
-  activeColor = '#00327d',
+  activeColor = '#000000',
   onChangeColor,
   layerColors = [],
   onChangeLayerColor,
@@ -124,16 +124,16 @@ const ColorPalettePicker = ({
             type="text"
             value={customHex}
             onChange={handleHexChange}
-            placeholder="#00327D"
+            placeholder="#000000"
             maxLength={7}
             className="w-full bg-landing-surface-container-low px-3.5 py-2.5 rounded-2xl text-xs font-mono font-bold text-landing-on-surface border border-landing-outline-variant/40 focus:outline-none focus:ring-2 focus:ring-landing-primary uppercase"
           />
 
           <button
             type="button"
-            onClick={() => handleColorPick('#00327d')}
-            className="p-2.5 rounded-2xl bg-landing-surface-container-low hover:bg-landing-surface-container text-landing-on-surface-variant transition-colors"
-            title="Reset to default brand color"
+            onClick={() => handleColorPick('#000000')}
+            className="p-2.5 rounded-2xl bg-landing-surface-container-low hover:bg-landing-surface-container text-landing-on-surface-variant transition-colors cursor-pointer"
+            title="Reset to default black"
           >
             <RefreshCw className="w-4 h-4" />
           </button>

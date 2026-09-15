@@ -43,7 +43,7 @@ export function prepareSvgForExport(rawSvg, options = {}) {
   }
 
   const targetSize = options.size || 512;
-  const targetColor = options.color || '#1e293b';
+  const targetColor = options.color || '#000000';
   let svg = rawSvg.trim()
     .replace(/<\?xml[^>]*\?>/gi, '')
     .replace(/<!DOCTYPE[^>]*>/gi, '')

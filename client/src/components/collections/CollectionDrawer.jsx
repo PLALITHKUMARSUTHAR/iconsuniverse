@@ -123,38 +123,18 @@ const CollectionDrawer = () => {
               </div>
             </div>
 
-            {/* Bottom Actions: Single direct download & Studio for 1 icon, Bulk ZIP Studio for >1 icons */}
+            {/* Bottom Actions: 1 icon = Studio Download; >1 icons = Bulk ZIP Studio */}
             {collectionIcons.length === 1 && (
-              <div className="pt-4 border-t border-landing-surface-container flex flex-col gap-2">
+              <div className="pt-4 border-t border-landing-surface-container">
                 <Button
                   variant="primary"
-                  size="md"
+                  size="lg"
                   onClick={() => setIsBulkDownloadModalOpen(true)}
                   icon={Sparkles}
-                  className="w-full text-xs font-bold shadow-xs"
+                  className="w-full text-xs sm:text-sm font-bold shadow-md"
                 >
-                  Open Download Studio / Customize
+                  Studio Download
                 </Button>
-                <div className="flex gap-2">
-                  <Button
-                    variant="glass"
-                    size="sm"
-                    onClick={() => handleDownloadSingle('svg')}
-                    icon={Download}
-                    className="flex-1 text-[11px] font-bold text-landing-primary border-landing-primary/20"
-                  >
-                    Direct SVG
-                  </Button>
-                  <Button
-                    variant="glass"
-                    size="sm"
-                    onClick={() => handleDownloadSingle('png')}
-                    icon={Download}
-                    className="flex-1 text-[11px] font-bold text-landing-primary border-landing-primary/20"
-                  >
-                    Direct PNG
-                  </Button>
-                </div>
               </div>
             )}
 

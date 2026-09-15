@@ -3,7 +3,7 @@ import { recolorSvg, normalizeSvgForCanvas } from '../../services/svgCacheServic
 
 const IconEditorCanvas = ({
   rawSvg = '',
-  color = '#00327d',
+  color = '#000000',
   layerColorOverrides = {},
   rotation = 0,
   flipH = false,
@@ -11,7 +11,7 @@ const IconEditorCanvas = ({
   scale = 1,
   padding = 16,
   shape = 'none',
-  badgeColor = '#00327d',
+  badgeColor = '#000000',
   badgeOpacity = 100,
   previewSize = 260,
 }) => {
