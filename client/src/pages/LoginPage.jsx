@@ -14,7 +14,6 @@ const LoginPage = () => {
   const { addToast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const redirectTarget = location.state?.from?.pathname || '/';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,7 +21,7 @@ const LoginPage = () => {
     try {
       await login(email, password);
       addToast('Welcome back to IconsUniverse!', 'success');
-      navigate(redirectTarget, { replace: true });
+      navigate('/', { replace: true });
     } catch (err) {
       addToast(err.message, 'error');
     } finally {
@@ -41,7 +40,7 @@ const LoginPage = () => {
       };
       await googleLogin(googleUser);
       addToast('Signed in with Google successfully!', 'success');
-      navigate(redirectTarget, { replace: true });
+      navigate('/', { replace: true });
     } catch (err) {
       addToast(err.message || 'Google authentication failed', 'error');
     } finally {

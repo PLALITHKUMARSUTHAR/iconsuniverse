@@ -30,7 +30,7 @@ const HeroSection = () => {
 
         {/* Hero Search Bar */}
         <div className="max-w-2xl mx-auto relative z-30">
-          <SearchBar isHero={true} />
+          <SearchBar isHero={true} placeholder="Search icons..." />
         </div>
       </div>
     </section>

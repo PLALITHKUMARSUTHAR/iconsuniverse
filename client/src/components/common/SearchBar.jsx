@@ -22,7 +22,7 @@ function shuffleKeywords(pool, count = 10, topReal = []) {
   return Array.from(combined);
 }
 
-const SearchBar = ({ initialQuery = '', placeholder = 'Search 10,00,000 icons...', isHero = false }) => {
+const SearchBar = ({ initialQuery = '', placeholder = 'Search icons...', isHero = false }) => {
   const [query, setQuery] = useState(initialQuery);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedStyle, setSelectedStyle] = useState('all');
