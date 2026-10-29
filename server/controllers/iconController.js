@@ -1156,13 +1156,26 @@ exports.getIconSvg = async (req, res, next) => {
 
     let icon;
     if (id.match(/^[0-9a-fA-F]{24}$/)) {
-      icon = await Icon.findById(id).select('path title');
+      icon = await Icon.findById(id).select('path title svgContent');
     } else {
-      icon = await Icon.findOne({ slug: id }).select('path title');
+      icon = await Icon.findOne({ slug: id }).select('path title svgContent');
     }
 
-    if (!icon || !icon.path) {
+    if (!icon || (!icon.path && !icon.svgContent)) {
       return res.status(404).send('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"></svg>');
+    }
+
+    if (icon.svgContent) {
+      const normalized = normalizeAndFixSvg(icon.svgContent);
+      if (svgCache.size > 10000) {
+        const firstKey = svgCache.keys().next().value;
+        svgCache.delete(firstKey);
+      }
+      svgCache.set(id, normalized);
+      res.set('Content-Type', 'image/svg+xml');
+      res.set('Access-Control-Allow-Origin', '*');
+      res.set('Cache-Control', 'public, max-age=31536000, immutable');
+      return res.send(normalized);
     }
 
     const cdnBase = process.env.R2_PUBLIC_URL || 'https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev';

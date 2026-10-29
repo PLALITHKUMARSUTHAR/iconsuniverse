@@ -29,7 +29,6 @@ const driveSyncLogSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     default: null,
-  },
-}, { timestamps: true });
+}, { timestamps: true, suppressReservedKeysWarning: true });
 
 module.exports = mongoose.model('DriveSyncLog', driveSyncLogSchema);

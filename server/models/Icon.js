@@ -17,8 +17,19 @@ const iconSchema = new mongoose.Schema({
   },
   path: {
     type: String,
-    required: true,
+    default: '',
   },
+  svgContent: {
+    type: String,
+    default: '',
+  },
+  tags: [{
+    type: String,
+    trim: true,
+  }],
+  colors: [{
+    type: String,
+  }],
   categoryId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
@@ -28,6 +39,11 @@ const iconSchema = new mongoose.Schema({
   packId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Pack',
+    default: null,
+  },
+  contributorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     default: null,
   },
   style: {
@@ -57,7 +73,7 @@ const iconSchema = new mongoose.Schema({
     default: 'approved',
   },
 }, { 
-  timestamps: false, 
+  timestamps: true, 
   versionKey: false,
   toJSON: { virtuals: true },
   toObject: { virtuals: true },
@@ -70,15 +86,21 @@ iconSchema.index({ categoryId: 1, isAnimated: 1, style: 1, downloadCount: -1, _i
 iconSchema.index({ categoryId: 1, downloadCount: -1, _id: 1 });
 iconSchema.index({ downloadCount: -1, _id: 1 });
 
-// Dynamic Virtual Getters: Produces svgUrl and pngPreviewUrl in all API responses with 0 database storage!
+// Dynamic Virtual Getters: Produces svgUrl and pngPreviewUrl in all API responses
 iconSchema.virtual('svgUrl').get(function() {
-  const safePath = this.path ? this.path.split('/').map(encodeURIComponent).join('/') : '';
-  return `${process.env.R2_PUBLIC_URL || CDN_BASE}/icons/${safePath}`;
+  if (this.path) {
+    const safePath = this.path.split('/').map(encodeURIComponent).join('/');
+    return `${process.env.R2_PUBLIC_URL || CDN_BASE}/icons/${safePath}`;
+  }
+  return `/api/icons/svg/${this._id}`;
 });
 
 iconSchema.virtual('pngPreviewUrl').get(function() {
-  const safePath = this.path ? this.path.split('/').map(encodeURIComponent).join('/') : '';
-  return `${process.env.R2_PUBLIC_URL || CDN_BASE}/icons/${safePath}`;
+  if (this.path) {
+    const safePath = this.path.split('/').map(encodeURIComponent).join('/');
+    return `${process.env.R2_PUBLIC_URL || CDN_BASE}/icons/${safePath}`;
+  }
+  return `/api/icons/svg/${this._id}`;
 });
 
 module.exports = mongoose.model('Icon', iconSchema);
