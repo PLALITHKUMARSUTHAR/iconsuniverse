@@ -1,4 +1,6 @@
 const archiver = require('archiver');
+const { GetObjectCommand } = require('@aws-sdk/client-s3');
+const r2Client = require('../config/r2');
 
 const CDN_BASE = process.env.R2_PUBLIC_URL || 'https://pub-2b1851a9e65c42c095e04c8a758bca43.r2.dev';
 
@@ -23,6 +25,20 @@ async function fetchSvgForIcon(icon) {
         }
       }
     } catch (e) {}
+
+    if (process.env.R2_ACCESS_KEY_ID) {
+      const bucket = process.env.R2_BUCKET_NAME || 'iconsuniverse-assets';
+      const candidateKeys = [`icons/${cleanPath}`, cleanPath, icon.path, `icons/${icon.path}`];
+      for (const key of candidateKeys) {
+        try {
+          const resObj = await r2Client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+          const text = await resObj.Body.transformToString('utf-8');
+          if (text && text.includes('<svg')) {
+            return text;
+          }
+        } catch (s3Err) {}
+      }
+    }
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>`;
 }

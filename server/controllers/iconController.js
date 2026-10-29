@@ -4,6 +4,8 @@ const Pack = require('../models/Pack');
 const Download = require('../models/Download');
 const User = require('../models/User');
 const SearchAnalytics = require('../models/SearchAnalytics');
+const { GetObjectCommand } = require('@aws-sdk/client-s3');
+const r2Client = require('../config/r2');
 const { sanitizeSVG, extractColorsFromSVG, svgToDataUrl } = require('../utils/svgSanitizer');
 const { cleanIconTitle } = require('../utils/titleCleaner');
 
@@ -1183,17 +1185,42 @@ exports.getIconSvg = async (req, res, next) => {
     const safePath = cleanPath.split('/').map(seg => encodeURIComponent(decodeURIComponent(seg))).join('/');
     const url = `${cdnBase}/icons/${safePath}`;
 
-    let upstreamRes = await fetch(url);
-    if (!upstreamRes.ok && cleanPath !== icon.path) {
-      const fallbackUrl = `${cdnBase}/icons/${icon.path.split('/').map(encodeURIComponent).join('/')}`;
-      upstreamRes = await fetch(fallbackUrl);
+    let rawSvg = null;
+    let upstreamRes = null;
+    try {
+      upstreamRes = await fetch(url);
+      if (!upstreamRes.ok && cleanPath !== icon.path) {
+        const fallbackUrl = `${cdnBase}/icons/${icon.path.split('/').map(encodeURIComponent).join('/')}`;
+        upstreamRes = await fetch(fallbackUrl);
+      }
+      if (upstreamRes && upstreamRes.ok) {
+        const text = await upstreamRes.text();
+        if (text && text.includes('<svg')) {
+          rawSvg = text;
+        }
+      }
+    } catch (fetchErr) {}
+
+    // Fallback: If public HTTP fetch failed (e.g. 403 Forbidden), query via S3 R2 client directly
+    if (!rawSvg && process.env.R2_ACCESS_KEY_ID) {
+      const bucket = process.env.R2_BUCKET_NAME || 'iconsuniverse-assets';
+      const candidateKeys = [`icons/${cleanPath}`, cleanPath, icon.path, `icons/${icon.path}`];
+      for (const key of candidateKeys) {
+        try {
+          const resObj = await r2Client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+          const text = await resObj.Body.transformToString('utf-8');
+          if (text && text.includes('<svg')) {
+            rawSvg = text;
+            break;
+          }
+        } catch (s3Err) {}
+      }
     }
 
-    if (!upstreamRes.ok) {
-      return res.status(upstreamRes.status).send('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"></svg>');
+    if (!rawSvg) {
+      return res.status(upstreamRes ? upstreamRes.status : 404).send('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"></svg>');
     }
 
-    const rawSvg = await upstreamRes.text();
     const normalized = normalizeAndFixSvg(rawSvg);
 
     // Cache in memory (cap at 10,000 items)
@@ -1351,14 +1378,34 @@ exports.downloadIcon = async (req, res, next) => {
           const fallbackUrl = `${cdnBase}/icons/${icon.path.split('/').map(encodeURIComponent).join('/')}`;
           upstreamRes = await fetch(fallbackUrl);
         }
-        if (upstreamRes.ok) {
+        if (upstreamRes && upstreamRes.ok) {
           const rawSvg = await upstreamRes.text();
-          svgData = normalizeAndFixSvg(rawSvg);
-          if (icon._id) {
-            svgCache.set(icon._id.toString(), svgData);
+          if (rawSvg && rawSvg.includes('<svg')) {
+            svgData = normalizeAndFixSvg(rawSvg);
+            if (icon._id) {
+              svgCache.set(icon._id.toString(), svgData);
+            }
           }
         }
       } catch (e) {}
+
+      if (!svgData && process.env.R2_ACCESS_KEY_ID) {
+        const bucket = process.env.R2_BUCKET_NAME || 'iconsuniverse-assets';
+        const candidateKeys = [`icons/${cleanPath}`, cleanPath, icon.path, `icons/${icon.path}`];
+        for (const key of candidateKeys) {
+          try {
+            const resObj = await r2Client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+            const text = await resObj.Body.transformToString('utf-8');
+            if (text && text.includes('<svg')) {
+              svgData = normalizeAndFixSvg(text);
+              if (icon._id) {
+                svgCache.set(icon._id.toString(), svgData);
+              }
+              break;
+            }
+          } catch (s3Err) {}
+        }
+      }
     }
 
     if (format === 'base64') {
